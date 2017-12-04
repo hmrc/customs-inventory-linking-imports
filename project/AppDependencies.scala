@@ -10,7 +10,6 @@ object AppDependencies {
   private val mockitoVersion = "2.6.2"
   private val pegdownVersion = "1.6.0"
   private val wireMockVersion = "2.10.1"
-  private val customsApiCommonVersion = "1.19.0"
   private val testScope = "test,it"
 
   val xmlResolver = "xml-resolver" % "xml-resolver" % xmlResolverVersion
@@ -30,8 +29,4 @@ object AppDependencies {
   val wireMock = "com.github.tomakehurst" % "wiremock" % wireMockVersion % testScope exclude("org.apache.httpcomponents","httpclient") exclude("org.apache.httpcomponents","httpcore")
 
   val mockito =  "org.mockito" % "mockito-core" % mockitoVersion % testScope
-
-  val customsApiCommon = "uk.gov.hmrc" %% "customs-api-common" % customsApiCommonVersion withSources()
-
-  val customsApiCommonTests = "uk.gov.hmrc" %% "customs-api-common" % customsApiCommonVersion % testScope classifier "tests"
 }

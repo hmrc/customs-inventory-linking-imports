@@ -2,11 +2,8 @@ import AppDependencies._
 import org.scalastyle.sbt.ScalastylePlugin._
 import sbt.Tests.{Group, SubProcess}
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, targetJvm}
-import scala.util.Properties.envOrElse
 
-name := "customs-wco-declaration"
-
-version := envOrElse("CUSTOMS_WCO_DECLARATION_VERSION", "999-SNAPSHOT")
+name := "customs-inventory-linking-imports"
 
 targetJvm := "jvm-1.8"
 
@@ -15,9 +12,9 @@ lazy val allResolvers = resolvers ++= Seq(
   Resolver.jcenterRepo
 )
 
-val compileDependencies = Seq(microserviceBootStrap, authClient, xmlResolver, customsApiCommon)
+val compileDependencies = Seq(microserviceBootStrap, authClient, xmlResolver)
 
-val testDependencies = Seq(hmrcTest, scalaTest, pegDown, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
+val testDependencies = Seq(hmrcTest, scalaTest, pegDown, scalaTestPlusPlay, wireMock, mockito)
 
 lazy val AcceptanceTest = config("acceptance") extend Test
 lazy val CdsIntegrationTest = config("it") extend Test
@@ -37,7 +34,6 @@ lazy val microservice = (project in file("."))
     unitTestSettings,
     integrationTestSettings,
     acceptanceTestSettings,
-    playSettings,
     allTest,
     scoverageSettings,
     allResolvers
@@ -87,10 +83,6 @@ lazy val acceptanceTestSettings =
 lazy val commonSettings: Seq[Setting[_]] = scalaSettings ++
   defaultSettings() ++
   gitStampSettings
-
-lazy val playSettings: Seq[Setting[_]] = Seq(
-  routesImport ++= Seq("domain._")
-)
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(AuthService|BuildInfo|Routes).*",
