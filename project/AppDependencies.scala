@@ -1,9 +1,9 @@
 import sbt._
 
 object AppDependencies {
-  private val xmlResolverVersion = "1.2"
   private val microserviceBootstrapVersion = "6.12.0"
   private val authClientVersion = "2.3.0"
+  private val xmlResolverVersion = "1.2"
   private val hmrcTestVersion = "3.0.0"
   private val scalaTestVersion = "3.0.4"
   private val scalatestplusVersion = "2.0.1"
@@ -12,11 +12,11 @@ object AppDependencies {
   private val wireMockVersion = "2.10.1"
   private val testScope = "test,it"
 
-  val xmlResolver = "xml-resolver" % "xml-resolver" % xmlResolverVersion
-
   val microserviceBootStrap = "uk.gov.hmrc" %% "microservice-bootstrap" % microserviceBootstrapVersion
 
   val authClient =  "uk.gov.hmrc" %% "auth-client" % authClientVersion
+
+  val xmlResolver = "xml-resolver" % "xml-resolver" % xmlResolverVersion
 
   val hmrcTest = "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % testScope
 
