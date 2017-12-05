@@ -1,0 +1,25 @@
+@import play.api.libs.json.Json
+@(apiScopeKey: String)
+{
+  "scopes": [
+    {
+      "key": "@apiScopeKey",
+      "name": "Customs Inventory Linking Imports",
+      "description": "Submit a Customs Inventory Linking Import Declaration"
+    }
+  ],
+  "api": {
+    "name": "Customs Inventory Linking Imports",
+    "description": "Single WCO-compliant Customs Inventory Linking Import Declaration API",
+    "context": "customs/inventory-linking/imports",
+    "versions": [
+      {
+        "version": "1.0",
+        "status": "PUBLISHED",
+        "access": {
+          "type": "PUBLIC"
+        }
+      }
+    ]
+  }
+}
