@@ -1,0 +1,2 @@
+GET    /api/definition                              @uk.gov.hmrc.customs.inventorylinking.imports.controllers.DocumentationController.definition()
+#GET    /api/conf/:version/*file                     @uk.gov.hmrc.customs.inventorylinking.imports.controllers.DocumentationController.conf(version, file)
