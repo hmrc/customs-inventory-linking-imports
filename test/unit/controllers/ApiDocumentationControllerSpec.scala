@@ -16,22 +16,24 @@
 
 package unit.controllers
 
+import akka.stream.Materializer
 import play.api.Configuration
 import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.http.{DefaultHttpErrorHandler, HttpErrorHandler}
 import play.api.http.Status.OK
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.DocumentationController
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ApiDocumentationController
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 import uk.gov.hmrc.play.test.{UnitSpec, WithFakeApplication}
 
-class DocumentationControllerSpec extends UnitSpec with WithFakeApplication{
+class ApiDocumentationControllerSpec extends UnitSpec with WithFakeApplication {
 
-  implicit val materializer = fakeApplication.materializer
+  implicit val materializer: Materializer = fakeApplication.materializer
 
   "with empty configuration DocumentationController.defintion" should {
     "throw IllegalStateException" in {
-      val controller = new DocumentationController(Configuration())
+      val controller = new ApiDocumentationController(DefaultHttpErrorHandler, Configuration())
       val thrown = the[IllegalStateException] thrownBy getDefinition(controller)
       thrown.getMessage should equal("customs.definition.api-scope is not configured")
     }
@@ -40,7 +42,7 @@ class DocumentationControllerSpec extends UnitSpec with WithFakeApplication{
   "With valid configuration DocumentationController.definition" should {
     val apiScope = "scope"
     val config = Configuration("customs.definition.api-scope" -> apiScope)
-    val controller = new DocumentationController(config)
+    val controller = new ApiDocumentationController(DefaultHttpErrorHandler, config)
     val result = getDefinition(controller)
 
     "return OK status" in {
@@ -56,7 +58,7 @@ class DocumentationControllerSpec extends UnitSpec with WithFakeApplication{
     }
   }
 
-  private def getDefinition(controller: DocumentationController) = {
+  private def getDefinition(controller: ApiDocumentationController) = {
     await(controller.definition().apply(FakeRequest()))
   }
 }

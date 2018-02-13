@@ -12,9 +12,9 @@ lazy val allResolvers = resolvers ++= Seq(
   Resolver.jcenterRepo
 )
 
-val compileDependencies = Seq(microserviceBootStrap, authClient, xmlResolver)
+val compileDependencies = Seq(microserviceBootStrap, authClient, xmlResolver, customsApiCommon)
 
-val testDependencies = Seq(hmrcTest, scalaTest, pegDown, scalaTestPlusPlay, wireMock, mockito)
+val testDependencies = Seq(hmrcTest, scalaTest, pegDown, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
 
 lazy val AcceptanceTest = config("acceptance") extend Test
 lazy val CdsIntegrationTest = config("it") extend Test
