@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
-import com.google.inject.Inject
+import javax.inject.Inject
+
 import play.api.Configuration
+import play.api.http.HttpErrorHandler
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.customs.api.common.controllers.DocumentationController
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 
-class DocumentationController @Inject()(configuration: Configuration) extends BaseController() {
+class ApiDocumentationController @Inject()(httpErrorHandler: HttpErrorHandler, configuration: Configuration) extends DocumentationController(httpErrorHandler) {
+
   private val apiScopeConfigKey = "customs.definition.api-scope"
   private lazy val apiScopeKey = configuration.getString(apiScopeConfigKey).getOrElse(throw new IllegalStateException(s"$apiScopeConfigKey is not configured"))
 
