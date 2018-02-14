@@ -16,6 +16,7 @@
 
 package acceptance
 
+import com.github.tomakehurst.wiremock.client.WireMock.{status => _, _}
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -23,7 +24,6 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import util.{ExternalServicesConfig, WireMockRunner}
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, stubFor, urlMatching, equalToXml}
 
 class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner {
@@ -49,6 +49,9 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
     stopMockServer()
   }
 
+  val id = "id"
+  val payload = "<import>payload</import>"
+
   feature("CSP Submits Validate Movement Response (UKCIRM) Message") {
     info("As a CSP")
     info("I want to submit an import inventory linking UKCIRM message")
@@ -58,21 +61,38 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
       Given("a CSP is authorised to use the API endpoint")
 
       And("the Back End Service will return a successful response")
-      val id = "id"
-      val payload = "<import>payload</import>"
-
       stubFor(
         post(urlMatching(mdgImportMovementUrl)).
           withRequestBody(equalToXml(payload)).
-          willReturn(aResponse().withStatus(ACCEPTED)))
+            willReturn(aResponse().withStatus(ACCEPTED)))
 
       When("a valid UKCIRM message is submitted with valid headers")
-      val request = FakeRequest("POST", s"/$id/movement-validation").withBody(payload)
-      val result = route(app, request).get
+      val result = postValidMovementMessage(id, payload)
 
       And("an Accepted (202) response is returned")
       status(result) shouldBe ACCEPTED
     }
 
+    scenario("A valid Declaration submitted and the Back End service fails") {
+      Given("a CSP is authorised to use the API endpoint")
+
+      And("the Back End Service will return an error response")
+      stubFor(
+        post(urlMatching(mdgImportMovementUrl)).
+          willReturn(aResponse().withStatus(NOT_FOUND)))
+
+
+      When("a valid UKCIRM message request is submitted")
+      val result = postValidMovementMessage(id, payload)
+
+      Then("an 500 Internal Server Error response is returned")
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  private def postValidMovementMessage(id: String, payload: String) = {
+    val request = FakeRequest("POST", s"/$id/movement-validation").withBody(payload)
+    val result = route(app, request).get
+    result
   }
 }

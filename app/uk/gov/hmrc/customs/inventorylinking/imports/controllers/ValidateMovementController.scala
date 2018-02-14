@@ -16,15 +16,23 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
+import javax.inject.Inject
+
 import play.api.mvc.{Action, AnyContent}
-import play.api.mvc.Results.Accepted
+import play.api.mvc.Results.{Accepted, InternalServerError}
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.InventoryLinkingImportsConnector
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.control.NonFatal
 
-class ValidateMovementController {
+class ValidateMovementController @Inject()(connector: InventoryLinkingImportsConnector) {
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
-    Future(Accepted)
+    connector.sendValidateMovementMessage.map(_ => Accepted).
+      recoverWith {
+        case NonFatal(_) => Future.successful(InternalServerError)
+    }
   }
 
 }

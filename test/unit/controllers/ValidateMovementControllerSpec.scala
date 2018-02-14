@@ -16,21 +16,41 @@
 
 package unit.controllers
 
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import uk.gov.hmrc.play.test.UnitSpec
-import play.api.http.Status.ACCEPTED
+import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR}
 import play.api.test.FakeRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.InventoryLinkingImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController
+import uk.gov.hmrc.play.test.UnitSpec
+import org.mockito.Mockito.when
 
-class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite {
+import scala.concurrent.Future
+
+class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar {
+
+  private val connector = mock[InventoryLinkingImportsConnector]
 
   "POST valid declaration" when {
-    "MDG backend service returns ACCEPTED" should {
+    "MDG backend service connector returns ACCEPTED" should {
       "return 202 ACCEPTED" in {
-        val controller = new ValidateMovementController
+        val controller = new ValidateMovementController(connector)
+        when(connector.sendValidateMovementMessage).thenReturn(Future.successful())
+
         val result = await(controller.postMessage("id").apply(FakeRequest()))
 
         status(result) shouldBe ACCEPTED
+      }
+    }
+
+    "MDG backend service connector returns failure" should {
+      "return 500 Internal Server Error" in {
+        val controller = new ValidateMovementController(connector)
+        when(connector.sendValidateMovementMessage).thenReturn(Future.failed(new UnsupportedOperationException))
+
+        val result = await(controller.postMessage("id").apply(FakeRequest()))
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
   }
