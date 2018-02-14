@@ -16,16 +16,19 @@
 
 package unit.controllers
 
+import org.mockito.ArgumentMatchers.{eq => meq, _}
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.InventoryLinkingImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
-import org.mockito.Mockito.when
 
 import scala.concurrent.Future
+import scala.xml.NodeSeq
 
 class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar {
 
@@ -35,9 +38,13 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     "MDG backend service connector returns ACCEPTED" should {
       "return 202 ACCEPTED" in {
         val controller = new ValidateMovementController(connector)
-        when(connector.sendValidateMovementMessage).thenReturn(Future.successful())
+        val payload = <payload></payload>
 
-        val result = await(controller.postMessage("id").apply(FakeRequest()))
+        when(connector.sendValidateMovementMessage(meq(payload))(any[HeaderCarrier])).
+          thenReturn(Future.successful(HttpResponse(ACCEPTED)))
+
+        val request = FakeRequest().withXmlBody(payload)
+        val result = await(controller.postMessage("id").apply(request))
 
         status(result) shouldBe ACCEPTED
       }
@@ -46,7 +53,9 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     "MDG backend service connector returns failure" should {
       "return 500 Internal Server Error" in {
         val controller = new ValidateMovementController(connector)
-        when(connector.sendValidateMovementMessage).thenReturn(Future.failed(new UnsupportedOperationException))
+
+        when(connector.sendValidateMovementMessage(any[NodeSeq])(any[HeaderCarrier])).
+          thenReturn(Future.failed(new UnsupportedOperationException))
 
         val result = await(controller.postMessage("id").apply(FakeRequest()))
 

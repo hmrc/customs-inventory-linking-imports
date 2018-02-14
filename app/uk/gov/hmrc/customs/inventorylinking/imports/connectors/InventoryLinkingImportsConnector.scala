@@ -16,9 +16,24 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import scala.concurrent.Future
+import javax.inject.Inject
 
-class InventoryLinkingImportsConnector {
-  def sendValidateMovementMessage: Future[Unit] = ???
+import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
+import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.xml.NodeSeq
+
+class InventoryLinkingImportsConnector @Inject()(wsHttp: WSHttp, configProvider: ServiceConfigProvider){
+
+  def sendValidateMovementMessage(payload: NodeSeq)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    val config = configProvider.getConfig("inventory-linking-imports")
+    wsHttp.POSTString(config.url, payload.toString(), Seq()).
+      recoverWith {
+        case httpError: HttpException => Future.failed(new RuntimeException(httpError))
+      }
+  }
 
 }
