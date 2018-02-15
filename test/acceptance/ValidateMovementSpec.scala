@@ -24,6 +24,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import util.{ExternalServicesConfig, WireMockRunner}
+import scala.xml.{XML, Utility}
 
 class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner {
@@ -51,6 +52,14 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
   val id = "id"
   val payload = <import>payload</import>
+
+  private val InternalServerError =
+    """<?xml version="1.0" encoding="UTF-8"?>
+      |<errorResponse>
+      |  <code>INTERNAL_SERVER_ERROR</code>
+      |  <message>Internal server error</message>
+      |</errorResponse>
+    """.stripMargin
 
   feature("CSP Submits Validate Movement Response (UKCIRM) Message") {
     info("As a CSP")
@@ -87,7 +96,12 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
       Then("an 500 Internal Server Error response is returned")
       status(result) shouldBe INTERNAL_SERVER_ERROR
+      stringToXml(contentAsString(result)) shouldEqual stringToXml(InternalServerError)
     }
+  }
+
+  private def stringToXml(str: String) = {
+    Utility.trim(XML.loadString(str))
   }
 
   private def postValidMovementMessage() = {

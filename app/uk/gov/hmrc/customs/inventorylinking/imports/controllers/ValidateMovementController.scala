@@ -19,6 +19,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.InventoryLinkingImportsConnector
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
@@ -36,7 +37,7 @@ class ValidateMovementController @Inject()(connector: InventoryLinkingImportsCon
     ).
       map(_ => Accepted).
       recoverWith {
-        case NonFatal(_) => Future.successful(InternalServerError)
+        case NonFatal(_) => Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
       }
   }
 
