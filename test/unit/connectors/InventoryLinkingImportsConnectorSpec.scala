@@ -66,6 +66,16 @@ class InventoryLinkingImportsConnectorSpec extends UnitSpec with MockitoSugar {
       }
     }
 
+    "service returns non HTTP error" should {
+      "return failed future with exception" in new SetupConnector {
+        private val notSupported = new UnsupportedOperationException
+
+        stubHttpClientReturnsResponseForValidMessage(Future.failed(notSupported))
+
+        intercept[UnsupportedOperationException](sendValidMessageToConnector)
+      }
+    }
+
     "service returns Accepted" should {
       "return successful future" in new SetupConnector {
         private val accepted = HttpResponse(ACCEPTED)
