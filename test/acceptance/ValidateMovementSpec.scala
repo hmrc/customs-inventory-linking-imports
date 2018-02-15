@@ -20,22 +20,33 @@ import com.github.tomakehurst.wiremock.client.WireMock.{status => _, _}
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
+import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import util.{ExternalServicesConfig, WireMockRunner}
-import scala.xml.{XML, Utility}
+
+import scala.xml.{Utility, XML}
 
 class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner {
 
   val mdgImportMovementUrl = "/InventoryLinking/ImportMovement"
 
+  val validMessageMatcher = post(urlMatching(mdgImportMovementUrl)).
+    withRequestBody(equalToXml(payload.toString())).
+    withHeader(ACCEPT, equalTo(MimeTypes.XML)).
+    withHeader(CONTENT_TYPE, equalTo(MimeTypes.XML)).
+    withHeader(DATE, notMatching("")).
+    withHeader("X-Correlation-ID", notMatching("")).
+    withHeader(X_FORWARDED_HOST, equalTo("MDTP")).
+    withHeader(AUTHORIZATION, equalTo(s"Bearer ${ExternalServicesConfig.AuthToken}"))
+
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
-    "microservice.services.inventory-linking-imports.host" -> ExternalServicesConfig.Host,
-    "microservice.services.inventory-linking-imports.port" -> ExternalServicesConfig.Port,
-    "microservice.services.inventory-linking-imports.context" -> mdgImportMovementUrl,
-    "microservice.services.inventory-linking-imports.bearer-token" -> ExternalServicesConfig.AuthToken
+    "microservice.services.mdg-imports.host" -> ExternalServicesConfig.Host,
+    "microservice.services.mdg-imports.port" -> ExternalServicesConfig.Port,
+    "microservice.services.mdg-imports.context" -> mdgImportMovementUrl,
+    "microservice.services.mdg-imports.bearer-token" -> ExternalServicesConfig.AuthToken
   )).build()
 
   override protected def beforeAll() {
@@ -70,10 +81,8 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
       Given("a CSP is authorised to use the API endpoint")
 
       And("the Back End Service will return a successful response")
-      stubFor(
-        post(urlMatching(mdgImportMovementUrl)).
-          withRequestBody(equalToXml(payload.toString())).
-            willReturn(aResponse().withStatus(ACCEPTED)))
+
+      stubFor(validMessageMatcher willReturn aResponse().withStatus(ACCEPTED))
 
       When("a valid UKCIRM message is submitted with valid headers")
       val result = postValidMovementMessage()
@@ -105,7 +114,10 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
   }
 
   private def postValidMovementMessage() = {
-    val request = FakeRequest("POST", s"/$id/movement-validation").withXmlBody(payload)
+    val request = FakeRequest("POST", s"/$id/movement-validation")
+      .withXmlBody(payload)
+      .withHeaders(TestData.Headers.validHeaders: _*)
+
     route(app, request).get
   }
 }

@@ -18,9 +18,10 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.Inject
 
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Request}
+import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.InventoryLinkingImportsConnector
+import uk.gov.hmrc.customs.inventorylinking.imports.mdg.{Connector, MdgRequestBuilder}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -28,17 +29,25 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.xml.NodeSeq
 
-class ValidateMovementController @Inject()(connector: InventoryLinkingImportsConnector) extends BaseController {
+class ValidateMovementController @Inject()(connector: Connector,
+                                           configProvider: ServiceConfigProvider,
+                                           requestBuilder: MdgRequestBuilder)
+  extends BaseController {
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
+    def buildMdgRequest(request: Request[AnyContent], config: ServiceConfig) = {
+      requestBuilder.buildRequest(config, request.body.asXml.getOrElse(NodeSeq.Empty))
+    }
 
-    connector.sendValidateMovementMessage(
-      request.body.asXml.getOrElse(NodeSeq.Empty)
-    ).
+    val config = configProvider.getConfig("mdg-imports")
+
+    (for {
+      mdgRequest <- buildMdgRequest(request, config)
+      result <- connector.postRequestToMdg(mdgRequest)
+    } yield result).
       map(_ => Accepted).
       recoverWith {
         case NonFatal(_) => Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
       }
   }
-
 }
