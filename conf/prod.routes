@@ -1,4 +1,5 @@
 ->         /                        health.Routes
 ->         /                        dynamicDefinition.Routes
 
+POST       /:id/movement-validation @uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController.postMessage(id)
 GET        /admin/metrics           @com.kenshoo.play.metrics.MetricsController.metrics
