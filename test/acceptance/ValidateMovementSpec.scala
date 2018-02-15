@@ -50,7 +50,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
   }
 
   val id = "id"
-  val payload = "<import>payload</import>"
+  val payload = <import>payload</import>
 
   feature("CSP Submits Validate Movement Response (UKCIRM) Message") {
     info("As a CSP")
@@ -63,11 +63,11 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
       And("the Back End Service will return a successful response")
       stubFor(
         post(urlMatching(mdgImportMovementUrl)).
-          withRequestBody(equalToXml(payload)).
+          withRequestBody(equalToXml(payload.toString())).
             willReturn(aResponse().withStatus(ACCEPTED)))
 
       When("a valid UKCIRM message is submitted with valid headers")
-      val result = postValidMovementMessage(id, payload)
+      val result = postValidMovementMessage()
 
       And("an Accepted (202) response is returned")
       status(result) shouldBe ACCEPTED
@@ -83,16 +83,15 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
 
       When("a valid UKCIRM message request is submitted")
-      val result = postValidMovementMessage(id, payload)
+      val result = postValidMovementMessage()
 
       Then("an 500 Internal Server Error response is returned")
       status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
 
-  private def postValidMovementMessage(id: String, payload: String) = {
-    val request = FakeRequest("POST", s"/$id/movement-validation").withBody(payload)
-    val result = route(app, request).get
-    result
+  private def postValidMovementMessage() = {
+    val request = FakeRequest("POST", s"/$id/movement-validation").withXmlBody(payload)
+    route(app, request).get
   }
 }
