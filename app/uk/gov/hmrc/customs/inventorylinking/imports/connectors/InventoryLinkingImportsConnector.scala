@@ -35,5 +35,4 @@ class InventoryLinkingImportsConnector @Inject()(wsHttp: WSHttp, configProvider:
         case httpError: HttpException => Future.failed(new RuntimeException(httpError))
       }
   }
-
 }
