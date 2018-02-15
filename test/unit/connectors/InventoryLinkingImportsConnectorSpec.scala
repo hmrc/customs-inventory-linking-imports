@@ -23,52 +23,59 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundExcepti
 import uk.gov.hmrc.play.test.UnitSpec
 import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers.{eq => meq, _}
+import org.mockito.stubbing.OngoingStubbing
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
+
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.http.Status.ACCEPTED
+
+import scala.xml.Elem
 
 class InventoryLinkingImportsConnectorSpec extends UnitSpec with MockitoSugar {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val validMessage = <importMovement></importMovement>
-  private val serviceConfig = ServiceConfig("the-url", Some("bearerToken"), "default")
+  trait SetupConnector {
+    val validMessage: Elem = <importMovement></importMovement>
+    val serviceConfig = ServiceConfig("the-url", Some("bearerToken"), "default")
+    val config: ServiceConfigProvider = mock[ServiceConfigProvider]
+    val wsHttp: WSHttp = mock[WSHttp]
+    val connector = new InventoryLinkingImportsConnector(wsHttp, config)
+
+    when(config.getConfig("inventory-linking-imports")).thenReturn(serviceConfig)
+
+    def stubHttpClientReturnsResponseForValidMessage(response: Future[HttpResponse]): OngoingStubbing[Future[HttpResponse]] = {
+      when(wsHttp.POSTString(meq(serviceConfig.url), meq(validMessage.toString()), any[Seq[(String, String)]])
+      (any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])).
+        thenReturn(response)
+    }
+
+    def sendValidMessageToConnector: HttpResponse = {
+      await(connector.sendValidateMovementMessage(validMessage))
+    }
+  }
 
   "sendInventoryLinkingMessage" when {
     "service returns an HTTP error" should {
-      "return failed future with exception wrapped" in {
-        val httpException = new NotFoundException("not found")
-        val wsHttp = mock[WSHttp]
-        val config = mock[ServiceConfigProvider]
+      "return failed future with exception wrapped" in new SetupConnector {
+        private val notFound = new NotFoundException("not found")
 
-        when(config.getConfig("inventory-linking-imports")).thenReturn(serviceConfig)
+        stubHttpClientReturnsResponseForValidMessage(
+          Future.failed(notFound))
 
-        when(wsHttp.POSTString(meq(serviceConfig.url), anyString, any[Seq[(String, String)]])
-        (any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])).
-          thenReturn(Future.failed(httpException))
-
-        val connector = new InventoryLinkingImportsConnector(wsHttp, config)
-
-        intercept[RuntimeException](await(connector.sendValidateMovementMessage(validMessage))).getCause shouldBe httpException
+        intercept[RuntimeException](sendValidMessageToConnector).getCause shouldBe notFound
       }
     }
 
     "service returns Accepted" should {
-      "return successful future" in {
-        val wsHttp = mock[WSHttp]
-        val config = mock[ServiceConfigProvider]
+      "return successful future" in new SetupConnector {
+        private val accepted = HttpResponse(ACCEPTED)
 
-        when(config.getConfig("inventory-linking-imports")).thenReturn(serviceConfig)
+        stubHttpClientReturnsResponseForValidMessage(
+          Future.successful(accepted))
 
-        val acceptedResponse = HttpResponse(ACCEPTED)
-        when(wsHttp.POSTString(meq(serviceConfig.url), meq(validMessage.toString()), any[Seq[(String, String)]])
-        (any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])).
-          thenReturn(Future.successful(acceptedResponse))
+        private val result = sendValidMessageToConnector
 
-        val connector = new InventoryLinkingImportsConnector(wsHttp, config)
-
-        val result = await(connector.sendValidateMovementMessage(validMessage))
-
-        result shouldBe acceptedResponse
+        result shouldBe accepted
       }
     }
   }
