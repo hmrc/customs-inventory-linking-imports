@@ -52,14 +52,15 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |  "api": {
           |    "name": "Customs Inventory Linking Imports",
           |    "description": "Single WCO-compliant Customs Inventory Linking Import Declaration API",
-          |    "context": "customs/inventory-linking/imports",
+          |    "context": "/customs/consignments",
           |    "versions": [
           |      {
           |        "version": "1.0",
-          |        "status": "STABLE",
+          |        "status": "BETA",
           |        "endpointsEnabled": true,
           |        "access": {
-          |          "type": "PUBLIC"
+          |          "type": "PUBLIC",
+          |          "whitelistedApplicationIds": []
           |        }
           |      }
           |    ]

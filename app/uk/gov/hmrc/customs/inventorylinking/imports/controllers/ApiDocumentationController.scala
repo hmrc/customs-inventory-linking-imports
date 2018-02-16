@@ -28,8 +28,9 @@ class ApiDocumentationController @Inject()(httpErrorHandler: HttpErrorHandler, c
 
   private val apiScopeConfigKey = "customs.definition.api-scope"
   private lazy val apiScopeKey = configuration.getString(apiScopeConfigKey).getOrElse(throw new IllegalStateException(s"$apiScopeConfigKey is not configured"))
+  private lazy val whitelistedApplicationIds = configuration.getStringSeq("api.access.version-2.0.whitelistedApplicationIds").getOrElse(Seq.empty)
 
   def definition(): Action[AnyContent] = Action {
-    Ok(txt.definition(apiScopeKey)).withHeaders(CONTENT_TYPE -> JSON)
+    Ok(txt.definition(apiScopeKey, whitelistedApplicationIds)).withHeaders(CONTENT_TYPE -> JSON)
   }
 }
