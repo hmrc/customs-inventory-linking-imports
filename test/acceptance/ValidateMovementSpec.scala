@@ -31,9 +31,19 @@ import scala.xml.{Utility, XML}
 class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner {
 
-  val mdgImportMovementUrl = "/InventoryLinking/ImportMovement"
+  private val mdgImportMovementUrl = "/InventoryLinking/ImportMovement"
+  private val id = "id"
+  private val payload = <import>payload</import>
 
-  val validMessageMatcher = post(urlMatching(mdgImportMovementUrl)).
+  private val internalServerError =
+    """<?xml version="1.0" encoding="UTF-8"?>
+      |<errorResponse>
+      |  <code>INTERNAL_SERVER_ERROR</code>
+      |  <message>Internal server error</message>
+      |</errorResponse>
+    """.stripMargin
+
+  private val validMessageMatcher = post(urlMatching(mdgImportMovementUrl)).
     withRequestBody(equalToXml(payload.toString())).
     withHeader(ACCEPT, equalTo(MimeTypes.XML)).
     withHeader(CONTENT_TYPE, equalTo(MimeTypes.XML)).
@@ -60,17 +70,6 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
   override protected def afterAll() {
     stopMockServer()
   }
-
-  val id = "id"
-  val payload = <import>payload</import>
-
-  private val InternalServerError =
-    """<?xml version="1.0" encoding="UTF-8"?>
-      |<errorResponse>
-      |  <code>INTERNAL_SERVER_ERROR</code>
-      |  <message>Internal server error</message>
-      |</errorResponse>
-    """.stripMargin
 
   feature("CSP Submits Validate Movement Response (UKCIRM) Message") {
     info("As a CSP")
@@ -105,7 +104,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
       Then("an 500 Internal Server Error response is returned")
       status(result) shouldBe INTERNAL_SERVER_ERROR
-      stringToXml(contentAsString(result)) shouldEqual stringToXml(InternalServerError)
+      stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
     }
   }
 

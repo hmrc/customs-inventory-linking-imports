@@ -16,21 +16,17 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.mdg
 
-import java.util.UUID
-
 import org.joda.time.format.ISODateTimeFormat
-import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.{ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE}
 import play.api.http.MimeTypes._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
+import uk.gov.hmrc.customs.inventorylinking.imports.request.RequestInfo
 
 import scala.xml.NodeSeq
 
 case class MdgRequest(service: ServiceConfig,
                       body: NodeSeq,
-                      conversationId: UUID = UUID.randomUUID(),
-                      correlationId: UUID = UUID.randomUUID(),
-                      dateTime: DateTime = DateTime.now(DateTimeZone.UTC)) {
+                      requestInfo: RequestInfo) {
 
   lazy val bearerToken: String = service.bearerToken.getOrElse("")
   lazy val url: String = service.url
@@ -39,10 +35,10 @@ case class MdgRequest(service: ServiceConfig,
       ACCEPT -> XML,
       CONTENT_TYPE -> XML,
       AUTHORIZATION -> s"Bearer $bearerToken",
-      DATE -> dateTime.toString(ISODateTimeFormat.dateTimeNoMillis()),
+      DATE -> requestInfo.dateTime.toString(ISODateTimeFormat.dateTimeNoMillis()),
       "X-Forwarded-Host" -> "MDTP",
-      "X-Conversation-Id" -> conversationId.toString,
-      "X-Correlation-Id" -> correlationId.toString
+      "X-Conversation-Id" -> requestInfo.conversationId.toString,
+      "X-Correlation-Id" -> requestInfo.correlationId.toString
     )
 }
 

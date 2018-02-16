@@ -20,15 +20,16 @@ import java.util.UUID
 
 import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.mdg.{MdgRequest, MdgRequestBuilder}
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.customs.inventorylinking.imports.mdg.MdgRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.request.RequestInfo
 
 import scala.xml.Elem
 
-class MdgRequestSpec extends UnitSpec with MockitoSugar {
+class MdgRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
 
   trait validRequest {
     private val dateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
@@ -42,7 +43,7 @@ class MdgRequestSpec extends UnitSpec with MockitoSugar {
     private val config = ServiceConfig("url", Some(bearerToken), "env")
     private val body: Elem = <mdgRequest></mdgRequest>
 
-    val request = MdgRequest(config, body, UUID.fromString(conversationId), UUID.fromString(correlationId), dateTime)
+    val request = MdgRequest(config, body, RequestInfo(UUID.fromString(conversationId), UUID.fromString(correlationId), dateTime))
   }
 
   "headers" should {

@@ -16,14 +16,18 @@
 
 package unit.mdg
 
+import java.util.UUID
+
+import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status.ACCEPTED
-import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
+import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
-import uk.gov.hmrc.customs.inventorylinking.imports.mdg.{Connector, MdgRequestBuilder, MdgRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.mdg.{Connector, MdgRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.request.RequestInfo
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -37,9 +41,9 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
     private val wsHttp: WSHttp = mock[WSHttp]
     private val connector = new Connector(wsHttp)
 
-    val validMessage: Elem = <message></message>
+    private val validMessage: Elem = <message></message>
 
-    private val request = MdgRequest(serviceConfig, validMessage)
+    private val request = MdgRequest(serviceConfig, validMessage, RequestInfo(UUID.randomUUID(), UUID.randomUUID(), DateTime.now))
 
     def stubHttpClientReturnsResponseForValidMessage(response: Future[HttpResponse]): OngoingStubbing[Future[HttpResponse]] = {
       when(wsHttp.POSTString(meq(serviceConfig.url), meq(validMessage.toString()), any[Seq[(String, String)]])

@@ -16,6 +16,9 @@
 
 package unit.controllers
 
+import java.util.UUID
+
+import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentMatchers.{eq => meq}
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -24,8 +27,10 @@ import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
+import uk.gov.hmrc.customs.inventorylinking.imports.RequestInfoGenerator
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController
-import uk.gov.hmrc.customs.inventorylinking.imports.mdg.{Connector, MdgRequest, MdgRequestBuilder}
+import uk.gov.hmrc.customs.inventorylinking.imports.mdg.{Connector, MdgRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.request.{RequestInfo, RequestInfoGenerator}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -38,18 +43,23 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     private val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
     private val body: Elem = <payload>payload</payload>
     private val serviceConfig: ServiceConfig = ServiceConfig("/url/", Some("Bearer"), "environment")
-    private val requestBuilder: MdgRequestBuilder = mock[MdgRequestBuilder]
+    private val requestInfoProvider: RequestInfoGenerator = mock[RequestInfoGenerator]
+    private val conversationId = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
+    private val correlationId = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
+    private val requestDateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
+    private val requestInfo = RequestInfo(conversationId, correlationId, requestDateTime)
+    private val connector: Connector = mock[Connector]
 
-    val connector: Connector = mock[Connector]
-    val mdgRequest = MdgRequest(serviceConfig, body)
     val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body)
-    val controller = new ValidateMovementController(connector, serviceConfigProvider, requestBuilder)
+    val controller: ValidateMovementController = new ValidateMovementController(connector, serviceConfigProvider, requestInfoProvider)
 
     when(serviceConfigProvider.getConfig("mdg-imports")).thenReturn(serviceConfig)
 
-    when(requestBuilder.buildRequest(serviceConfig, body)).thenReturn(mdgRequest)
+    when(requestInfoProvider.newRequestInfo).thenReturn(requestInfo)
 
     def stubConnectorReturnsResponseForPostedMdgRequest(response: Future[HttpResponse]): Unit ={
+      val mdgRequest: MdgRequest = MdgRequest(serviceConfig, body, requestInfo)
+
       when(connector.postRequestToMdg(mdgRequest)).
         thenReturn(Future.successful(response))
     }

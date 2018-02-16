@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.mdg
-import uk.gov.hmrc.customs.api.common.config.ServiceConfig
+package uk.gov.hmrc.customs.inventorylinking.imports.request
 
-import scala.concurrent.Future
-import scala.xml.NodeSeq
-import scala.concurrent.ExecutionContext.Implicits.global
+import java.util.UUID
 
-class MdgRequestBuilder {
-  def buildRequest(config: ServiceConfig, body: NodeSeq): Future[MdgRequest] = {
-    Future(MdgRequest(config, body))
-  }
-}
+import org.joda.time.DateTime
+
+case class RequestInfo(conversationId: UUID, correlationId: UUID, dateTime: DateTime)
