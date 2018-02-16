@@ -29,6 +29,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
 import uk.gov.hmrc.customs.inventorylinking.imports.request.{Connector, OutgoingRequest, RequestInfo}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
+import util.TestData
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Elem
@@ -69,12 +70,10 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
 
     "service returns non HTTP error" should {
       "return failed future with exception" in new SetupConnector {
-        private val notSupported = new UnsupportedOperationException
-
         stubHttpClientReturnsResponseForValidMessage(
-          Future.failed(notSupported))
+          Future.failed(TestData.emulatedServiceFailure))
 
-        intercept[UnsupportedOperationException](sendValidMessageToConnector)
+        intercept[TestData.EmulatedServiceFailure](sendValidMessageToConnector)
       }
     }
 

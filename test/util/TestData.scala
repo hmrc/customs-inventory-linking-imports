@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package acceptance
+package util
 
 import play.api.http.MimeTypes
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE}
@@ -28,4 +28,7 @@ object TestData {
 
     val validHeaders: Seq[(String, String)] = Seq(accept, contentType, xClientId, xBadgeIdentifier)
   }
+
+  type EmulatedServiceFailure = UnsupportedOperationException
+  val emulatedServiceFailure = new EmulatedServiceFailure("Emulated service failure.")
 }

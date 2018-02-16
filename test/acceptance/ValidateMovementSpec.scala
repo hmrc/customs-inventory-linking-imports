@@ -24,7 +24,7 @@ import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import util.{ExternalServicesConfig, WireMockRunner}
+import util.{ExternalServicesConfig, TestData, WireMockRunner}
 
 import scala.xml.{Utility, XML}
 

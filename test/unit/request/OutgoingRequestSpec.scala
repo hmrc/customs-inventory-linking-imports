@@ -34,15 +34,15 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     private val dateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
 
     val dateTimeHttp: String = "2017-06-08T13:55:00Z"
-    val conversationId: String = "2139b8d1-1875-4f84-8af1-f3ce01965c6f"
-    val correlationId: String = "5664704d-af3e-43bc-8c6c-f24ce6970e84"
+    val conversationId: UUID = UUID.fromString("2139b8d1-1875-4f84-8af1-f3ce01965c6f")
+    val correlationId: UUID = UUID.fromString("5664704d-af3e-43bc-8c6c-f24ce6970e84")
     val bearerToken: String = "token"
     val MDTP: String = "MDTP"
 
     private val config = ServiceConfig("url", Some(bearerToken), "env")
     private val body: Elem = <request></request>
 
-    val request = OutgoingRequest(config, body, RequestInfo(UUID.fromString(conversationId), UUID.fromString(correlationId), dateTime))
+    val request = OutgoingRequest(config, body, RequestInfo(conversationId, correlationId, dateTime))
   }
 
   "headers" should {
@@ -63,11 +63,11 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     "include X-Conversation-Id" in new validRequest {
-      request.headers should contain ("X-Conversation-Id" -> conversationId)
+      request.headers should contain ("X-Conversation-Id" -> conversationId.toString)
     }
 
     "include X-Correlation-Id" in new validRequest {
-      request.headers should contain ("X-Correlation-Id" -> correlationId)
+      request.headers should contain ("X-Correlation-Id" -> correlationId.toString)
     }
 
     "include Authorization" in new validRequest {

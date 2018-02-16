@@ -31,6 +31,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.request.{Connector, OutgoingRequest, RequestInfo, RequestInfoGenerator}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.test.UnitSpec
+import util.TestData
 
 import scala.concurrent.Future
 import scala.xml.Elem
@@ -76,8 +77,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
 
     "MDG backend service connector returns failure" should {
       "return 500 Internal Server Error" in  new Setup {
-        val emulatedServiceFailure = new UnsupportedOperationException("Emulated service failure.")
-        stubConnectorReturnsResponseForPostedMdgRequest(Future.failed(emulatedServiceFailure))
+        stubConnectorReturnsResponseForPostedMdgRequest(Future.failed(TestData.emulatedServiceFailure))
 
         val result = await(controller.postMessage("id").apply(request))
 
