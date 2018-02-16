@@ -16,6 +16,8 @@
 
 package unit.controllers
 
+import java.io.FileNotFoundException
+
 import akka.stream.Materializer
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
@@ -31,6 +33,11 @@ import uk.gov.hmrc.play.test.UnitSpec
 class ApiDocumentationControllerSpec extends UnitSpec with GuiceOneAppPerSuite {
   implicit val materializer: Materializer = app.materializer
 
+  private lazy val applicationRamlContent = getResourceFileContent("/public/api/conf/1.0/application.raml")
+  private val apiScope = "scope"
+  private lazy val config = Configuration("customs.definition.api-scope" -> apiScope)
+  private lazy val controller = new ApiDocumentationController(DefaultHttpErrorHandler, config)
+
   "with empty configuration DocumentationController.defintion" should {
     "throw IllegalStateException" in {
       val controller = new ApiDocumentationController(DefaultHttpErrorHandler, Configuration())
@@ -39,10 +46,7 @@ class ApiDocumentationControllerSpec extends UnitSpec with GuiceOneAppPerSuite {
     }
   }
 
-  "With valid configuration DocumentationController.definition" should {
-    val apiScope = "scope"
-    val config = Configuration("customs.definition.api-scope" -> apiScope)
-    val controller = new ApiDocumentationController(DefaultHttpErrorHandler, config)
+  "With valid configuration ApiDocumentationController.definition" should {
     val result = getDefinition(controller)
 
     "return OK status" in {
@@ -54,11 +58,35 @@ class ApiDocumentationControllerSpec extends UnitSpec with GuiceOneAppPerSuite {
     }
 
     "return definition in the body" in {
-      jsonBodyOf(result) shouldBe Json.parse(txt.definition("scope").toString())
+      jsonBodyOf(result) shouldBe Json.parse(txt.definition("scope", Seq.empty).toString())
+    }
+  }
+
+  "With valid configuration ApiDocumentationController.conf" should {
+    lazy val result = getDocumentation(controller)
+
+    "return OK status" in {
+      status(result) shouldBe OK
+    }
+
+    "return application.raml in the body" in {
+      bodyOf(result) shouldBe applicationRamlContent
     }
   }
 
   private def getDefinition(controller: ApiDocumentationController) = {
     await(controller.definition().apply(FakeRequest()))
   }
+
+  private def getDocumentation(controller: ApiDocumentationController) = {
+    await(controller.conf("1.0","application.raml").apply(FakeRequest("GET", "/api/conf/1.0/application.raml")))
+  }
+
+  private def getResourceFileContent(resourceFile: String): String = {
+    val is = Option(getClass.getResourceAsStream(resourceFile)).getOrElse(
+      throw new FileNotFoundException(s"Resource file not found: $resourceFile"))
+    scala.io.Source.fromInputStream(is).mkString
+  }
+
+
 }

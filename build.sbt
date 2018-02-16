@@ -2,6 +2,7 @@ import AppDependencies._
 import org.scalastyle.sbt.ScalastylePlugin._
 import sbt.Tests.{Group, SubProcess}
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, targetJvm}
+import scala.language.postfixOps
 
 name := "customs-inventory-linking-imports"
 
