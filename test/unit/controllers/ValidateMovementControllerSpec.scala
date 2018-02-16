@@ -27,10 +27,8 @@ import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
-import uk.gov.hmrc.customs.inventorylinking.imports.RequestInfoGenerator
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController
-import uk.gov.hmrc.customs.inventorylinking.imports.mdg.{Connector, MdgRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{RequestInfo, RequestInfoGenerator}
+import uk.gov.hmrc.customs.inventorylinking.imports.request.{Connector, OutgoingRequest, RequestInfo, RequestInfoGenerator}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.test.UnitSpec
 
@@ -53,14 +51,14 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body)
     val controller: ValidateMovementController = new ValidateMovementController(connector, serviceConfigProvider, requestInfoProvider)
 
-    when(serviceConfigProvider.getConfig("mdg-imports")).thenReturn(serviceConfig)
+    when(serviceConfigProvider.getConfig("imports")).thenReturn(serviceConfig)
 
     when(requestInfoProvider.newRequestInfo).thenReturn(requestInfo)
 
     def stubConnectorReturnsResponseForPostedMdgRequest(response: Future[HttpResponse]): Unit ={
-      val mdgRequest: MdgRequest = MdgRequest(serviceConfig, body, requestInfo)
+      val outgoingRequest: OutgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
 
-      when(connector.postRequestToMdg(mdgRequest)).
+      when(connector.postRequestToMdg(outgoingRequest)).
         thenReturn(Future.successful(response))
     }
   }

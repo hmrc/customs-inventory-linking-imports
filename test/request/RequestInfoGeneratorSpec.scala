@@ -31,7 +31,7 @@ class RequestInfoGeneratorSpec extends WordSpecLike with Matchers {
   trait NewRequestInfo extends AsyncTestSuite {
     private val bearerToken: String = "token"
     val config = ServiceConfig("url", Some(bearerToken), "env")
-    val body: Elem = <mdgRequest></mdgRequest>
+    val body: Elem = <request></request>
     val defaultUuid: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
 
     private val requestInfoGenerator = new RequestInfoGenerator

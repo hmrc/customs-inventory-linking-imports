@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.mdg
+package unit.request
 
 import java.util.UUID
 
@@ -24,12 +24,11 @@ import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.mdg.MdgRequest
-import uk.gov.hmrc.customs.inventorylinking.imports.request.RequestInfo
+import uk.gov.hmrc.customs.inventorylinking.imports.request.{OutgoingRequest, RequestInfo}
 
 import scala.xml.Elem
 
-class MdgRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
+class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
 
   trait validRequest {
     private val dateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
@@ -41,9 +40,9 @@ class MdgRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     val MDTP: String = "MDTP"
 
     private val config = ServiceConfig("url", Some(bearerToken), "env")
-    private val body: Elem = <mdgRequest></mdgRequest>
+    private val body: Elem = <request></request>
 
-    val request = MdgRequest(config, body, RequestInfo(UUID.fromString(conversationId), UUID.fromString(correlationId), dateTime))
+    val request = OutgoingRequest(config, body, RequestInfo(UUID.fromString(conversationId), UUID.fromString(correlationId), dateTime))
   }
 
   "headers" should {

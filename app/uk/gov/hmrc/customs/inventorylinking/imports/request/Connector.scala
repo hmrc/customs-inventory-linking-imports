@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.mdg
+package uk.gov.hmrc.customs.inventorylinking.imports.request
 
 import javax.inject.Inject
 
-import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 
@@ -29,7 +28,7 @@ class Connector @Inject()(wsHttp: WSHttp) {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def postRequestToMdg(request: MdgRequest): Future[HttpResponse] = {
+  def postRequestToMdg(request: OutgoingRequest): Future[HttpResponse] = {
 
     wsHttp.POSTString(request.url, request.body.toString, request.headers).
       recoverWith {

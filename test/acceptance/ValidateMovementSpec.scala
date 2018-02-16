@@ -31,7 +31,7 @@ import scala.xml.{Utility, XML}
 class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner {
 
-  private val mdgImportMovementUrl = "/InventoryLinking/ImportMovement"
+  private val importMovementUrl = "/InventoryLinking/ImportMovement"
   private val id = "id"
   private val payload = <import>payload</import>
 
@@ -43,7 +43,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
       |</errorResponse>
     """.stripMargin
 
-  private val validMessageMatcher = post(urlMatching(mdgImportMovementUrl)).
+  private val validMessageMatcher = post(urlMatching(importMovementUrl)).
     withRequestBody(equalToXml(payload.toString())).
     withHeader(ACCEPT, equalTo(MimeTypes.XML)).
     withHeader(CONTENT_TYPE, equalTo(MimeTypes.XML)).
@@ -53,10 +53,10 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
     withHeader(AUTHORIZATION, equalTo(s"Bearer ${ExternalServicesConfig.AuthToken}"))
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
-    "microservice.services.mdg-imports.host" -> ExternalServicesConfig.Host,
-    "microservice.services.mdg-imports.port" -> ExternalServicesConfig.Port,
-    "microservice.services.mdg-imports.context" -> mdgImportMovementUrl,
-    "microservice.services.mdg-imports.bearer-token" -> ExternalServicesConfig.AuthToken
+    "microservice.services.imports.host" -> ExternalServicesConfig.Host,
+    "microservice.services.imports.port" -> ExternalServicesConfig.Port,
+    "microservice.services.imports.context" -> importMovementUrl,
+    "microservice.services.imports.bearer-token" -> ExternalServicesConfig.AuthToken
   )).build()
 
   override protected def beforeAll() {
@@ -95,7 +95,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
       And("the Back End Service will return an error response")
       stubFor(
-        post(urlMatching(mdgImportMovementUrl)).
+        post(urlMatching(importMovementUrl)).
           willReturn(aResponse().withStatus(NOT_FOUND)))
 
 

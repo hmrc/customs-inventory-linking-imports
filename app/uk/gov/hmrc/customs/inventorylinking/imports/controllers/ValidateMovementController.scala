@@ -21,9 +21,7 @@ import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, Request}
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.inventorylinking.imports.RequestInfoGenerator
-import uk.gov.hmrc.customs.inventorylinking.imports.mdg.{Connector, MdgRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{RequestInfo, RequestInfoGenerator}
+import uk.gov.hmrc.customs.inventorylinking.imports.request._
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,18 +37,18 @@ class ValidateMovementController @Inject()(connector: Connector,
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
     def buildMdgRequest(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
       Future.successful(
-        MdgRequest(
+        OutgoingRequest(
           config,
           request.body.asXml.getOrElse(NodeSeq.Empty),
           requestInfo))
     }
 
-    val config = configProvider.getConfig("mdg-imports")
+    val config = configProvider.getConfig("imports")
 
     (for {
       requestInfo <- requestInfoGenerator.newRequestInfo
-      mdgRequest <- buildMdgRequest(request, config, requestInfo)
-      result <- connector.postRequestToMdg(mdgRequest)
+      outgoingRequest <- buildMdgRequest(request, config, requestInfo)
+      result <- connector.postRequestToMdg(outgoingRequest)
     } yield result).
       map(_ => Accepted).
       recoverWith {

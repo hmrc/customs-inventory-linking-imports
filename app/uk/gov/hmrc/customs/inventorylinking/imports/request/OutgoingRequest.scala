@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.mdg
+package uk.gov.hmrc.customs.inventorylinking.imports.request
 
 import org.joda.time.format.ISODateTimeFormat
 import play.api.http.HeaderNames.{ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE}
 import play.api.http.MimeTypes._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.request.RequestInfo
 
 import scala.xml.NodeSeq
 
-case class MdgRequest(service: ServiceConfig,
-                      body: NodeSeq,
-                      requestInfo: RequestInfo) {
+case class OutgoingRequest(service: ServiceConfig,
+                           body: NodeSeq,
+                           requestInfo: RequestInfo) {
 
   lazy val bearerToken: String = service.bearerToken.getOrElse("")
   lazy val url: String = service.url
