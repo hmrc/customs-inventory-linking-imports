@@ -85,8 +85,8 @@ lazy val commonSettings: Seq[Setting[_]] = scalaSettings ++
   gitStampSettings
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
-  coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(AuthService|BuildInfo|Routes).*",
-  coverageMinimum := 95,
+  coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(AuthService|BuildInfo|Routes).*;uk.gov.hmrc.customs.inventorylinking.imports.views.*",
+  coverageMinimum := 98,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,
   parallelExecution in Test := false

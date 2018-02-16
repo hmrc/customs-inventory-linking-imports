@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.connectors
+package uk.gov.hmrc.customs.inventorylinking.imports.request
 
 import javax.inject.Inject
 
-import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.xml.NodeSeq
 
-class InventoryLinkingImportsConnector @Inject()(wsHttp: WSHttp, configProvider: ServiceConfigProvider){
+class Connector @Inject()(wsHttp: WSHttp) {
 
-  def sendValidateMovementMessage(payload: NodeSeq)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val config = configProvider.getConfig("inventory-linking-imports")
-    wsHttp.POSTString(config.url, payload.toString(), Seq()).
+  private implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  def postRequestToMdg(request: OutgoingRequest): Future[HttpResponse] = {
+
+    wsHttp.POSTString(request.url, request.body.toString, request.headers).
       recoverWith {
         case httpError: HttpException => Future.failed(new RuntimeException(httpError))
       }

@@ -20,21 +20,43 @@ import com.github.tomakehurst.wiremock.client.WireMock.{status => _, _}
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
+import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import util.{ExternalServicesConfig, WireMockRunner}
+import util.{ExternalServicesConfig, TestData, WireMockRunner}
+
+import scala.xml.{Utility, XML}
 
 class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner {
 
-  val mdgImportMovementUrl = "/InventoryLinking/ImportMovement"
+  private val importMovementUrl = "/InventoryLinking/ImportMovement"
+  private val id = "id"
+  private val payload = <import>payload</import>
+
+  private val internalServerError =
+    """<?xml version="1.0" encoding="UTF-8"?>
+      |<errorResponse>
+      |  <code>INTERNAL_SERVER_ERROR</code>
+      |  <message>Internal server error</message>
+      |</errorResponse>
+    """.stripMargin
+
+  private val validMessageMatcher = post(urlMatching(importMovementUrl)).
+    withRequestBody(equalToXml(payload.toString())).
+    withHeader(ACCEPT, equalTo(MimeTypes.XML)).
+    withHeader(CONTENT_TYPE, equalTo(MimeTypes.XML)).
+    withHeader(DATE, notMatching("")).
+    withHeader("X-Correlation-ID", notMatching("")).
+    withHeader(X_FORWARDED_HOST, equalTo("MDTP")).
+    withHeader(AUTHORIZATION, equalTo(s"Bearer ${ExternalServicesConfig.AuthToken}"))
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
-    "microservice.services.inventory-linking-imports.host" -> ExternalServicesConfig.Host,
-    "microservice.services.inventory-linking-imports.port" -> ExternalServicesConfig.Port,
-    "microservice.services.inventory-linking-imports.context" -> mdgImportMovementUrl,
-    "microservice.services.inventory-linking-imports.bearer-token" -> ExternalServicesConfig.AuthToken
+    "microservice.services.imports.host" -> ExternalServicesConfig.Host,
+    "microservice.services.imports.port" -> ExternalServicesConfig.Port,
+    "microservice.services.imports.context" -> importMovementUrl,
+    "microservice.services.imports.bearer-token" -> ExternalServicesConfig.AuthToken
   )).build()
 
   override protected def beforeAll() {
@@ -49,9 +71,6 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
     stopMockServer()
   }
 
-  val id = "id"
-  val payload = <import>payload</import>
-
   feature("CSP Submits Validate Movement Response (UKCIRM) Message") {
     info("As a CSP")
     info("I want to submit an import inventory linking UKCIRM message")
@@ -61,10 +80,8 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
       Given("a CSP is authorised to use the API endpoint")
 
       And("the Back End Service will return a successful response")
-      stubFor(
-        post(urlMatching(mdgImportMovementUrl)).
-          withRequestBody(equalToXml(payload.toString())).
-            willReturn(aResponse().withStatus(ACCEPTED)))
+
+      stubFor(validMessageMatcher willReturn aResponse().withStatus(ACCEPTED))
 
       When("a valid UKCIRM message is submitted with valid headers")
       val result = postValidMovementMessage()
@@ -78,7 +95,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
       And("the Back End Service will return an error response")
       stubFor(
-        post(urlMatching(mdgImportMovementUrl)).
+        post(urlMatching(importMovementUrl)).
           willReturn(aResponse().withStatus(NOT_FOUND)))
 
 
@@ -87,11 +104,19 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
       Then("an 500 Internal Server Error response is returned")
       status(result) shouldBe INTERNAL_SERVER_ERROR
+      stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
     }
   }
 
+  private def stringToXml(str: String) = {
+    Utility.trim(XML.loadString(str))
+  }
+
   private def postValidMovementMessage() = {
-    val request = FakeRequest("POST", s"/$id/movement-validation").withXmlBody(payload)
+    val request = FakeRequest("POST", s"/$id/movement-validation")
+      .withXmlBody(payload)
+      .withHeaders(TestData.Headers.validHeaders: _*)
+
     route(app, request).get
   }
 }

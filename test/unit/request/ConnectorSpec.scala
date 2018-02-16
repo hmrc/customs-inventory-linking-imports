@@ -14,34 +14,36 @@
  * limitations under the License.
  */
 
-package unit.connectors
+package unit.request
 
+import java.util.UUID
+
+import org.joda.time.DateTime
+import org.mockito.ArgumentMatchers.{eq => meq, _}
+import org.mockito.Mockito._
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
+import play.api.http.Status.ACCEPTED
+import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.InventoryLinkingImportsConnector
+import uk.gov.hmrc.customs.inventorylinking.imports.request.{Connector, OutgoingRequest, RequestInfo}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
-import org.mockito.Mockito._
-import org.mockito.ArgumentMatchers.{eq => meq, _}
-import org.mockito.stubbing.OngoingStubbing
-import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
+import util.TestData
 
 import scala.concurrent.{ExecutionContext, Future}
-import play.api.http.Status.ACCEPTED
-
 import scala.xml.Elem
 
-class InventoryLinkingImportsConnectorSpec extends UnitSpec with MockitoSugar {
-  implicit val hc: HeaderCarrier = HeaderCarrier()
+class ConnectorSpec extends UnitSpec with MockitoSugar {
 
   trait SetupConnector {
-    val validMessage: Elem = <importMovement></importMovement>
-    val serviceConfig = ServiceConfig("the-url", Some("bearerToken"), "default")
-    val config: ServiceConfigProvider = mock[ServiceConfigProvider]
-    val wsHttp: WSHttp = mock[WSHttp]
-    val connector = new InventoryLinkingImportsConnector(wsHttp, config)
+    private val serviceConfig = ServiceConfig("the-url", Some("bearerToken"), "default")
+    private val wsHttp: WSHttp = mock[WSHttp]
+    private val connector = new Connector(wsHttp)
 
-    when(config.getConfig("inventory-linking-imports")).thenReturn(serviceConfig)
+    private val validMessage: Elem = <message></message>
+
+    private val request = OutgoingRequest(serviceConfig, validMessage, RequestInfo(UUID.randomUUID(), UUID.randomUUID(), DateTime.now))
 
     def stubHttpClientReturnsResponseForValidMessage(response: Future[HttpResponse]): OngoingStubbing[Future[HttpResponse]] = {
       when(wsHttp.POSTString(meq(serviceConfig.url), meq(validMessage.toString()), any[Seq[(String, String)]])
@@ -50,7 +52,7 @@ class InventoryLinkingImportsConnectorSpec extends UnitSpec with MockitoSugar {
     }
 
     def sendValidMessageToConnector: HttpResponse = {
-      await(connector.sendValidateMovementMessage(validMessage))
+      await(connector.postRequestToMdg(request))
     }
   }
 
@@ -68,11 +70,10 @@ class InventoryLinkingImportsConnectorSpec extends UnitSpec with MockitoSugar {
 
     "service returns non HTTP error" should {
       "return failed future with exception" in new SetupConnector {
-        private val notSupported = new UnsupportedOperationException
+        stubHttpClientReturnsResponseForValidMessage(
+          Future.failed(TestData.emulatedServiceFailure))
 
-        stubHttpClientReturnsResponseForValidMessage(Future.failed(notSupported))
-
-        intercept[UnsupportedOperationException](sendValidMessageToConnector)
+        intercept[TestData.EmulatedServiceFailure](sendValidMessageToConnector)
       }
     }
 
