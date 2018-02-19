@@ -1,0 +1,78 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<xs:schema xmlns="http://gov.uk/customs/inventoryLinkingImport/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" targetNamespace="http://gov.uk/customs/inventoryLinkingImport/v1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="0.5" vc:minVersion="1.1">
+	<xs:simpleType name="messageCode">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="entryNumber">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="35"/>
+			<xs:pattern value="([a-zA-Z0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="entryVersionNumber">
+		<xs:restriction base="xs:int"/>
+	</xs:simpleType>
+	<xs:simpleType name="goodsArrivalDeclaration">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Y"/>
+			<xs:enumeration value="N"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="inventoryConsignmentReference">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="25"/>
+			<xs:pattern value="([a-zA-Z0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="irc">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="transportNationality">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="agentLocation">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="12"/>
+			<xs:pattern value="([a-zA-Z0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="agentRole">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="3"/>
+			<xs:pattern value="([a-zA-Z0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="declarationMethod">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+			<xs:enumeration value="3"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ics">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="2"/>
+			<xs:pattern value="([a-zA-Z0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="roe">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="traderReference">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="22"/>
+			<xs:pattern value="([a-zA-Z0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="totalPackages">
+		<xs:restriction base="xs:int"/>
+	</xs:simpleType>
+</xs:schema>
