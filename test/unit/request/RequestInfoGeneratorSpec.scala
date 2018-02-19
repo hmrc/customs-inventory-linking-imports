@@ -49,7 +49,7 @@ class RequestInfoGeneratorSpec extends WordSpecLike with Matchers {
     }
 
     "correlationId is not the same as conversationId" in new NewRequestInfo {
-      request.map(r => r.conversationId shouldNot be(r.conversationId))
+      request.map(r => r.correlationId shouldNot be(r.conversationId))
     }
 
     "dateTime is created in utc" in new NewRequestInfo {

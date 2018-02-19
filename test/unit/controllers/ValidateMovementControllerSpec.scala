@@ -43,7 +43,8 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     private val body: Elem = <payload>payload</payload>
     private val serviceConfig: ServiceConfig = ServiceConfig("/url/", Some("Bearer"), "environment")
     private val requestInfoProvider: RequestInfoGenerator = mock[RequestInfoGenerator]
-    private val conversationId = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
+    val conversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
+    val expectedConversationIdHeader: (String, String) = "X-Conversation-Id" -> conversationId.toString
     private val correlationId = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
     private val requestDateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
     private val requestInfo = RequestInfo(conversationId, correlationId, requestDateTime)
@@ -65,7 +66,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
   }
 
   "POST valid declaration" when {
-    "MDG backend service connector returns ACCEPTED" should {
+    "backend service connector returns ACCEPTED" should {
       "return 202 ACCEPTED" in new Setup {
         stubConnectorReturnsResponseForPostedMdgRequest(HttpResponse(ACCEPTED))
 
@@ -73,15 +74,31 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
 
         status(result) shouldBe ACCEPTED
       }
+
+      "return X-Conversation-Id header" in new Setup {
+        stubConnectorReturnsResponseForPostedMdgRequest(HttpResponse(ACCEPTED))
+
+        val result = await(controller.postMessage("id").apply(request))
+
+        result.header.headers should contain(expectedConversationIdHeader)
+      }
     }
 
-    "MDG backend service connector returns failure" should {
-      "return 500 Internal Server Error" in  new Setup {
+    "backend service connector returns failure" should {
+      "return 500 Internal Server Error" in new Setup {
         stubConnectorReturnsResponseForPostedMdgRequest(Future.failed(TestData.emulatedServiceFailure))
 
         val result = await(controller.postMessage("id").apply(request))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
+
+      "return X-Conversation-Id header" in new Setup {
+        stubConnectorReturnsResponseForPostedMdgRequest(Future.failed(TestData.emulatedServiceFailure))
+
+        val result = await(controller.postMessage("id").apply(request))
+
+        result.header.headers should contain(expectedConversationIdHeader)
       }
     }
   }

@@ -34,8 +34,13 @@ class ValidateMovementController @Inject()(connector: Connector,
                                            requestInfoGenerator: RequestInfoGenerator)
   extends BaseController {
 
-  def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
-    def buildMdgRequest(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
+  def postMessage(id: String): Action[AnyContent] = Action.async {implicit request =>
+
+    def conversationIdHeader(requestInfo: RequestInfo) = {
+      "X-Conversation-Id" -> requestInfo.conversationId.toString
+    }
+
+    def buildOutgoingRequest(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
       Future.successful(
         OutgoingRequest(
           config,
@@ -43,16 +48,21 @@ class ValidateMovementController @Inject()(connector: Connector,
           requestInfo))
     }
 
-    val config = configProvider.getConfig("imports")
+    def postToBackendService(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
+      (for {
+        outgoingRequest <- buildOutgoingRequest(request, config, requestInfo)
+        result <- connector.postRequestToMdg(outgoingRequest)
+      } yield result).
+        map(_ => Accepted.withHeaders(conversationIdHeader(requestInfo))).
+        recoverWith {
+          case NonFatal(_) => Future.successful(
+            ErrorResponse.ErrorInternalServerError.XmlResult.withHeaders(conversationIdHeader(requestInfo)))
+        }
+    }
 
-    (for {
+    for {
       requestInfo <- requestInfoGenerator.newRequestInfo
-      outgoingRequest <- buildMdgRequest(request, config, requestInfo)
-      result <- connector.postRequestToMdg(outgoingRequest)
-    } yield result).
-      map(_ => Accepted).
-      recoverWith {
-        case NonFatal(_) => Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
-      }
+      result <- postToBackendService(request, configProvider.getConfig("imports"), requestInfo)
+    } yield result
   }
 }

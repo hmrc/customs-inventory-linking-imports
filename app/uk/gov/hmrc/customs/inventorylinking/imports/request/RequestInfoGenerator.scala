@@ -26,6 +26,8 @@ class RequestInfoGenerator {
   def newRequestInfo: Future[RequestInfo] = {
     val conversationId = UUID.randomUUID()
     val correlationId = UUID.randomUUID()
-    Future.successful(RequestInfo(conversationId, correlationId, DateTime.now(DateTimeZone.UTC)))
+
+    Future.successful(
+      RequestInfo(conversationId, correlationId, DateTime.now(DateTimeZone.UTC)))
   }
 }
