@@ -99,4 +99,23 @@ unmanagedResourceDirectories in Compile += baseDirectory.value / "public"
 
 libraryDependencies ++= compileDependencies ++ testDependencies
 
+// Task to create a ZIP file containing all inventory linking imports XSDs for each version, under the version directory
+lazy val zipXsds = taskKey[Unit]("Zips up all inventory linking imports XSD's")
+zipXsds := {
+  (baseDirectory.value / "public" / "api" / "conf")
+    .listFiles()
+    .filter(_.isDirectory)
+    .foreach { dir =>
+      val wcoXsdDir = dir / "schemas" / "imports"
+      val zipFile = dir / "inventory-linking-imports-schemas.zip"
+      IO.zip(Path.allSubpaths(wcoXsdDir), zipFile)
+    }
+}
+
+// default package task depends on packageBin which we override here to also invoke the custom ZIP task
+packageBin in Compile := {
+  zipXsds.value
+  (packageBin in Compile).value
+}
+
 evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
