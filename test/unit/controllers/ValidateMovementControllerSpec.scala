@@ -19,7 +19,7 @@ package unit.controllers
 import java.util.UUID
 
 import org.joda.time.{DateTime, DateTimeZone}
-import org.mockito.ArgumentMatchers.{eq => meq}
+import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -29,12 +29,13 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController
 import uk.gov.hmrc.customs.inventorylinking.imports.request.{Connector, OutgoingRequest, RequestInfo, RequestInfoGenerator}
+import uk.gov.hmrc.customs.inventorylinking.imports.service.XmlValidationService
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData
 
-import scala.concurrent.Future
-import scala.xml.Elem
+import scala.concurrent.{ExecutionContext, Future}
+import scala.xml.{Elem, NodeSeq}
 
 class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar {
 
@@ -43,6 +44,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     private val body: Elem = <payload>payload</payload>
     private val serviceConfig: ServiceConfig = ServiceConfig("/url/", Some("Bearer"), "environment")
     private val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
+    private val mockXmlValidationService: XmlValidationService = mock[XmlValidationService]
     val conversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
     val expectedConversationIdHeader: (String, String) = "X-Conversation-Id" -> conversationId.toString
     private val correlationId = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
@@ -51,10 +53,10 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     private val connector: Connector = mock[Connector]
 
     val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body)
-    val controller: ValidateMovementController = new ValidateMovementController(connector, serviceConfigProvider, requestInfoGenerator)
+    val controller: ValidateMovementController = new ValidateMovementController(connector, serviceConfigProvider, requestInfoGenerator, mockXmlValidationService)
 
     when(serviceConfigProvider.getConfig("imports")).thenReturn(serviceConfig)
-
+    when(mockXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(())
     when(requestInfoGenerator.newRequestInfo).thenReturn(requestInfo)
 
     def stubConnectorReturnsResponseForPostedRequest(response: Future[HttpResponse]): Unit ={

@@ -19,34 +19,37 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import java.util.UUID
 import javax.inject.Inject
 
-import play.api.mvc.{Action, AnyContent, Request}
+import play.api.mvc.{Action, AnyContent, Request, Result}
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.api.common.controllers.{ErrorResponse, ResponseContents}
 import uk.gov.hmrc.customs.inventorylinking.imports.request._
 import uk.gov.hmrc.play.microservice.controller.BaseController
-import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers.{xConversationId}
+import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers.xConversationId
+import uk.gov.hmrc.customs.inventorylinking.imports.service.XmlValidationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-import scala.xml.NodeSeq
+import scala.xml.{NodeSeq, SAXException}
 
 class ValidateMovementController @Inject()(connector: Connector,
                                            configProvider: ServiceConfigProvider,
-                                           requestInfoGenerator: RequestInfoGenerator)
+                                           requestInfoGenerator: RequestInfoGenerator,
+                                           xmlValidationService: XmlValidationService
+                                          )
   extends BaseController {
 
-  def postMessage(id: String): Action[AnyContent] = Action.async {implicit request =>
+  def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 
     def conversationIdHeader(conversationId: UUID) = {
       xConversationId -> conversationId.toString
     }
 
     def buildOutgoingRequest(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
-        OutgoingRequest(
-          config,
-          request.body.asXml.getOrElse(NodeSeq.Empty),
-          requestInfo)
+      OutgoingRequest(
+        config,
+        request.body.asXml.getOrElse(NodeSeq.Empty),
+        requestInfo)
     }
 
     def postToBackendService(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
@@ -61,7 +64,30 @@ class ValidateMovementController @Inject()(connector: Connector,
         }
     }
 
+    val payload = request.body.asXml.getOrElse(NodeSeq.Empty)
+
     val requestInfo = requestInfoGenerator.newRequestInfo
-    postToBackendService(request, configProvider.getConfig("imports"), requestInfo)
+
+    xmlValidationService.validate(payload).flatMap{
+      case _ => postToBackendService(request, configProvider.getConfig("imports"), requestInfo)
+    }.recoverWith{
+      case NonFatal(saxe: SAXException) =>
+              Future.successful(
+                ErrorResponse.ErrorGenericBadRequest.withErrors(xmlValidationErrors(saxe): _*).XmlResult.
+                  withHeaders(conversationIdHeader(requestInfo.conversationId)))
+    }
+  }
+
+  private def xmlValidationErrors(saxe: SAXException): Seq[ResponseContents] = {
+    @annotation.tailrec
+    def loop(thr: Exception, acc: List[ResponseContents]): List[ResponseContents] = {
+      val newAcc = ResponseContents("xml_validation_error", thr.getMessage) :: acc
+      thr match {
+        case saxError: SAXException if Option(saxError.getException).isDefined => loop(saxError.getException, newAcc)
+        case _ => newAcc
+      }
+    }
+
+    loop(saxe, Nil)
   }
 }
