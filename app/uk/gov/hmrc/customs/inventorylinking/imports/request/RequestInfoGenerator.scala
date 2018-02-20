@@ -23,9 +23,10 @@ import org.joda.time.{DateTime, DateTimeZone}
 import scala.concurrent.Future
 
 class RequestInfoGenerator {
-  def newRequestInfo: Future[RequestInfo] = {
+  def newRequestInfo: RequestInfo = {
     val conversationId = UUID.randomUUID()
     val correlationId = UUID.randomUUID()
-    Future.successful(RequestInfo(conversationId, correlationId, DateTime.now(DateTimeZone.UTC)))
+
+    RequestInfo(conversationId, correlationId, DateTime.now(DateTimeZone.UTC))
   }
 }

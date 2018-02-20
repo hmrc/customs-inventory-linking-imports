@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
+import java.util.UUID
 import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Request}
@@ -23,6 +24,7 @@ import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvid
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.request._
 import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers.{xConversationId}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -34,25 +36,32 @@ class ValidateMovementController @Inject()(connector: Connector,
                                            requestInfoGenerator: RequestInfoGenerator)
   extends BaseController {
 
-  def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
-    def buildMdgRequest(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
-      Future.successful(
+  def postMessage(id: String): Action[AnyContent] = Action.async {implicit request =>
+
+    def conversationIdHeader(conversationId: UUID) = {
+      xConversationId -> conversationId.toString
+    }
+
+    def buildOutgoingRequest(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
         OutgoingRequest(
           config,
           request.body.asXml.getOrElse(NodeSeq.Empty),
-          requestInfo))
+          requestInfo)
     }
 
-    val config = configProvider.getConfig("imports")
+    def postToBackendService(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
+      val outgoingRequest = buildOutgoingRequest(request, config, requestInfo)
 
-    (for {
-      requestInfo <- requestInfoGenerator.newRequestInfo
-      outgoingRequest <- buildMdgRequest(request, config, requestInfo)
-      result <- connector.postRequestToMdg(outgoingRequest)
-    } yield result).
-      map(_ => Accepted).
-      recoverWith {
-        case NonFatal(_) => Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
-      }
+      connector.postRequest(outgoingRequest).
+        map(_ => Accepted.withHeaders(conversationIdHeader(requestInfo.conversationId))).
+        recoverWith {
+          case NonFatal(_) => Future.successful(
+            ErrorResponse.ErrorInternalServerError.XmlResult.
+              withHeaders(conversationIdHeader(requestInfo.conversationId)))
+        }
+    }
+
+    val requestInfo = requestInfoGenerator.newRequestInfo
+    postToBackendService(request, configProvider.getConfig("imports"), requestInfo)
   }
 }

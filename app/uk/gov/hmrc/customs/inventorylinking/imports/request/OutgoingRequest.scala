@@ -20,6 +20,7 @@ import org.joda.time.format.ISODateTimeFormat
 import play.api.http.HeaderNames.{ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE}
 import play.api.http.MimeTypes._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
+import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers._
 
 import scala.xml.NodeSeq
 
@@ -35,9 +36,9 @@ case class OutgoingRequest(service: ServiceConfig,
       CONTENT_TYPE -> XML,
       AUTHORIZATION -> s"Bearer $bearerToken",
       DATE -> requestInfo.dateTime.toString(ISODateTimeFormat.dateTimeNoMillis()),
-      "X-Forwarded-Host" -> "MDTP",
-      "X-Conversation-Id" -> requestInfo.conversationId.toString,
-      "X-Correlation-Id" -> requestInfo.correlationId.toString
+      xForwardedHost -> "MDTP",
+      xConversationId -> requestInfo.conversationId.toString,
+      xCorrelationId -> requestInfo.correlationId.toString
     )
 }
 

@@ -88,6 +88,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
       And("an Accepted (202) response is returned")
       status(result) shouldBe ACCEPTED
+      header("X-Conversation-Id", result).get shouldNot be("")
     }
 
     scenario("A valid Declaration submitted and the Back End service fails") {
@@ -105,6 +106,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
       Then("an 500 Internal Server Error response is returned")
       status(result) shouldBe INTERNAL_SERVER_ERROR
       stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
+      header("X-Conversation-Id", result).get shouldNot be("")
     }
   }
 

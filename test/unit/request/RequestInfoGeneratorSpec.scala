@@ -36,24 +36,24 @@ class RequestInfoGeneratorSpec extends WordSpecLike with Matchers {
 
     private val requestInfoGenerator = new RequestInfoGenerator
 
-    val request: Future[RequestInfo] = requestInfoGenerator.newRequestInfo
+    val request: RequestInfo = requestInfoGenerator.newRequestInfo
   }
 
   "buildRequest" should {
     "creates conversationId" in new NewRequestInfo {
-      request.map(r => r.conversationId shouldNot be(defaultUuid))
+      request.conversationId shouldNot be(defaultUuid)
     }
 
     "creates correlationId" in new NewRequestInfo {
-      request.map(r => r.getClass shouldNot be(defaultUuid))
+      request.getClass shouldNot be(defaultUuid)
     }
 
     "correlationId is not the same as conversationId" in new NewRequestInfo {
-      request.map(r => r.conversationId shouldNot be(r.conversationId))
+      request.correlationId shouldNot be(request.conversationId)
     }
 
     "dateTime is created in utc" in new NewRequestInfo {
-      request.map(r => r.dateTime.getZone shouldBe DateTimeZone.UTC)
+      request.dateTime.getZone shouldBe DateTimeZone.UTC
     }
   }
 }
