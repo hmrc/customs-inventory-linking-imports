@@ -5,7 +5,7 @@
 This service offers an interface for submitting custom inventory linking import declarations.
 
 The objective of the Customs Inventory Linking Imports API is as below:
- 
+
 1. Receive a post request containing the import inventory linking declaration
 3. Pass the request on to a backend service
 4. Respond to the declarant indicating the success of previous steps.
