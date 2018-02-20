@@ -28,7 +28,7 @@ class Connector @Inject()(wsHttp: WSHttp) {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def postRequestToMdg(request: OutgoingRequest): Future[HttpResponse] = {
+  def postRequest(request: OutgoingRequest): Future[HttpResponse] = {
 
     wsHttp.POSTString(request.url, request.body.toString, request.headers).
       recoverWith {

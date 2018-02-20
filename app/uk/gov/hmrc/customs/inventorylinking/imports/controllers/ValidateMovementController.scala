@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
+import java.util.UUID
 import javax.inject.Inject
 
 import play.api.mvc.{Action, AnyContent, Request}
@@ -23,6 +24,7 @@ import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvid
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.request._
 import uk.gov.hmrc.play.microservice.controller.BaseController
+import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers.{xConversationId}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -36,33 +38,30 @@ class ValidateMovementController @Inject()(connector: Connector,
 
   def postMessage(id: String): Action[AnyContent] = Action.async {implicit request =>
 
-    def conversationIdHeader(requestInfo: RequestInfo) = {
-      "X-Conversation-Id" -> requestInfo.conversationId.toString
+    def conversationIdHeader(conversationId: UUID) = {
+      xConversationId -> conversationId.toString
     }
 
     def buildOutgoingRequest(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
-      Future.successful(
         OutgoingRequest(
           config,
           request.body.asXml.getOrElse(NodeSeq.Empty),
-          requestInfo))
+          requestInfo)
     }
 
     def postToBackendService(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
-      (for {
-        outgoingRequest <- buildOutgoingRequest(request, config, requestInfo)
-        result <- connector.postRequestToMdg(outgoingRequest)
-      } yield result).
-        map(_ => Accepted.withHeaders(conversationIdHeader(requestInfo))).
+      val outgoingRequest = buildOutgoingRequest(request, config, requestInfo)
+
+      connector.postRequest(outgoingRequest).
+        map(_ => Accepted.withHeaders(conversationIdHeader(requestInfo.conversationId))).
         recoverWith {
           case NonFatal(_) => Future.successful(
-            ErrorResponse.ErrorInternalServerError.XmlResult.withHeaders(conversationIdHeader(requestInfo)))
+            ErrorResponse.ErrorInternalServerError.XmlResult.
+              withHeaders(conversationIdHeader(requestInfo.conversationId)))
         }
     }
 
-    for {
-      requestInfo <- requestInfoGenerator.newRequestInfo
-      result <- postToBackendService(request, configProvider.getConfig("imports"), requestInfo)
-    } yield result
+    val requestInfo = requestInfoGenerator.newRequestInfo
+    postToBackendService(request, configProvider.getConfig("imports"), requestInfo)
   }
 }

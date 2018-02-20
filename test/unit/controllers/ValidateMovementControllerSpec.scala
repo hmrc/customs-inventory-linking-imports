@@ -42,7 +42,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     private val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
     private val body: Elem = <payload>payload</payload>
     private val serviceConfig: ServiceConfig = ServiceConfig("/url/", Some("Bearer"), "environment")
-    private val requestInfoProvider: RequestInfoGenerator = mock[RequestInfoGenerator]
+    private val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
     val conversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
     val expectedConversationIdHeader: (String, String) = "X-Conversation-Id" -> conversationId.toString
     private val correlationId = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
@@ -51,16 +51,16 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     private val connector: Connector = mock[Connector]
 
     val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body)
-    val controller: ValidateMovementController = new ValidateMovementController(connector, serviceConfigProvider, requestInfoProvider)
+    val controller: ValidateMovementController = new ValidateMovementController(connector, serviceConfigProvider, requestInfoGenerator)
 
     when(serviceConfigProvider.getConfig("imports")).thenReturn(serviceConfig)
 
-    when(requestInfoProvider.newRequestInfo).thenReturn(requestInfo)
+    when(requestInfoGenerator.newRequestInfo).thenReturn(requestInfo)
 
-    def stubConnectorReturnsResponseForPostedMdgRequest(response: Future[HttpResponse]): Unit ={
+    def stubConnectorReturnsResponseForPostedRequest(response: Future[HttpResponse]): Unit ={
       val outgoingRequest: OutgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
 
-      when(connector.postRequestToMdg(outgoingRequest)).
+      when(connector.postRequest(outgoingRequest)).
         thenReturn(Future.successful(response))
     }
   }
@@ -68,7 +68,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
   "POST valid declaration" when {
     "backend service connector returns ACCEPTED" should {
       "return 202 ACCEPTED" in new Setup {
-        stubConnectorReturnsResponseForPostedMdgRequest(HttpResponse(ACCEPTED))
+        stubConnectorReturnsResponseForPostedRequest(HttpResponse(ACCEPTED))
 
         val result = await(controller.postMessage("id").apply(request))
 
@@ -76,7 +76,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
       }
 
       "return X-Conversation-Id header" in new Setup {
-        stubConnectorReturnsResponseForPostedMdgRequest(HttpResponse(ACCEPTED))
+        stubConnectorReturnsResponseForPostedRequest(HttpResponse(ACCEPTED))
 
         val result = await(controller.postMessage("id").apply(request))
 
@@ -86,7 +86,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
 
     "backend service connector returns failure" should {
       "return 500 Internal Server Error" in new Setup {
-        stubConnectorReturnsResponseForPostedMdgRequest(Future.failed(TestData.emulatedServiceFailure))
+        stubConnectorReturnsResponseForPostedRequest(Future.failed(TestData.emulatedServiceFailure))
 
         val result = await(controller.postMessage("id").apply(request))
 
@@ -94,7 +94,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
       }
 
       "return X-Conversation-Id header" in new Setup {
-        stubConnectorReturnsResponseForPostedMdgRequest(Future.failed(TestData.emulatedServiceFailure))
+        stubConnectorReturnsResponseForPostedRequest(Future.failed(TestData.emulatedServiceFailure))
 
         val result = await(controller.postMessage("id").apply(request))
 

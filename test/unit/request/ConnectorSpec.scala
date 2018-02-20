@@ -52,7 +52,7 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
     }
 
     def sendValidMessageToConnector: HttpResponse = {
-      await(connector.postRequestToMdg(request))
+      await(connector.postRequest(request))
     }
   }
 
