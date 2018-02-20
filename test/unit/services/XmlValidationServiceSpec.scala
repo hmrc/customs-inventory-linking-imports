@@ -81,14 +81,6 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with BeforeAnd
       caught.getMessage shouldBe "XML Schema resource file: there/is/no/such/file"
     }
 
-//    forAll(xmlRequests) { (linkingType, xml) => {
-//      s"successfully validate a correct $linkingType" in testService { xmlValidationService =>
-//        val result = await(xmlValidationService.validate(xml))
-//        result should be(())
-//      }
-//    }
-//    }
-
     "fail the future with SAXException when there is an error in XML" in testService { xmlValidationService =>
       val caught = intercept[SAXException] {
         await(xmlValidationService.validate(InvalidXML))

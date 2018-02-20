@@ -26,7 +26,6 @@ import scala.xml.Elem
 object XMLTestData {
 
   val declarantEoriValue = "ZZ123456789000"
-  //val declarantEori = Eori(declarantEoriValue)
   val conversationIdValue = UUID.randomUUID().toString
   val correlationId = UUID.randomUUID().toString
   val clientId = UUID.randomUUID().toString

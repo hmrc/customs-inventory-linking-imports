@@ -39,8 +39,7 @@ class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen wit
     "microservice.services.inventory-linking-imports.host" -> ExternalServicesConfig.Host,
     "microservice.services.inventory-linking-imports.port" -> ExternalServicesConfig.Port,
     "microservice.services.inventory-linking-imports.context" -> mdgImportMovementUrl,
-    "microservice.services.inventory-linking-imports.bearer-token" -> ExternalServicesConfig.AuthToken,
-    "xsd.location" -> ""
+    "microservice.services.inventory-linking-imports.bearer-token" -> ExternalServicesConfig.AuthToken
   )).build()
 
   override protected def beforeAll() {
