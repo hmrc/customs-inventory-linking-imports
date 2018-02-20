@@ -44,7 +44,6 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
     """.stripMargin
 
   private val validMessageMatcher = post(urlMatching(importMovementUrl)).
-    withRequestBody(equalToXml(ValidInventoryLinkingMovementRequestXML.toString())).
     withHeader(ACCEPT, equalTo(MimeTypes.XML)).
     withHeader(CONTENT_TYPE, equalTo(MimeTypes.XML)).
     withHeader(DATE, notMatching("")).

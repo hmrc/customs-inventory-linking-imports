@@ -24,8 +24,8 @@ import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvid
 import uk.gov.hmrc.customs.api.common.controllers.{ErrorResponse, ResponseContents}
 import uk.gov.hmrc.customs.inventorylinking.imports.request._
 import uk.gov.hmrc.play.microservice.controller.BaseController
-import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers.xConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.service.XmlValidationService
+import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -35,7 +35,9 @@ import scala.xml.{NodeSeq, SAXException}
 class ValidateMovementController @Inject()(connector: Connector,
                                            configProvider: ServiceConfigProvider,
                                            requestInfoGenerator: RequestInfoGenerator,
-                                           xmlValidationService: XmlValidationService)  extends BaseController {
+                                           xmlValidationService: XmlValidationService,
+                                           payloadDecorator: PayloadDecorator)
+  extends BaseController {
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 
@@ -43,15 +45,17 @@ class ValidateMovementController @Inject()(connector: Connector,
       xConversationId -> conversationId.toString
     }
 
-    def buildOutgoingRequest(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
+    def buildOutgoingRequest(config: ServiceConfig, requestInfo: RequestInfo) = {
+      val xClientIdValue = request.headers.get(xClientId).getOrElse("")
+      val xBadgeIdentifierValue = request.headers.get(xBadgeIdentifier).getOrElse("")
       OutgoingRequest(
-        config,
-        request.body.asXml.getOrElse(NodeSeq.Empty),
-        requestInfo)
+          config,
+          payloadDecorator.wrap(request.body.asXml.getOrElse(NodeSeq.Empty), requestInfo, xClientIdValue, xBadgeIdentifierValue),
+          requestInfo)
     }
 
     def postToBackendService(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
-      val outgoingRequest = buildOutgoingRequest(request, config, requestInfo)
+      val outgoingRequest = buildOutgoingRequest(config, requestInfo)
 
       connector.postRequest(outgoingRequest).
         map(_ => Accepted.withHeaders(conversationIdHeader(requestInfo.conversationId))).

@@ -23,8 +23,10 @@ object TestData {
   object Headers {
     val accept: (String, String) = (ACCEPT, "application/vnd.hmrc.1.0+xml")
     val contentType: (String, String) = (CONTENT_TYPE, MimeTypes.XML)
-    val xClientId: (String, String) = ("X-Client-Id", "c9503c3d-6df7-448d-a01b-e623a3b8806d")
-    val xBadgeIdentifier: (String, String) = ("X-Badge-Identifier", "BadgeId")
+    val xClientIdName: String = "X-Client-Id"
+    val xClientId: (String, String) = (xClientIdName, "c9503c3d-6df7-448d-a01b-e623a3b8806d")
+    val xBadgeIdentifierName: String = "X-Badge-Identifier"
+    val xBadgeIdentifier: (String, String) = (xBadgeIdentifierName, "BadgeId")
 
     val validHeaders: Seq[(String, String)] = Seq(accept, contentType, xClientId, xBadgeIdentifier)
   }
