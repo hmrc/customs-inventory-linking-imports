@@ -41,10 +41,6 @@ class ValidateMovementController @Inject()(connector: Connector,
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 
-    def conversationIdHeader(conversationId: UUID) = {
-      xConversationId -> conversationId.toString
-    }
-
     def buildOutgoingRequest(config: ServiceConfig, requestInfo: RequestInfo) = {
       val xClientIdValue = request.headers.get(xClientId).getOrElse("")
       val xBadgeIdentifierValue = request.headers.get(xBadgeIdentifier).getOrElse("")
@@ -58,12 +54,11 @@ class ValidateMovementController @Inject()(connector: Connector,
       val outgoingRequest = buildOutgoingRequest(config, requestInfo)
 
       connector.postRequest(outgoingRequest).
-        map(_ => Accepted.withHeaders(conversationIdHeader(requestInfo.conversationId))).
+        map(_ => Accepted).
         recoverWith {
           case NonFatal(_) => Future.successful(
-            ErrorResponse.ErrorInternalServerError.XmlResult.
-              withHeaders(conversationIdHeader(requestInfo.conversationId)))
-        }
+            ErrorResponse.ErrorInternalServerError.XmlResult)
+        }.map(r => r.withHeaders(xConversationId -> requestInfo.conversationId.toString))
     }
 
     val payload = request.body.asXml.getOrElse(NodeSeq.Empty)
