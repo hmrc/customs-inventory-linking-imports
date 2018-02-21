@@ -14,10 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package unit.util
 
-object Headers {
-  val xConversationId = "X-Conversation-Id"
-  val xForwardedHost = "X-Forwarded-Host"
-  val xCorrelationId = "X-Correlation-Id"
+import scala.util.Random
+
+object TestData {
+
+  val validBasicAuthToken = s"Basic ${Random.alphanumeric.take(18).mkString}=="
+
+  val cspBearerToken = "CSP-Bearer-Token"
+  val nonCspBearerToken = "Software-House-Bearer-Token"
+
+  type EmulatedServiceFailure = UnsupportedOperationException
+  val emulatedServiceFailure = new EmulatedServiceFailure("Emulated service failure.")
+
+  val xsdLocations = List("/api/conf/1.0/schemas/imports/inventoryLinkingImportValidateMovementResponse.xsd")
 }

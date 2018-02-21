@@ -24,6 +24,7 @@ import play.api.http.MimeTypes
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import unit.util.XMLTestData.ValidInventoryLinkingMovementRequestXML
 import util.{ExternalServicesConfig, TestData, WireMockRunner}
 
 import scala.xml.{Utility, XML}
@@ -33,7 +34,6 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
   private val importMovementUrl = "/InventoryLinking/ImportMovement"
   private val id = "id"
-  private val payload = <import>payload</import>
 
   private val internalServerError =
     """<?xml version="1.0" encoding="UTF-8"?>
@@ -44,7 +44,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
     """.stripMargin
 
   private val validMessageMatcher = post(urlMatching(importMovementUrl)).
-    withRequestBody(equalToXml(payload.toString())).
+    withRequestBody(equalToXml(ValidInventoryLinkingMovementRequestXML.toString())).
     withHeader(ACCEPT, equalTo(MimeTypes.XML)).
     withHeader(CONTENT_TYPE, equalTo(MimeTypes.XML)).
     withHeader(DATE, notMatching("")).
@@ -116,7 +116,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
   private def postValidMovementMessage() = {
     val request = FakeRequest("POST", s"/$id/movement-validation")
-      .withXmlBody(payload)
+      .withXmlBody(ValidInventoryLinkingMovementRequestXML)
       .withHeaders(TestData.Headers.validHeaders: _*)
 
     route(app, request).get

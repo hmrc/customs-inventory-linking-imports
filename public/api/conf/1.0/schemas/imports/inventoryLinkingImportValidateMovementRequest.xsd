@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="http://gov.uk/customs/inventoryLinkingImport/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://gov.uk/customs/inventoryLinkingImport/v1" elementFormDefault="qualified" version="1.1">
+	<xs:include schemaLocation="inventoryLinkingImportCommonTypes.xsd"/>
+	<!-- ==================================================================================== -->
+	<!-- Inventory Linking Import Validate Movement Request                                   -->
+	<!-- Requests for the movement to be validated during the declaration validation process. -->
+	<!-- ==================================================================================== -->
+	<xs:element name="InventoryLinkingImportsValidateMovementRequest">
+		<xs:annotation>
+			<xs:documentation>Inventory Linking Imports Validate Movement Request
+            </xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="messageCode" type="messageCode" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="agentLocation" type="agentLocation" nillable="true" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="agentRole" type="agentRole" nillable="true" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="declarationMethod" type="declarationMethod" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="dateOfEntry" type="xs:dateTime" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="entryNumber" type="entryNumber" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="entryVersionNumber" type="entryVersionNumber" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="goodsArrivalDeclaration" type="goodsArrivalDeclaration" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="ics" type="ics" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="inventoryConsignmentReference" type="inventoryConsignmentReference" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="irc" type="irc" nillable="true" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="roe" type="roe" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="traderReference" type="traderReference" nillable="true" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="totalPackages" type="totalPackages" minOccurs="1" maxOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
