@@ -16,33 +16,16 @@
 
 package unit.request
 
-import java.util.UUID
-
-import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{PayloadDecorator, RequestInfo}
+import uk.gov.hmrc.customs.inventorylinking.imports.request.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
+import util.TestData._
 
 import scala.xml.NodeSeq
 
 class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
   private val xml: NodeSeq = <node1></node1>
-
-  private val clientId = "clientID"
-  private val conversationId = UUID.fromString("3dbc19cb-94a2-45f1-ab54-30ff328ce9cb")
-  private val correlationId = UUID.fromString("403f287e-376f-4aca-9fb9-5d96b5507cd2")
-  private val badgeIdentifier = "badgeIdentifier"
-
-  private val year = 2017
-  private val monthOfYear = 6
-  private val dayOfMonth = 8
-  private val hourOfDay = 13
-  private val minuteOfHour = 55
-  private val secondOfMinute = 0
-  private val millisOfSecond = 0
-  private val dateTime = new DateTime(year, monthOfYear, dayOfMonth, hourOfDay, minuteOfHour, secondOfMinute, millisOfSecond, DateTimeZone.UTC)
-  private val requestInfo = RequestInfo(conversationId, correlationId, dateTime)
 
   private val payloadWrapper = new PayloadDecorator
 
@@ -61,7 +44,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "dateTimeStamp"
 
-      rd.head.text shouldBe "2017-06-08T13:55:00Z"
+      rd.head.text shouldBe requestDateTimeHttp
     }
 
     "set the conversationId" in {

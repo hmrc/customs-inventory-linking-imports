@@ -16,9 +16,6 @@
 
 package unit.controllers
 
-import java.util.UUID
-
-import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
 import org.scalatest.mockito.MockitoSugar
@@ -26,36 +23,28 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
-import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
+import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController
 import uk.gov.hmrc.customs.inventorylinking.imports.request._
 import uk.gov.hmrc.customs.inventorylinking.imports.service.XmlValidationService
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.test.UnitSpec
-import util.TestData
 import util.TestData.Headers._
+import util.TestData._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.NodeSeq
 
 class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar {
 
   trait Setup {
     private val serviceConfigProvider = mock[ServiceConfigProvider]
-    val body: Elem = <payload>payload</payload>
     private val decoratedBody = <wrapped><payload>payload</payload></wrapped>
-    private val serviceConfig = ServiceConfig("/url/", Some("Bearer"), "environment")
     private val requestInfoGenerator = mock[RequestInfoGenerator]
     val mockXmlValidationService: XmlValidationService = mock[XmlValidationService]
-    val conversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
-    val expectedConversationIdHeader: (String, String) = "X-Conversation-Id" -> conversationId.toString
-    private val correlationId = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
     private val clientId = "clientId"
     private val badgeIdentifier = "badge"
-    private val requestDateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
-    private val requestInfo = RequestInfo(conversationId, correlationId, requestDateTime)
     private val connector = mock[Connector]
     private val decorator = mock[PayloadDecorator]
 
@@ -94,7 +83,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
 
         val result = await(controller.postMessage("id").apply(request))
 
-        result.header.headers should contain(expectedConversationIdHeader)
+        result.header.headers should contain(conversationIdHeader)
         verify(mockXmlValidationService).validate(body)
         verifyNoMoreInteractions(mockXmlValidationService)
       }
@@ -102,7 +91,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
 
     "backend service connector returns failure" should {
       "return 500 Internal Server Error" in new Setup {
-        stubConnectorReturnsResponseForPostedRequest(Future.failed(TestData.emulatedServiceFailure))
+        stubConnectorReturnsResponseForPostedRequest(Future.failed(emulatedServiceFailure))
 
         val result = await(controller.postMessage("id").apply(request))
 
@@ -112,11 +101,11 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
       }
 
       "return X-Conversation-Id header" in new Setup {
-        stubConnectorReturnsResponseForPostedRequest(Future.failed(TestData.emulatedServiceFailure))
+        stubConnectorReturnsResponseForPostedRequest(Future.failed(emulatedServiceFailure))
 
         val result = await(controller.postMessage("id").apply(request))
 
-        result.header.headers should contain(expectedConversationIdHeader)
+        result.header.headers should contain(conversationIdHeader)
         verify(mockXmlValidationService).validate(body)
         verifyNoMoreInteractions(mockXmlValidationService)
       }

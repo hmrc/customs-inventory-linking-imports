@@ -16,33 +16,19 @@
 
 package unit.request
 
-import java.util.UUID
-
-import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes._
-import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{OutgoingRequest, RequestInfo}
-
-import scala.xml.Elem
+import uk.gov.hmrc.customs.inventorylinking.imports.request.OutgoingRequest
+import util.TestData._
 
 class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
 
   trait validRequest {
-    private val dateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
-
-    val dateTimeHttp: String = "2017-06-08T13:55:00Z"
-    val conversationId: UUID = UUID.fromString("2139b8d1-1875-4f84-8af1-f3ce01965c6f")
-    val correlationId: UUID = UUID.fromString("5664704d-af3e-43bc-8c6c-f24ce6970e84")
-    val bearerToken: String = "token"
     val MDTP: String = "MDTP"
 
-    private val config = ServiceConfig("url", Some(bearerToken), "env")
-    private val body: Elem = <request></request>
-
-    val request = OutgoingRequest(config, body, RequestInfo(conversationId, correlationId, dateTime))
+    val request = OutgoingRequest(serviceConfig, body, requestInfo)
   }
 
   "headers" should {
@@ -59,7 +45,7 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     "include Date" in new validRequest {
-      request.headers should contain (DATE -> dateTimeHttp)
+      request.headers should contain (DATE -> requestDateTimeHttp)
     }
 
     "include X-Conversation-Id" in new validRequest {

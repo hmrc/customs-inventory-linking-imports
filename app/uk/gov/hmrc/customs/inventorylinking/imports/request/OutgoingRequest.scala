@@ -20,7 +20,7 @@ import org.joda.time.format.ISODateTimeFormat
 import play.api.http.HeaderNames.{ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE}
 import play.api.http.MimeTypes._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers._
+import uk.gov.hmrc.customs.inventorylinking.imports.request.HeaderNames._
 
 import scala.xml.NodeSeq
 

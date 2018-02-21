@@ -19,13 +19,13 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import java.util.UUID
 import javax.inject.Inject
 
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.mvc.{Action, AnyContent, Request}
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
 import uk.gov.hmrc.customs.api.common.controllers.{ErrorResponse, ResponseContents}
+import uk.gov.hmrc.customs.inventorylinking.imports.request.HeaderNames._
 import uk.gov.hmrc.customs.inventorylinking.imports.request._
-import uk.gov.hmrc.play.microservice.controller.BaseController
 import uk.gov.hmrc.customs.inventorylinking.imports.service.XmlValidationService
-import uk.gov.hmrc.customs.inventorylinking.imports.request.Headers._
+import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -41,11 +41,11 @@ class ValidateMovementController @Inject()(connector: Connector,
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 
-    def conversationIdHeader(conversationId: UUID) = {
+    def conversationIdHeader(conversationId: UUID): (String, String) = {
       xConversationId -> conversationId.toString
     }
 
-    def buildOutgoingRequest(config: ServiceConfig, requestInfo: RequestInfo) = {
+    def buildOutgoingRequest(config: ServiceConfig, requestInfo: RequestInfo): OutgoingRequest = {
       val xClientIdValue = request.headers.get(xClientId).getOrElse("")
       val xBadgeIdentifierValue = request.headers.get(xBadgeIdentifier).getOrElse("")
       OutgoingRequest(
