@@ -1,8 +1,14 @@
 import AppDependencies._
 import org.scalastyle.sbt.ScalastylePlugin._
+import play.sbt.routes.RoutesKeys._
+import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
+import sbt.{Resolver, _}
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, targetJvm}
-import scala.language.postfixOps
+import uk.gov.hmrc.PublishingSettings._
+import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
+
+import language.postfixOps
 
 name := "customs-inventory-linking-imports"
 
@@ -22,12 +28,20 @@ lazy val CdsIntegrationTest = config("it") extend Test
 
 val testConfig = Seq(AcceptanceTest, CdsIntegrationTest, Test)
 
+def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[Group] =
+  tests.groupBy(_.name.takeWhile(_ != '.')).filter(packageAndTests => packages contains packageAndTests._1) map {
+    case (packg, theTests) =>
+      Group(packg, theTests, SubProcess(ForkOptions()))
+  } toSeq
+
 lazy val testAll = TaskKey[Unit]("test-all")
 lazy val allTest = Seq(testAll := (test in AcceptanceTest)
-  .dependsOn((test in CdsIntegrationTest).dependsOn(test in Test)).value)
+  .dependsOn((test in CdsIntegrationTest).dependsOn(test in Test)))
 
 lazy val microservice = (project in file("."))
-  .enablePlugins(PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .enablePlugins(PlayScala)
+  .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
+  .enablePlugins(SbtDistributablesPlugin)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .configs(testConfig: _*)
   .settings(
@@ -35,17 +49,12 @@ lazy val microservice = (project in file("."))
     unitTestSettings,
     integrationTestSettings,
     acceptanceTestSettings,
+    playSettings,
+    playPublishingSettings,
     allTest,
     scoverageSettings,
     allResolvers
   )
-
-
-def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[Group] =
-  tests.groupBy(_.name.takeWhile(_ != '.')).filter(packageAndTests => packages contains packageAndTests._1) map {
-    case (packg, theTests) =>
-      Group(packg, theTests, SubProcess(ForkOptions()))
-  } toSeq
 
 def onPackageName(rootPackage: String): (String => Boolean) = {
   testName => testName startsWith rootPackage
@@ -81,9 +90,20 @@ lazy val acceptanceTestSettings =
       addTestReportOption(AcceptanceTest, "acceptance-reports")
     )
 
-lazy val commonSettings: Seq[Setting[_]] = scalaSettings ++
+
+lazy val commonSettings: Seq[Setting[_]] =
+  scalaSettings ++
+  publishingSettings ++
   defaultSettings() ++
   gitStampSettings
+
+lazy val playSettings: Seq[Setting[_]] = Seq(
+  routesImport ++= Seq("uk.gov.hmrc.customs.api.common.domain._")
+)
+
+lazy val playPublishingSettings: Seq[sbt.Setting[_]] = sbtrelease.ReleasePlugin.releaseSettings ++
+  Seq(credentials += SbtCredentials) ++
+  publishAllArtefacts
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(AuthService|BuildInfo|Routes).*;uk.gov.hmrc.customs.inventorylinking.imports.views.*",
