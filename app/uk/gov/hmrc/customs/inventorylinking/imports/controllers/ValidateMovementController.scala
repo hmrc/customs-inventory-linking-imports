@@ -41,6 +41,10 @@ class ValidateMovementController @Inject()(connector: Connector,
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 
+    def conversationIdHeader(conversationId: UUID) = {
+      xConversationId -> conversationId.toString
+    }
+
     def buildOutgoingRequest(config: ServiceConfig, requestInfo: RequestInfo) = {
       val xClientIdValue = request.headers.get(xClientId).getOrElse("")
       val xBadgeIdentifierValue = request.headers.get(xBadgeIdentifier).getOrElse("")
