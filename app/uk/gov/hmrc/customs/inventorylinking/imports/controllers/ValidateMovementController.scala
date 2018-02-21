@@ -35,9 +35,7 @@ import scala.xml.{NodeSeq, SAXException}
 class ValidateMovementController @Inject()(connector: Connector,
                                            configProvider: ServiceConfigProvider,
                                            requestInfoGenerator: RequestInfoGenerator,
-                                           xmlValidationService: XmlValidationService
-                                          )
-  extends BaseController {
+                                           xmlValidationService: XmlValidationService)  extends BaseController {
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 

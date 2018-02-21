@@ -85,36 +85,6 @@ object XMLTestData {
     </agentDetails>
   </inventoryLinkingQueryRequest>
 
-  def wrappedValidXML(clientId: String = clientId,
-                      conversationId: String = conversationIdValue,
-                      correlationId: String = correlationId,
-                      dateTime: DateTime = dateTime): Elem =
-      <n1:InventoryLinkingExportsInboundRequest xmlns:n1="http://www.hmrc.gov.uk/cds/inventorylinking/exportmovement"
-                                                xmlns:gw="http://gov.uk/customs/inventoryLinking/gatewayHeader/v1"
-                                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:inv="http://gov.uk/customs/inventoryLinking/v1">
-        <n1:requestCommon>
-          <gw:clientID>{clientId}</gw:clientID>
-          <gw:conversationID>{conversationId}</gw:conversationID>
-          <gw:correlationID>{correlationId}</gw:correlationID>
-          <gw:dateTimeStamp>{dateTime.toString(dateTimeFormat)}</gw:dateTimeStamp>
-        </n1:requestCommon>
-        <n1:requestDetail>
-          <inventoryLinkingMovementRequest xmlns="http://gov.uk/customs/inventoryLinking/v1">
-            <messageCode>EAA</messageCode>
-            <agentDetails>
-              <EORI>{declarantEoriValue}</EORI>
-            </agentDetails>
-            <ucrBlock>
-              <ucr>GB/AAAA-00000</ucr>
-              <ucrType>D</ucrType>
-            </ucrBlock>
-            <goodsLocation>Secret location</goodsLocation>
-          </inventoryLinkingMovementRequest>
-      </n1:requestDetail>
-      </n1:InventoryLinkingExportsInboundRequest>
-
-  val WrappedValidXML: Elem = wrappedValidXML()
-
   val xmlRequests = Table(
     ("linkingType", "xml"),
     ("inventoryLinkingMovementRequest", ValidInventoryLinkingMovementRequestXML),
