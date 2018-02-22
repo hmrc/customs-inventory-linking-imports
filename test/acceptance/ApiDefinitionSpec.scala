@@ -61,12 +61,25 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |        "access": {
           |          "type": "PUBLIC",
           |          "whitelistedApplicationIds": []
-          |        }
+          |        },
+          |        "fieldDefinitions": [
+          |          {
+          |            "name": "callbackUrl",
+          |            "description": "The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.",
+          |            "type": "URL",
+          |            "hint": "This is how we'll notify you when we've processed them. It must include https and port 443"
+          |          },
+          |          {
+          |            "name": "securityToken",
+          |            "description": "The full value of Authorization HTTP header that will be used when notifying you.",
+          |            "type": "SecureToken",
+          |            "hint": "For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk"
+          |          }
+          |        ]
           |      }
           |    ]
           |  }
           |}
-          |
         """.stripMargin)
     }
   }
