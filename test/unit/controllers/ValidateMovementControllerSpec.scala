@@ -20,7 +20,9 @@ import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.{verify, verifyNoMoreInteractions, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR}
+import org.xml.sax
+import org.xml.sax.SAXException
+import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
@@ -53,10 +55,12 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
 
     val controller: ValidateMovementController = new ValidateMovementController(connector, serviceConfigProvider, requestInfoGenerator, mockXmlValidationService, decorator)
     when(serviceConfigProvider.getConfig("imports")).thenReturn(serviceConfig)
-    when(mockXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(())
     when(requestInfoGenerator.newRequestInfo).thenReturn(requestInfo)
-
     when(decorator.wrap(body, requestInfo, clientId, badgeIdentifier)).thenReturn(decoratedBody)
+
+    def stubXmlValidationReturnsSuccess(): Unit = {
+      when(mockXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(())
+    }
 
     def stubConnectorReturnsResponseForPostedRequest(response: Future[HttpResponse]): Unit ={
       val outgoingRequest: OutgoingRequest = OutgoingRequest(serviceConfig, decoratedBody, requestInfo)
@@ -69,6 +73,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
   "POST valid declaration" when {
     "backend service connector returns ACCEPTED" should {
       "return 202 ACCEPTED" in new Setup {
+        stubXmlValidationReturnsSuccess()
         stubConnectorReturnsResponseForPostedRequest(HttpResponse(ACCEPTED))
 
         val result = await(controller.postMessage("id").apply(request))
@@ -79,6 +84,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
       }
 
       "return X-Conversation-Id header" in new Setup {
+        stubXmlValidationReturnsSuccess()
         stubConnectorReturnsResponseForPostedRequest(HttpResponse(ACCEPTED))
 
         val result = await(controller.postMessage("id").apply(request))
@@ -91,6 +97,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
 
     "backend service connector returns failure" should {
       "return 500 Internal Server Error" in new Setup {
+        stubXmlValidationReturnsSuccess()
         stubConnectorReturnsResponseForPostedRequest(Future.failed(emulatedServiceFailure))
 
         val result = await(controller.postMessage("id").apply(request))
@@ -101,6 +108,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
       }
 
       "return X-Conversation-Id header" in new Setup {
+        stubXmlValidationReturnsSuccess()
         stubConnectorReturnsResponseForPostedRequest(Future.failed(emulatedServiceFailure))
 
         val result = await(controller.postMessage("id").apply(request))
@@ -109,6 +117,17 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
         verify(mockXmlValidationService).validate(body)
         verifyNoMoreInteractions(mockXmlValidationService)
       }
+    }
+  }
+
+  "POST invalid declaration" should {
+    "return bad request" in new Setup {
+      when(mockXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).
+              thenReturn(Future.failed(new sax.SAXException()))
+
+      val result = await(controller.postMessage("id").apply(request))
+
+      status(result) shouldBe BAD_REQUEST
     }
   }
 }
