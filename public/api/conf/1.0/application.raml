@@ -29,6 +29,64 @@ documentation:
       type: string
   post:
     displayName: Send validated movement response messages provided by the CSP as a result of a previous validate movement request
+    description: This validate movement response message is provided by the CSP as a result of a previous validate movement request. It represents the (positive/negative) outcome of matching a declaration Id (MRN) against the provided Inventory Consignment Reference (ICR)
+    headers:
+      Accept:
+        description: Specifies the version of the API that you want to call. See [versioning](/api-documentation/docs/reference-guide#versioning).
+        type: string
+        required: true
+        example: application/vnd.hmrc.1.0+xml
+      Content-Type:
+        description: Specifies the format of the request body, which must be XML. Download [schemas](/api-documentation/docs/api/download/customs-inventory-linking-imports/1.0/inventory-linking-imports-schemas.zip).
+        type: string
+        required: true
+        example: application/xml
+      X-Badge-Identifier:
+        description: Alpha-numeric, maximum length is 12. Represents the end-user who is interacting with the CSP systems. It is used within the CSP systems to facilitate message routing back to the originator.
+        type: string
+        required: true
+        example: DHL123
+
+    (annotations.scope): "write:customs-inventory-linking-imports"
+    securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-inventory-linking-imports" ] } ]
+    responses:
+      202:
+      400:
+        body:
+          application/xml:
+            description: Invalid XML Payload
+            type: !include schemas/customs/error.xsd
+            example: |
+                <?xml version="1.0" encoding="UTF-8"?>
+                <errorResponse>
+                    <code>BAD_REQUEST</code>
+                    <message>Payload is not valid according to schema</message>
+                    <errors>
+                        <error>
+                            <code>xml_validation_error</code>
+                            <message>Error at line 13, column 13: no declaration found for element 'unknown'</message>
+                        </error>
+                    </errors>
+                </errorResponse>
+      500:
+        body:
+          application/xml:
+            description: Internal server error
+            type: !include schemas/customs/error.xsd
+            example: |
+                <?xml version="1.0" encoding="UTF-8"?>
+                <errorResponse>
+                    <code>INTERNAL_SERVER_ERROR</code>
+                    <message>Internal server error</message>
+                </errorResponse>
+
+/customs/consignments/{id}/arrival-notification:
+  uriParameters:
+    id:
+      description: Declaration Id (MRN). Used to match against the provided Inventory Consignment Reference (ICR).
+      type: string
+  post:
+    displayName: Inventory Linking Imports Goods Arrival
     description: Send validated movement response messages provided by the CSP as a result of a previous validate movement request.
     headers:
       Accept:
@@ -42,7 +100,7 @@ documentation:
         required: true
         example: application/xml
       X-Badge-Identifier:
-        description: Represents the end-user who is interacting with the CSP systems. It is used within the CSP systems to facilitate message routing back to the originator.
+        description: Alpha-numeric, maximum length is 12. Represents the end-user who is interacting with the CSP systems. It is used within the CSP systems to facilitate message routing back to the originator.
         type: string
         required: true
         example: DHL123
