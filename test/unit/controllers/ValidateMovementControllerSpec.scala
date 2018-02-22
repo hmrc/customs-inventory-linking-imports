@@ -59,7 +59,7 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
     when(decorator.wrap(body, requestInfo, clientId, badgeIdentifier)).thenReturn(decoratedBody)
 
     def stubXmlValidationReturnsSuccess(): Unit = {
-      when(mockXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(())
+      when(mockXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(body)
     }
 
     def stubConnectorReturnsResponseForPostedRequest(response: Future[HttpResponse]): Unit ={
@@ -79,8 +79,6 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
         val result = await(controller.postMessage("id").apply(request))
 
         status(result) shouldBe ACCEPTED
-        verify(mockXmlValidationService).validate(body)
-        verifyNoMoreInteractions(mockXmlValidationService)
       }
 
       "return X-Conversation-Id header" in new Setup {
@@ -90,8 +88,6 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
         val result = await(controller.postMessage("id").apply(request))
 
         result.header.headers should contain(conversationIdHeader)
-        verify(mockXmlValidationService).validate(body)
-        verifyNoMoreInteractions(mockXmlValidationService)
       }
     }
 
@@ -103,8 +99,6 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
         val result = await(controller.postMessage("id").apply(request))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        verify(mockXmlValidationService).validate(body)
-        verifyNoMoreInteractions(mockXmlValidationService)
       }
 
       "return X-Conversation-Id header" in new Setup {
@@ -114,8 +108,6 @@ class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite w
         val result = await(controller.postMessage("id").apply(request))
 
         result.header.headers should contain(conversationIdHeader)
-        verify(mockXmlValidationService).validate(body)
-        verifyNoMoreInteractions(mockXmlValidationService)
       }
     }
   }

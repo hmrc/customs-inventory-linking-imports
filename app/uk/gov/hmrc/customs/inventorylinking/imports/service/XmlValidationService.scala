@@ -50,16 +50,17 @@ class XmlValidationService @Inject()(configuration: Configuration) {
 
   private lazy val maxSAXErrors = configuration.getInt("xml.max-errors").getOrElse(Int.MaxValue)
 
-  def validate(xml: NodeSeq)(implicit ec: ExecutionContext): Future[Unit] = {
+  def validate(xml: NodeSeq)(implicit ec: ExecutionContext): Future[NodeSeq] = {
     Future(doValidate(xml))
   }
 
-  private def doValidate(xml: NodeSeq): Unit = {
+  private def doValidate(xml: NodeSeq): NodeSeq = {
     val errorHandler = new AccumulatingSAXErrorHandler(maxSAXErrors)
     val validator = schema.newValidator()
     validator.setErrorHandler(errorHandler)
     validator.validate(new StreamSource(new StringReader(xml.toString)))
     errorHandler.throwIfErrorsEncountered()
+    xml
   }
 
   private class AccumulatingSAXErrorHandler(maxErrors: Int) extends ErrorHandler {

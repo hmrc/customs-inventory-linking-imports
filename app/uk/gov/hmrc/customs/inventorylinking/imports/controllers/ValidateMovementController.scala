@@ -41,45 +41,18 @@ class ValidateMovementController @Inject()(connector: Connector,
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 
-    def conversationIdHeader(conversationId: UUID): (String, String) = {
-      xConversationId -> conversationId.toString
-    }
+    def postToBackendService(config: ServiceConfig, requestInfo: RequestInfo, headers: Map[String, String], body: NodeSeq) = {
+      val clientId = headers.getOrElse(xClientId, "")
+      val xBadgeIdentifierValue = headers.getOrElse(xBadgeIdentifier, "")
 
-    def buildOutgoingRequest(config: ServiceConfig, requestInfo: RequestInfo): OutgoingRequest = {
-      val xClientIdValue = request.headers.get(xClientId).getOrElse("")
-      val xBadgeIdentifierValue = request.headers.get(xBadgeIdentifier).getOrElse("")
-      OutgoingRequest(
+      connector.postRequest(
+        OutgoingRequest(
           config,
-          payloadDecorator.wrap(request.body.asXml.getOrElse(NodeSeq.Empty), requestInfo, xClientIdValue, xBadgeIdentifierValue),
-          requestInfo)
+          payloadDecorator.wrap(body, requestInfo, clientId, xBadgeIdentifierValue),
+          requestInfo))
     }
 
-    def postToBackendService(request: Request[AnyContent], config: ServiceConfig, requestInfo: RequestInfo) = {
-      val outgoingRequest = buildOutgoingRequest(config, requestInfo)
-
-      connector.postRequest(outgoingRequest).
-        map(_ => Accepted).
-        recoverWith {
-          case NonFatal(_) => Future.successful(
-            ErrorResponse.ErrorInternalServerError.XmlResult)
-        }.map(r => r.withHeaders(xConversationId -> requestInfo.conversationId.toString))
-    }
-
-    val payload = request.body.asXml.getOrElse(NodeSeq.Empty)
-
-    val requestInfo = requestInfoGenerator.newRequestInfo
-
-    xmlValidationService.validate(payload).flatMap{
-      case _ => postToBackendService(request, configProvider.getConfig("imports"), requestInfo)
-    }.recoverWith{
-      case NonFatal(saxe: SAXException) =>
-              Future.successful(
-                ErrorResponse.ErrorGenericBadRequest.withErrors(xmlValidationErrors(saxe): _*).XmlResult.
-                  withHeaders(conversationIdHeader(requestInfo.conversationId)))
-    }
-  }
-
-  private def xmlValidationErrors(saxe: SAXException): Seq[ResponseContents] = {
+    def xmlValidationErrors(saxe: SAXException): Seq[ResponseContents] = {
     @annotation.tailrec
     def loop(thr: Exception, acc: List[ResponseContents]): List[ResponseContents] = {
       val newAcc = ResponseContents("xml_validation_error", thr.getMessage) :: acc
@@ -88,7 +61,23 @@ class ValidateMovementController @Inject()(connector: Connector,
         case _ => newAcc
       }
     }
-
     loop(saxe, Nil)
+  }
+
+    val payload = request.body.asXml.getOrElse(NodeSeq.Empty)
+    val requestInfo = requestInfoGenerator.newRequestInfo
+
+    (for {
+      validBody <- xmlValidationService.validate(payload)
+      _ <- postToBackendService(configProvider.getConfig("imports"), requestInfo, request.headers.toSimpleMap, validBody)
+    } yield Accepted).
+    recoverWith{
+      case NonFatal(saxe: SAXException) =>
+              Future.successful(
+                ErrorResponse.ErrorGenericBadRequest.withErrors(xmlValidationErrors(saxe): _*).XmlResult)
+
+      case NonFatal(_) => Future.successful(
+        ErrorResponse.ErrorInternalServerError.XmlResult)
+    }.map(r => r.withHeaders(xConversationId -> requestInfo.conversationId.toString))
   }
 }
