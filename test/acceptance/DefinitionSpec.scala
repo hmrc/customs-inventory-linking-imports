@@ -74,7 +74,19 @@ class DefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerS
          |            "someId-1",
          |            "someId-2"
          |          ]
-         |        }
+         |        },
+         |        "fieldDefinitions": [
+         |          {
+         |            "name": "callbackUrl",
+         |            "description": "The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.",
+         |            "type": "URL"
+         |          },
+         |          {
+         |            "name": "securityToken",
+         |            "description": "The full value of Authorization HTTP header that will be used when notifying you.",
+         |            "type": "SecureToken"
+         |          }
+         |        ]
          |      }
          |    ]
          |  }
