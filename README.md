@@ -14,7 +14,7 @@ It is assumed that the underlying backend process is asynchronous, and that the 
 
 # Switching service endpoints
 
-Dynamic switching of service endpoints has been implemented for wco declaration connector. To configure dynamic
+Dynamic switching of service endpoints has been implemented for inventory linking imports connector. To configure dynamic
 switching of the endpoint there must be a corresponding section in the application config file
 (see example below). This should contain the endpoint config details.
 
