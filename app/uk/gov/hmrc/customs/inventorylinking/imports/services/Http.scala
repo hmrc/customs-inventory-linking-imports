@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports
+package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import javax.inject.Singleton
 

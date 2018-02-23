@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.request.HeaderNames.{xBadgeIdentifier, xClientId}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderNames.{XBadgeIdentifier, XClientId}
+import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 
 import scala.xml.NodeSeq
 
+//TODO: maybe this can be reused if PayloadDecorator is made an abstract interface?
+@Singleton
 class OutgoingRequestBuilder @Inject()(payloadDecorator: PayloadDecorator) {
 
   def build(config: ServiceConfig, requestInfo: RequestInfo, headers: Map[String, String], body: NodeSeq): OutgoingRequest = {
-    val clientId = headers.getOrElse(xClientId, "")
-    val xBadgeIdentifierValue = headers.getOrElse(xBadgeIdentifier, "")
+    val clientId = headers.getOrElse(XClientId, "")
+    val xBadgeIdentifierValue = headers.getOrElse(XBadgeIdentifier, "")
 
     OutgoingRequest(
       config,
