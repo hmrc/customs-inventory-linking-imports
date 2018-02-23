@@ -16,15 +16,14 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
-import java.util.UUID
 import javax.inject.Inject
 
-import play.api.mvc.{Action, AnyContent, Request}
-import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
-import uk.gov.hmrc.customs.api.common.controllers.{ErrorResponse, ResponseContents}
+import play.api.mvc.{Action, AnyContent, Result}
+import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.request.HeaderNames._
 import uk.gov.hmrc.customs.inventorylinking.imports.request._
-import uk.gov.hmrc.customs.inventorylinking.imports.service.XmlValidationService
+import uk.gov.hmrc.customs.inventorylinking.imports.xml.XmlValidationErrorsMapper
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,52 +31,33 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.xml.{NodeSeq, SAXException}
 
-class ValidateMovementController @Inject()(connector: Connector,
-                                           configProvider: ServiceConfigProvider,
+class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider,
                                            requestInfoGenerator: RequestInfoGenerator,
-                                           xmlValidationService: XmlValidationService,
-                                           payloadDecorator: PayloadDecorator)
+                                           messageSender: ValidateMovementMessageSender)
   extends BaseController {
 
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 
-    def postToBackendService(config: ServiceConfig, requestInfo: RequestInfo, headers: Map[String, String], body: NodeSeq) = {
-      val clientId = headers.getOrElse(xClientId, "")
-      val xBadgeIdentifierValue = headers.getOrElse(xBadgeIdentifier, "")
-
-      connector.postRequest(
-        OutgoingRequest(
-          config,
-          payloadDecorator.wrap(body, requestInfo, clientId, xBadgeIdentifierValue),
-          requestInfo))
+    def addConversationIdHeader(r: Result, conversationId: String) = {
+      r.withHeaders(xConversationId -> conversationId)
     }
 
-    def xmlValidationErrors(saxe: SAXException): Seq[ResponseContents] = {
-    @annotation.tailrec
-    def loop(thr: Exception, acc: List[ResponseContents]): List[ResponseContents] = {
-      val newAcc = ResponseContents("xml_validation_error", thr.getMessage) :: acc
-      thr match {
-        case saxError: SAXException if Option(saxError.getException).isDefined => loop(saxError.getException, newAcc)
-        case _ => newAcc
-      }
-    }
-    loop(saxe, Nil)
-  }
-
-    val payload = request.body.asXml.getOrElse(NodeSeq.Empty)
-    val requestInfo = requestInfoGenerator.newRequestInfo
-
-    (for {
-      validBody <- xmlValidationService.validate(payload)
-      _ <- postToBackendService(configProvider.getConfig("imports"), requestInfo, request.headers.toSimpleMap, validBody)
-    } yield Accepted).
-    recoverWith{
+    def recover: PartialFunction[Throwable, Future[Result]] = {
       case NonFatal(saxe: SAXException) =>
-              Future.successful(
-                ErrorResponse.ErrorGenericBadRequest.withErrors(xmlValidationErrors(saxe): _*).XmlResult)
+        Future.successful(
+          ErrorResponse.ErrorGenericBadRequest.withErrors(
+            XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
 
-      case NonFatal(_) => Future.successful(
-        ErrorResponse.ErrorInternalServerError.XmlResult)
-    }.map(r => r.withHeaders(xConversationId -> requestInfo.conversationId.toString))
+      case NonFatal(_) => Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
+    }
+
+    val body = request.body.asXml.getOrElse(NodeSeq.Empty)
+    val requestInfo = requestInfoGenerator.newRequestInfo
+    val headers = request.headers.toSimpleMap
+
+    messageSender.send(body, requestInfo, headers, configProvider.getConfig("imports")).
+      map(_ => Accepted).
+      recoverWith(recover).
+      map(r => addConversationIdHeader(r, requestInfo.conversationId.toString))
   }
 }

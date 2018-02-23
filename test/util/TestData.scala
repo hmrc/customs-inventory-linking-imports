@@ -40,6 +40,7 @@ object TestData {
   val serviceConfig: ServiceConfig = ServiceConfig("url", Some(bearerToken), "env")
 
   val body: Elem = <payload>payload</payload>
+  val decoratedBody = <wrapped><payload>payload</payload></wrapped>
 
   object Headers {
     val accept: (String, String) = (ACCEPT, "application/vnd.hmrc.1.0+xml")

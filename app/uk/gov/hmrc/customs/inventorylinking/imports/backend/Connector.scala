@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package uk.gov.hmrc.customs.inventorylinking.imports.backend
 
 import javax.inject.Inject
 
 import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
+import uk.gov.hmrc.customs.inventorylinking.imports.request.OutgoingRequest
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.services
+package unit.xml
 
 import java.io.FileNotFoundException
 
@@ -23,7 +23,7 @@ import org.mockito.Mockito.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import play.api.Configuration
-import uk.gov.hmrc.customs.inventorylinking.imports.service.XmlValidationService
+import uk.gov.hmrc.customs.inventorylinking.imports.xml.XmlValidationService
 import uk.gov.hmrc.play.test.UnitSpec
 import unit.util.TestData.xsdLocations
 import unit.util.XMLTestData.{InvalidXML, InvalidXMLWithMultipleErrors, ValidInventoryLinkingMovementRequestXML}

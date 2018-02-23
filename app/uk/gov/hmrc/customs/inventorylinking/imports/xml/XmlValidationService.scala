@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.service
+package uk.gov.hmrc.customs.inventorylinking.imports.xml
 
 import java.io.{FileNotFoundException, StringReader}
 import java.net.URL
@@ -50,17 +50,16 @@ class XmlValidationService @Inject()(configuration: Configuration) {
 
   private lazy val maxSAXErrors = configuration.getInt("xml.max-errors").getOrElse(Int.MaxValue)
 
-  def validate(xml: NodeSeq)(implicit ec: ExecutionContext): Future[NodeSeq] = {
+  def validate(xml: NodeSeq)(implicit ec: ExecutionContext): Future[Unit] = {
     Future(doValidate(xml))
   }
 
-  private def doValidate(xml: NodeSeq): NodeSeq = {
+  private def doValidate(xml: NodeSeq): Unit = {
     val errorHandler = new AccumulatingSAXErrorHandler(maxSAXErrors)
     val validator = schema.newValidator()
     validator.setErrorHandler(errorHandler)
     validator.validate(new StreamSource(new StringReader(xml.toString)))
     errorHandler.throwIfErrorsEncountered()
-    xml
   }
 
   private class AccumulatingSAXErrorHandler(maxErrors: Int) extends ErrorHandler {
