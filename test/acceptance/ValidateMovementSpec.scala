@@ -45,7 +45,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
   private val validMessageMatcher = post(urlMatching(importMovementUrl)).
     withHeader(ACCEPT, equalTo(MimeTypes.XML)).
-    withHeader(CONTENT_TYPE, equalTo(MimeTypes.XML)).
+    withHeader(CONTENT_TYPE, equalTo(s"${MimeTypes.XML}; charset=UTF-8")).
     withHeader(DATE, notMatching("")).
     withHeader("X-Correlation-ID", notMatching("")).
     withHeader(X_FORWARDED_HOST, equalTo("MDTP")).
@@ -87,7 +87,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
 
       And("an Accepted (202) response is returned")
       status(result) shouldBe ACCEPTED
-      header("X-Conversation-Id", result).get shouldNot be("")
+      header("X-Conversation-ID", result).get shouldNot be("")
     }
 
     scenario("A valid Declaration submitted and the Back End service fails") {
@@ -105,7 +105,7 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
       Then("an 500 Internal Server Error response is returned")
       status(result) shouldBe INTERNAL_SERVER_ERROR
       stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
-      header("X-Conversation-Id", result).get shouldNot be("")
+      header("X-Conversation-ID", result).get shouldNot be("")
     }
   }
 
