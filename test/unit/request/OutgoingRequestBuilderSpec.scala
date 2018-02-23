@@ -16,12 +16,13 @@
 
 package unit.request
 
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{OutgoingRequest, OutgoingRequestBuilder, PayloadDecorator}
-import util.TestData._
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder}
+import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import util.TestData.Headers._
-import org.mockito.Mockito.when
+import util.TestData._
 
 class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with MockitoSugar {
 

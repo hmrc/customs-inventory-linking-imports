@@ -20,7 +20,8 @@ import java.util.UUID
 
 import org.joda.time.DateTimeZone
 import org.scalatest.{AsyncTestSuite, Matchers, WordSpecLike}
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{RequestInfo, RequestInfoGenerator}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
+import uk.gov.hmrc.customs.inventorylinking.imports.services.RequestInfoGenerator
 class RequestInfoGeneratorSpec extends WordSpecLike with Matchers {
 
   trait NewRequestInfo extends AsyncTestSuite {

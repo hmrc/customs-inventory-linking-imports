@@ -22,7 +22,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.MimeTypes
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.request.RequestInfo
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
 
 import scala.xml.Elem
 

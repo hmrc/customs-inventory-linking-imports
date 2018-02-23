@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-object HeaderNames {
-  val xClientId: String = "X-Client-ID"
-  val xConversationId: String = "X-Conversation-ID"
-  val xForwardedHost: String = "X-Forwarded-Host"
-  val xCorrelationId: String = "X-Correlation-ID"
-  val xBadgeIdentifier: String = "X-Badge-Identifier"
-}
+import java.util.UUID
+
+import org.joda.time.DateTime
+
+case class RequestInfo(conversationId: UUID, correlationId: UUID, dateTime: DateTime)

@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package uk.gov.hmrc.customs.inventorylinking.imports.xml
 
 import org.joda.time.format.ISODateTimeFormat
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
 
 import scala.xml.NodeSeq
 
+//TODO: maybe this can be reused if wrap is made into an abstract interface with implementations per message
 class PayloadDecorator {
   def wrap(xml: NodeSeq, requestInfo: RequestInfo, clientId: String, badgeIdentifier: String): NodeSeq =
     <n1:InventoryLinkingImportsInboundValidateMovementResponse

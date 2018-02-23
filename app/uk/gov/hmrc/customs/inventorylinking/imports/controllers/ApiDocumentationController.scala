@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
 import play.api.Configuration
 import play.api.http.HttpErrorHandler
@@ -24,6 +24,7 @@ import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.customs.api.common.controllers.DocumentationController
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 
+@Singleton
 class ApiDocumentationController @Inject()(httpErrorHandler: HttpErrorHandler, configuration: Configuration) extends DocumentationController(httpErrorHandler) {
 
   private val apiScopeConfigKey = "customs.definition.api-scope"
