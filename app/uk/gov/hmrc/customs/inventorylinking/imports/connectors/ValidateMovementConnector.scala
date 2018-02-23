@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.backend
+package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
-import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
-import uk.gov.hmrc.customs.inventorylinking.imports.request.OutgoingRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Connector @Inject()(wsHttp: WSHttp) {
+@Singleton
+class ValidateMovementConnector @Inject()(wsHttp: WSHttp) {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def postRequest(request: OutgoingRequest): Future[HttpResponse] = {
+  def post(request: OutgoingRequest): Future[HttpResponse] = {
 
     wsHttp.POSTString(request.url, request.body.toString, request.headers).
       recoverWith {
