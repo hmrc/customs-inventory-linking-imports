@@ -14,29 +14,30 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.backend.Connector
-import uk.gov.hmrc.customs.inventorylinking.imports.xml.XmlValidationService
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequestBuilder, ValidateMovementConnector}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
 import uk.gov.hmrc.http.HttpResponse
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.NodeSeq
-import scala.concurrent.ExecutionContext.Implicits.global
 
+@Singleton
 class ValidateMovementMessageSender @Inject()(outgoingRequestBuilder: OutgoingRequestBuilder,
                                               xmlValidationService: XmlValidationService,
-                                              connector: Connector) {
+                                              connector: ValidateMovementConnector) {
 
   def send(body: NodeSeq, requestInfo: RequestInfo, headers: Map[String, String], config: ServiceConfig): Future[HttpResponse] = {
     val outgoingRequest = outgoingRequestBuilder.build(config, requestInfo, headers, body)
 
     for {
       _ <- xmlValidationService.validate(body)
-      result <- connector.postRequest(outgoingRequest)
+      result <- connector.post(outgoingRequest)
     } yield result
   }
 }

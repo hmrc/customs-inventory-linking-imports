@@ -21,9 +21,8 @@ import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.inventorylinking.imports.request.HeaderNames._
-import uk.gov.hmrc.customs.inventorylinking.imports.request._
-import uk.gov.hmrc.customs.inventorylinking.imports.xml.XmlValidationErrorsMapper
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderNames.XConversationId
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{RequestInfoGenerator, ValidateMovementMessageSender, XmlValidationErrorsMapper}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -39,7 +38,7 @@ class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider
   def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
 
     def addConversationIdHeader(r: Result, conversationId: String) = {
-      r.withHeaders(xConversationId -> conversationId)
+      r.withHeaders(XConversationId -> conversationId)
     }
 
     def recover: PartialFunction[Throwable, Future[Result]] = {

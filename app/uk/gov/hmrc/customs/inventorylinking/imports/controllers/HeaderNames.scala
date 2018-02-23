@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 object HeaderNames {
-  val xClientId: String = "X-Client-Id"
-  val xConversationId: String = "X-Conversation-Id"
-  val xForwardedHost: String = "X-Forwarded-Host"
-  val xCorrelationId: String = "X-Correlation-Id"
-  val xBadgeIdentifier: String = "X-Badge-Identifier"
+  val XClientId: String = "X-Client-Id"
+  val XConversationId: String = "X-Conversation-Id"
+  val XForwardedHost: String = "X-Forwarded-Host"
+  val XCorrelationId: String = "X-Correlation-Id"
+  val XBadgeIdentifier: String = "X-Badge-Identifier"
 }

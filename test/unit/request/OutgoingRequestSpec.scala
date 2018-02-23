@@ -20,7 +20,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes._
-import uk.gov.hmrc.customs.inventorylinking.imports.request.OutgoingRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.OutgoingRequest
 import util.TestData._
 
 class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {

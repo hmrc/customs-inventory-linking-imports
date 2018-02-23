@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.xml
+package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import uk.gov.hmrc.customs.api.common.controllers.ResponseContents
 

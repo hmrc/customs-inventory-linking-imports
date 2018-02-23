@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import java.util.UUID
 
 import org.joda.time.{DateTime, DateTimeZone}
-
-import scala.concurrent.Future
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
 
 class RequestInfoGenerator {
   def newRequestInfo: RequestInfo = {

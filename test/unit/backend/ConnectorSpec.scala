@@ -25,9 +25,9 @@ import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
-import uk.gov.hmrc.customs.inventorylinking.imports.backend.Connector
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{OutgoingRequest, RequestInfo}
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, ValidateMovementConnector}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
+import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData
@@ -40,7 +40,7 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
   trait SetupConnector {
     private val serviceConfig = ServiceConfig("the-url", Some("bearerToken"), "default")
     private val wsHttp: WSHttp = mock[WSHttp]
-    private val connector = new Connector(wsHttp)
+    private val connector = new ValidateMovementConnector(wsHttp)
 
     private val validMessage: Elem = <message></message>
 
@@ -53,7 +53,7 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
     }
 
     def sendValidMessageToConnector: HttpResponse = {
-      await(connector.postRequest(request))
+      await(connector.post(request))
     }
   }
 

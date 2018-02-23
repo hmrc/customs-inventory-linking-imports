@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.request
+package uk.gov.hmrc.customs.inventorylinking.imports.model
 
 import java.util.UUID
 
 import org.joda.time.DateTime
 
+//TODO: maybe this can be reused for other messages?
 case class RequestInfo(conversationId: UUID, correlationId: UUID, dateTime: DateTime)

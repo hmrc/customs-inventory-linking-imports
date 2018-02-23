@@ -16,17 +16,16 @@
 
 package unit.request
 
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.Status.ACCEPTED
-import uk.gov.hmrc.customs.inventorylinking.imports.backend.Connector
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{OutgoingRequest, OutgoingRequestBuilder, ValidateMovementMessageSender}
-import uk.gov.hmrc.customs.inventorylinking.imports.xml.XmlValidationService
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder, ValidateMovementConnector}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{ValidateMovementMessageSender, XmlValidationService}
 import uk.gov.hmrc.http.HttpResponse
-import org.mockito.Mockito.when
 import util.TestData._
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ValidateMovementMessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
@@ -35,7 +34,7 @@ class ValidateMovementMessageSenderSpec extends WordSpecLike with Matchers with 
     val httpResponse: AnyRef with HttpResponse = HttpResponse(ACCEPTED)
     private val outgoingRequestBuilder = mock[OutgoingRequestBuilder]
     val xmlValidationService: XmlValidationService = mock[XmlValidationService]
-    val connector: Connector = mock[Connector]
+    val connector: ValidateMovementConnector = mock[ValidateMovementConnector]
     val headers: Map[String, String] = Map("header" -> "value")
     val sender: ValidateMovementMessageSender = new ValidateMovementMessageSender(outgoingRequestBuilder, xmlValidationService, connector)
 
@@ -48,7 +47,7 @@ class ValidateMovementMessageSenderSpec extends WordSpecLike with Matchers with 
   "send" when {
     "message is valid" should {
       "return the result from the connector" in new Setup {
-        when(connector.postRequest(outgoingRequest)).thenReturn(Future.successful(httpResponse))
+        when(connector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
 
         val result = sender.send(body, requestInfo, headers, serviceConfig)
 

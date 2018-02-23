@@ -16,27 +16,23 @@
 
 package unit.controllers
 
-import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.ArgumentMatchers.{eq => meq}
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import org.xml.sax
 import org.xml.sax.SAXException
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
-import uk.gov.hmrc.customs.inventorylinking.imports.backend.Connector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController
-import uk.gov.hmrc.customs.inventorylinking.imports.request._
-import uk.gov.hmrc.customs.inventorylinking.imports.xml.XmlValidationService
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{RequestInfoGenerator, ValidateMovementMessageSender}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData.Headers._
 import util.TestData._
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
+import scala.concurrent.Future
 
 class ValidateMovementControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar {
 

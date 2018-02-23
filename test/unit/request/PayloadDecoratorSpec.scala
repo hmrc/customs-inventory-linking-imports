@@ -17,7 +17,7 @@
 package unit.request
 
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.customs.inventorylinking.imports.request.PayloadDecorator
+import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData._
 
