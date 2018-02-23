@@ -33,7 +33,7 @@ case class OutgoingRequest(service: ServiceConfig,
 
   lazy val headers: Seq[(String, String)] = Seq(
       ACCEPT -> XML,
-      CONTENT_TYPE -> XML,
+      CONTENT_TYPE -> s"$XML; charset=UTF-8",
       AUTHORIZATION -> s"Bearer $bearerToken",
       DATE -> requestInfo.dateTime.toString(ISODateTimeFormat.dateTimeNoMillis()),
       xForwardedHost -> "MDTP",

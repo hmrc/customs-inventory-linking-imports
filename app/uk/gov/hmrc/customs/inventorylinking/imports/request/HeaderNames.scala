@@ -17,9 +17,9 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.request
 
 object HeaderNames {
-  val xClientId: String = "X-Client-Id"
-  val xConversationId: String = "X-Conversation-Id"
+  val xClientId: String = "X-Client-ID"
+  val xConversationId: String = "X-Conversation-ID"
   val xForwardedHost: String = "X-Forwarded-Host"
-  val xCorrelationId: String = "X-Correlation-Id"
+  val xCorrelationId: String = "X-Correlation-ID"
   val xBadgeIdentifier: String = "X-Badge-Identifier"
 }

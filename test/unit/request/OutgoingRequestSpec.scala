@@ -37,7 +37,7 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     "include content-type" in new validRequest {
-      request.headers should contain (CONTENT_TYPE -> XML)
+      request.headers should contain (CONTENT_TYPE -> s"$XML; charset=UTF-8")
     }
 
     "include X-Forwared-Host" in new validRequest {
@@ -49,11 +49,11 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     "include X-Conversation-Id" in new validRequest {
-      request.headers should contain ("X-Conversation-Id" -> conversationId.toString)
+      request.headers should contain ("X-Conversation-ID" -> conversationId.toString)
     }
 
     "include X-Correlation-Id" in new validRequest {
-      request.headers should contain ("X-Correlation-Id" -> correlationId.toString)
+      request.headers should contain ("X-Correlation-ID" -> correlationId.toString)
     }
 
     "include Authorization" in new validRequest {
