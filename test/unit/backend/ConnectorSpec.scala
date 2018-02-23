@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.request
+package unit.backend
 
 import java.util.UUID
 
@@ -26,7 +26,8 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
-import uk.gov.hmrc.customs.inventorylinking.imports.request.{Connector, OutgoingRequest, RequestInfo}
+import uk.gov.hmrc.customs.inventorylinking.imports.backend.Connector
+import uk.gov.hmrc.customs.inventorylinking.imports.request.{OutgoingRequest, RequestInfo}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.service
+package uk.gov.hmrc.customs.inventorylinking.imports.xml
 
 import java.io.{FileNotFoundException, StringReader}
 import java.net.URL

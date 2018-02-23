@@ -16,23 +16,10 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.request
 
-import javax.inject.Inject
-
-import uk.gov.hmrc.customs.inventorylinking.imports.WSHttp
-import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
-class Connector @Inject()(wsHttp: WSHttp) {
-
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
-
-  def postRequest(request: OutgoingRequest): Future[HttpResponse] = {
-
-    wsHttp.POSTString(request.url, request.body.toString, request.headers).
-      recoverWith {
-        case httpError: HttpException => Future.failed(new RuntimeException(httpError))
-      }
-  }
+object HeaderNames {
+  val xClientId: String = "X-Client-Id"
+  val xConversationId: String = "X-Conversation-Id"
+  val xForwardedHost: String = "X-Forwarded-Host"
+  val xCorrelationId: String = "X-Correlation-Id"
+  val xBadgeIdentifier: String = "X-Badge-Identifier"
 }
