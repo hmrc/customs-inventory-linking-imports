@@ -23,3 +23,8 @@ object HeaderNames {
   val XCorrelationId: String = "X-Correlation-ID"
   val XBadgeIdentifier: String = "X-Badge-Identifier"
 }
+
+object ConfigNames {
+  val ValidateMovementConfig = "validatemovement"
+  val GoodsArrivalConfig = "goodsarrival"
+}

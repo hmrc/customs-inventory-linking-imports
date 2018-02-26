@@ -21,7 +21,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder, ValidateMovementConnector}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ValidateMovementMessageSender, XmlValidationService}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, XmlValidationService}
 import uk.gov.hmrc.http.HttpResponse
 import util.TestData._
 
@@ -36,7 +36,7 @@ class ValidateMovementMessageSenderSpec extends WordSpecLike with Matchers with 
     val xmlValidationService: XmlValidationService = mock[XmlValidationService]
     val connector: ValidateMovementConnector = mock[ValidateMovementConnector]
     val headers: Map[String, String] = Map("header" -> "value")
-    val sender: ValidateMovementMessageSender = new ValidateMovementMessageSender(outgoingRequestBuilder, xmlValidationService, connector)
+    val sender: MessageSender = new MessageSender(outgoingRequestBuilder, xmlValidationService, connector)
 
     val outgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
     when(outgoingRequestBuilder.build(serviceConfig, requestInfo, headers, body)).thenReturn(outgoingRequest)

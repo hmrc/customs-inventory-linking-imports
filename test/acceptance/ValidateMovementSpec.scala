@@ -52,10 +52,10 @@ class ValidateMovementSpec extends FeatureSpec with GivenWhenThen with GuiceOneA
     withHeader(AUTHORIZATION, equalTo(s"Bearer ${ExternalServicesConfig.AuthToken}"))
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
-    "microservice.services.imports.host" -> ExternalServicesConfig.Host,
-    "microservice.services.imports.port" -> ExternalServicesConfig.Port,
-    "microservice.services.imports.context" -> importMovementUrl,
-    "microservice.services.imports.bearer-token" -> ExternalServicesConfig.AuthToken
+    "microservice.services.validatemovement.host" -> ExternalServicesConfig.Host,
+    "microservice.services.validatemovement.port" -> ExternalServicesConfig.Port,
+    "microservice.services.validatemovement.context" -> importMovementUrl,
+    "microservice.services.validatemovement.bearer-token" -> ExternalServicesConfig.AuthToken
   )).build()
 
   override protected def beforeAll() {

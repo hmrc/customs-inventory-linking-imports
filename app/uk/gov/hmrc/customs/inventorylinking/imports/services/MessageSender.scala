@@ -27,9 +27,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 
-class ValidateMovementMessageSender @Inject()(outgoingRequestBuilder: OutgoingRequestBuilder,
-                                              xmlValidationService: XmlValidationService,
-                                              connector: ValidateMovementConnector) {
+class MessageSender @Inject()(outgoingRequestBuilder: OutgoingRequestBuilder,
+                              xmlValidationService: XmlValidationService,
+                              connector: ValidateMovementConnector) {
 
   def send(body: NodeSeq, requestInfo: RequestInfo, headers: Map[String, String], config: ServiceConfig): Future[HttpResponse] = {
     val outgoingRequest = outgoingRequestBuilder.build(config, requestInfo, headers, body)
