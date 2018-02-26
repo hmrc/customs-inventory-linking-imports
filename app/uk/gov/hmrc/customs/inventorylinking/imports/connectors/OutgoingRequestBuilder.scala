@@ -19,8 +19,8 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.{XBadgeIdentifier, XClientId}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderNames.{XBadgeIdentifier, XClientId}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 
 import scala.xml.NodeSeq

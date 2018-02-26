@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderNames.XConversationId
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.XmlValidationErrorsMapper
 import uk.gov.hmrc.play.microservice.controller.BaseController
@@ -71,7 +71,7 @@ class GoodsArrivalController @Inject()(configProvider: ServiceConfigProvider,
                                        messageSender: MessageSender)
   extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.GoodsArrivalConfig) {
 
-  def submit(id: String): Action[AnyContent] = {
+  def post(id: String): Action[AnyContent] = {
     super.process(id)
   }
 }
@@ -82,8 +82,8 @@ class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider
                                            messageSender: MessageSender)
   extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.ValidateMovementConfig) {
 
-  def postMessage(id: String): Action[AnyContent] = {
-    super.process(id)
+  def post(id: String): Action[AnyContent] = {
+     super.process(id)
   }
 
 }

@@ -19,7 +19,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 import javax.inject.Inject
 
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequestBuilder, ValidateMovementConnector}
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequestBuilder, ImportsConnector}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
 import uk.gov.hmrc.http.HttpResponse
 
@@ -29,7 +29,7 @@ import scala.xml.NodeSeq
 
 class MessageSender @Inject()(outgoingRequestBuilder: OutgoingRequestBuilder,
                               xmlValidationService: XmlValidationService,
-                              connector: ValidateMovementConnector) {
+                              connector: ImportsConnector) {
 
   def send(body: NodeSeq, requestInfo: RequestInfo, headers: Map[String, String], config: ServiceConfig): Future[HttpResponse] = {
     val outgoingRequest = outgoingRequestBuilder.build(config, requestInfo, headers, body)

@@ -20,12 +20,11 @@ import org.joda.time.format.ISODateTimeFormat
 import play.api.http.HeaderNames.{ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE}
 import play.api.http.MimeTypes._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderNames._
 
 import scala.xml.NodeSeq
 
-//TODO: maybe this can be reused?
 case class OutgoingRequest(service: ServiceConfig,
                            body: NodeSeq,
                            requestInfo: RequestInfo) {
