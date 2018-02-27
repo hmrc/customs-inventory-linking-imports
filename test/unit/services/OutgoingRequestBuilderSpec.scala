@@ -23,6 +23,7 @@ import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
+import util.TestData
 import util.TestData.Headers._
 import util.TestData._
 
@@ -34,7 +35,7 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
     val decorator: PayloadDecorator = mock[PayloadDecorator]
     val builder: OutgoingRequestBuilder = new OutgoingRequestBuilder(serviceConfigProvider, decorator)
 
-    when(decorator.wrap(body, requestInfo, clientId, badgeIdentifier, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
+    when(decorator.wrap(body, requestInfo, XClientIdHeaderValue, XBadgeIdentifierHeaderValue, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
     when(serviceConfigProvider.getConfig("validatemovement")).thenReturn(serviceConfig)
 
     val result: OutgoingRequest = builder.build(ValidateMovement, requestInfo, headers, body)

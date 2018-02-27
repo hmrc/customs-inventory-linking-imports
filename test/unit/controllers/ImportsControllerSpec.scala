@@ -22,9 +22,12 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.xml.sax.SAXException
+import play.api.http.HeaderNames.{ACCEPT, CONTENT_TYPE}
+import play.api.http.MimeTypes
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
+import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
@@ -38,20 +41,25 @@ import scala.concurrent.Future
 
 class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
 
-  private val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
-  private val clientId = "clientId"
-  private val badgeIdentifier = "badge"
-  private val messageSender: MessageSender = mock[MessageSender]
+  val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
+  val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
+  val clientId = "8e1043ef-fb32-4e90-9682-a8ff4a07228a"
+  val badgeIdentifier = "badge"
+  val messageSender: MessageSender = mock[MessageSender]
 
-  private val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
-    withHeaders(xClientIdName -> clientId.toString, xBadgeIdentifierName -> badgeIdentifier)
+  val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
+    withHeaders(
+      ACCEPT -> AcceptHeaderValue,
+      CONTENT_TYPE -> MimeTypes.XML,
+      xClientIdName -> clientId.toString,
+      xBadgeIdentifierName -> badgeIdentifier)
 
   val logger = mock[CdsLogger]
   val validateMovementController: ValidateMovementController = new ValidateMovementController(requestInfoGenerator, messageSender, logger)
   val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(requestInfoGenerator, messageSender, logger)
 
   override protected def beforeEach() {
-    reset(requestInfoGenerator)
+    reset(serviceConfigProvider, requestInfoGenerator)
     when(requestInfoGenerator.newRequestInfo).thenReturn(requestInfo)
   }
 
@@ -115,7 +123,5 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         status(result) shouldBe BAD_REQUEST
       }
     }
-
   }
-
 }

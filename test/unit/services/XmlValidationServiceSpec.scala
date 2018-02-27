@@ -92,21 +92,20 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
         verify(mockConfiguration).getStringSeq(ameq(xsdPropertyPathLocation))
       }
-
     }
   }
 
   forAll(testXmlDataByMessageType) { (messageType, _, validXmlForOtherElement, invalidXml, invalidXmlWithMultipleErrors) =>
     s"$messageType XmlValidationService with invalid input" should {
       "fail the future when in configuration there are no locations of xsd resource files" in new SetUp {
-          val importsMessageType: ImportsMessageType = messageType
-          when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(None)
-          when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+        val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(None)
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
 
-          private val caught = intercept[IllegalStateException] {
-            await(service.validate(mockXml))
-          }
-          caught.getMessage shouldBe s"application.conf is missing mandatory property '$xsdPropertyPathLocation'"
+        private val caught = intercept[IllegalStateException] {
+          await(service.validate(mockXml))
+        }
+        caught.getMessage shouldBe s"application.conf is missing mandatory property '$xsdPropertyPathLocation'"
       }
 
       s"fail the future when in configuration there is an empty list for locations of xsd resource files" in new SetUp {
@@ -223,7 +222,5 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
         caught.getMessage shouldBe "requirement failed: maxErrors should be a positive number but 0 was provided instead."
       }
     }
-
   }
-
 }

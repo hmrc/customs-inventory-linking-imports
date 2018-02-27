@@ -48,11 +48,11 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
       request.headers should contain (DATE -> requestDateTimeHttp)
     }
 
-    "include X-Conversation-Id" in new validRequest {
+    "include X-Conversation-ID" in new validRequest {
       request.headers should contain ("X-Conversation-ID" -> conversationId.toString)
     }
 
-    "include X-Correlation-Id" in new validRequest {
+    "include X-Correlation-ID" in new validRequest {
       request.headers should contain ("X-Correlation-ID" -> correlationId.toString)
     }
 

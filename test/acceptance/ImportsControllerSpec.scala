@@ -40,11 +40,11 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
 
   private val validateMovementRequest = FakeRequest("POST", "/movement-validation")
     .withXmlBody(ValidInventoryLinkingMovementRequestXML)
-    .withHeaders(TestData.Headers.validHeaders: _*)
+    .withHeaders(TestData.Headers.validHeaders.toSeq: _*)
 
   private val goodsArrivalRequest = FakeRequest("POST", "/arrival-notifications")
     .withXmlBody(ValidInventoryLinkingGoodsArrivalRequestXML)
-    .withHeaders(TestData.Headers.validHeaders: _*)
+    .withHeaders(TestData.Headers.validHeaders.toSeq: _*)
 
   private val internalServerError =
     """<?xml version="1.0" encoding="UTF-8"?>
