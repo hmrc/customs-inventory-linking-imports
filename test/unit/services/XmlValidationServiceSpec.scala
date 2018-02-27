@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.xml
+package unit.services
 
 import java.io.FileNotFoundException
 
@@ -22,16 +22,17 @@ import org.mockito.ArgumentMatchers.{eq => ameq}
 import org.mockito.Mockito.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.Configuration
 import uk.gov.hmrc.customs.inventorylinking.imports.services.XmlValidationService
 import uk.gov.hmrc.play.test.UnitSpec
 import unit.util.TestData.xsdLocations
-import unit.util.XMLTestData.{InvalidXML, InvalidXMLWithMultipleErrors, ValidInventoryLinkingMovementRequestXML}
+import unit.util.XMLTestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{Node, SAXException}
 
-class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach {
+class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach with TableDrivenPropertyChecks {
 
   private val MockConfiguration = mock[Configuration]
   private val MockXml = mock[Node]
@@ -46,12 +47,28 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with BeforeAnd
     when(MockConfiguration.getInt("xml.max-errors")).thenReturn(None)
   }
 
-  "XmlValidationService" should {
+  "XmlValidationService with valid input" should {
     "get location of xsd resource files from configuration" in testService { xmlValidationService =>
       await(xmlValidationService.validate(ValidInventoryLinkingMovementRequestXML))
+
       verify(MockConfiguration).getStringSeq(ameq("xsd.locations"))
     }
 
+    val xmlRequests = Table(
+      ("linking message type", "xml"),
+      ("MovementRequest", ValidInventoryLinkingMovementRequestXML),
+      ("GoodsArrival", ValidInventoryGoodsArrivalRequestXML)
+    )
+
+    forAll(xmlRequests) { (linkingType, xml) =>
+      s"not throw exceptions for valid XML for linking type $linkingType" in testService {
+        xmlValidationService =>
+          xmlValidationService.validate(xml)
+      }
+    }
+  }
+
+  "XmlValidationService with invalid input" should {
     "fail the future when in configuration there are no locations of xsd resource files" in testService {
       xmlValidationService =>
         when(MockConfiguration.getStringSeq("xsd.locations")).thenReturn(None)
@@ -85,6 +102,7 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with BeforeAnd
       val caught = intercept[SAXException] {
         await(xmlValidationService.validate(InvalidXML))
       }
+
       caught.getMessage shouldBe "cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element 'InventoryLinkingImportsValidateMovementResponse'."
       Option(caught.getException) shouldBe None
     }
@@ -93,8 +111,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with BeforeAnd
       val caught = intercept[SAXException] {
         await(xmlValidationService.validate(InvalidXMLWithMultipleErrors))
       }
-      caught.getMessage shouldBe "cvc-type.3.1.3: The value 'A' of element 'entryVersionNumber' is not valid."
 
+      caught.getMessage shouldBe "cvc-type.3.1.3: The value 'A' of element 'entryVersionNumber' is not valid."
       Option(caught.getException) shouldBe 'nonEmpty
 
       val wrapped1 = caught.getException

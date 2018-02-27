@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.request
+package unit.xml
 
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
