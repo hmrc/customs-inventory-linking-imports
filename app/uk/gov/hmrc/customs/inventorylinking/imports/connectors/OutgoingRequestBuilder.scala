@@ -25,7 +25,6 @@ import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 
 import scala.xml.NodeSeq
 
-//TODO: maybe this can be reused if PayloadDecorator is made an abstract interface?
 @Singleton
 class OutgoingRequestBuilder @Inject()(payloadDecorator: PayloadDecorator) {
 

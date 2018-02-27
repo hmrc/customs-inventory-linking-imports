@@ -35,7 +35,8 @@ import scala.xml.{Utility, XML}
 class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner with TableDrivenPropertyChecks {
 
-  private val importMovementUrl = "/inventorylinkingimports/validatemovementresponse"
+  private val validateMovementUrl = "/inventorylinkingimports/validatemovementresponse"
+  private val goodsArrivalUrl = "/inventorylinkingimports/goodsarrivalnotification"
   private val id = "id"
 
   private val validateMovementRequest = FakeRequest("POST", s"/$id/movement-validation")
@@ -54,7 +55,7 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
       |</errorResponse>
     """.stripMargin
 
-  private val validMessageMatcher = post(urlMatching(importMovementUrl)).
+  private def validMessageMatcher(url: String) = post(urlMatching(url)).
     withHeader(ACCEPT, equalTo(MimeTypes.XML)).
     withHeader(CONTENT_TYPE, equalTo(s"${MimeTypes.XML}; charset=UTF-8")).
     withHeader(DATE, notMatching("")).
@@ -65,11 +66,11 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
     "microservice.services.validatemovement.host" -> ExternalServicesConfig.Host,
     "microservice.services.validatemovement.port" -> ExternalServicesConfig.Port,
-    "microservice.services.validatemovement.context" -> importMovementUrl,
+    "microservice.services.validatemovement.context" -> validateMovementUrl,
     "microservice.services.validatemovement.bearer-token" -> ExternalServicesConfig.AuthToken,
     "microservice.services.goodsarrival.host" -> ExternalServicesConfig.Host,
     "microservice.services.goodsarrival.port" -> ExternalServicesConfig.Port,
-    "microservice.services.goodsarrival.context" -> importMovementUrl,
+    "microservice.services.goodsarrival.context" -> goodsArrivalUrl,
     "microservice.services.goodsarrival.bearer-token" -> ExternalServicesConfig.AuthToken
   )).build()
 
@@ -85,12 +86,12 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
     stopMockServer()
   }
 
-  private val controllers = Table(("controller name", "controller post"),
-    ("Goods Arrival", goodsArrivalRequest),
-    ("Validate Movement", validateMovementRequest)
+  private val controllers = Table(("Message Type", "request", "url"),
+    ("Goods Arrival", goodsArrivalRequest, goodsArrivalUrl),
+    ("Validate Movement", validateMovementRequest, validateMovementUrl)
   )
 
-  forAll(controllers) { case (controllerName, controller) =>
+  forAll(controllers) { case (controllerName, controller, url) =>
 
     feature(s"CSP Submits ($controllerName) Message") {
       info("As a CSP")
@@ -102,7 +103,7 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
 
         And("the Back End Service will return a successful response")
 
-        stubFor(validMessageMatcher willReturn aResponse().withStatus(ACCEPTED))
+        stubFor(validMessageMatcher(url) willReturn aResponse().withStatus(ACCEPTED))
 
         When(s"a valid $controllerName message is submitted with valid headers")
         val result: Future[Result] = route(app, controller).get
@@ -117,7 +118,7 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
 
         And("the Back End Service will return an error response")
         stubFor(
-          post(urlMatching(importMovementUrl)).
+          post(urlMatching(url)).
             willReturn(aResponse().withStatus(NOT_FOUND)))
 
 
