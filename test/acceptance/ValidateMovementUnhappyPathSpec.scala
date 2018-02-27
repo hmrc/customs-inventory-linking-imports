@@ -184,12 +184,12 @@ class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen wit
   }
 
   private def postValidMovementMessage(payload: String) = {
-    val request = FakeRequest("POST", s"/$id/movement-validation").withBody(payload)
+    val request = FakeRequest("POST", "/movement-validation").withBody(payload)
     route(app, request)
   }
 
   private def postValidMovementMessage(payload: NodeSeq) = {
-    val request = FakeRequest("POST", s"/$id/movement-validation").withXmlBody(payload)
+    val request = FakeRequest("POST", "/movement-validation").withXmlBody(payload)
     route(app, request)
   }
 }

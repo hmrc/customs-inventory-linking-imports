@@ -59,7 +59,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
   private val controllers = Table(("controller name", "controller post"),
     ("Goods Arrival", goodsArrivalController.post("id")),
-    ("Validate Movement", validateMovementController.post("id"))
+    ("Validate Movement", validateMovementController.post())
   )
 
   forAll(controllers) { case (controllerName, controller) =>
