@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.request
+package unit.services
 
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}

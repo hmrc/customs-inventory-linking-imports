@@ -63,32 +63,19 @@ object XMLTestData {
       <irc>str</irc>
     </InventoryLinkingImportsValidateMovementResponse>
 
-  val ValidInventoryLinkingConsolidationRequestXML: Elem =
-    <inventoryLinkingConsolidationRequest xmlns="http://gov.uk/customs/inventoryLinking/v1">
-      <messageCode>EAC</messageCode>
-      <transactionType>Dissassociate</transactionType>
-      <masterUCR>GB/AAAA-00000</masterUCR>
-      <ucrBlock>
-        <ucr>GB/BBBB-00000</ucr>
-        <ucrType>D</ucrType>
-      </ucrBlock>
-    </inventoryLinkingConsolidationRequest>
+  val ValidInventoryGoodsArrivalRequestXML: Elem =
+    <inventoryLinkingImportsGoodsArrival xmlns:v1="http://gov.uk/customs/inventoryLinkingImport/v1">
+      <messageCode>str</messageCode>
+      <dateOfEntry>2008-09-29T02:49:45</dateOfEntry>
+      <entryNumber>string</entryNumber>
+      <!--Optional:-->
+      <entryVersionNumber>3</entryVersionNumber>
+      <goodsArrivalDeclaration>Y</goodsArrivalDeclaration>
+      <inventoryConsignmentReference>string</inventoryConsignmentReference>
+      <!--Optional:-->
+      <irc>str</irc>
+      <!--Optional:-->
+      <transportNationality>st</transportNationality>
+    </inventoryLinkingImportsGoodsArrival>
 
-  val ValidInventoryLinkingQueryRequestXML: Elem =
-    <inventoryLinkingQueryRequest xmlns="http://gov.uk/customs/inventoryLinking/v1">
-    <queryUCR>
-      <ucr>GB/AAAA-00000</ucr>
-      <ucrType>M</ucrType>
-    </queryUCR>
-    <agentDetails>
-      <EORI>{declarantEoriValue}</EORI>
-    </agentDetails>
-  </inventoryLinkingQueryRequest>
-
-  val xmlRequests = Table(
-    ("linkingType", "xml"),
-    ("inventoryLinkingMovementRequest", ValidInventoryLinkingMovementRequestXML),
-    ("inventoryLinkingConsolidationRequest", ValidInventoryLinkingConsolidationRequestXML),
-    ("inventoryLinkingQueryRequest", ValidInventoryLinkingQueryRequestXML)
-  )
 }
