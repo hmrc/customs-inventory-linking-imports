@@ -16,10 +16,7 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
-object HeaderNames {
-  val XClientId: String = "X-Client-ID"
-  val XConversationId: String = "X-Conversation-ID"
-  val XForwardedHost: String = "X-Forwarded-Host"
-  val XCorrelationId: String = "X-Correlation-ID"
-  val XBadgeIdentifier: String = "X-Badge-Identifier"
+object ConfigNames {
+  val ValidateMovementConfig = "validatemovement"
+  val GoodsArrivalConfig = "goodsarrival"
 }

@@ -21,22 +21,23 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderNames._
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{RequestInfoGenerator, ValidateMovementMessageSender, XmlValidationErrorsMapper}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.XmlValidationErrorsMapper
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 import scala.xml.{NodeSeq, SAXException}
 
-@Singleton
-class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider,
-                                           requestInfoGenerator: RequestInfoGenerator,
-                                           messageSender: ValidateMovementMessageSender)
-  extends BaseController {
+abstract class ImportController @Inject()(configProvider: ServiceConfigProvider,
+                                 requestInfoGenerator: RequestInfoGenerator,
+                                 messageSender: MessageSender,
+                                 configName: String) extends BaseController {
 
-  def postMessage(id: String): Action[AnyContent] = Action.async { implicit request =>
+
+  def process(id: String): Action[AnyContent] = Action.async { implicit request =>
 
     def addConversationIdHeader(r: Result, conversationId: String) = {
       r.withHeaders(XConversationId -> conversationId)
@@ -55,9 +56,35 @@ class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider
     val requestInfo = requestInfoGenerator.newRequestInfo
     val headers = request.headers.toSimpleMap
 
-    messageSender.send(body, requestInfo, headers, configProvider.getConfig("imports")).
+    messageSender.send(body, requestInfo, headers, configProvider.getConfig(configName)).
       map(_ => Accepted).
       recoverWith(recover).
       map(r => addConversationIdHeader(r, requestInfo.conversationId.toString))
   }
+
+
 }
+
+@Singleton
+class GoodsArrivalController @Inject()(configProvider: ServiceConfigProvider,
+                                       requestInfoGenerator: RequestInfoGenerator,
+                                       messageSender: MessageSender)
+  extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.GoodsArrivalConfig) {
+
+  def post(id: String): Action[AnyContent] = {
+    super.process(id)
+  }
+}
+
+@Singleton
+class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider,
+                                           requestInfoGenerator: RequestInfoGenerator,
+                                           messageSender: MessageSender)
+  extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.ValidateMovementConfig) {
+
+  def post(id: String): Action[AnyContent] = {
+     super.process(id)
+  }
+
+}
+

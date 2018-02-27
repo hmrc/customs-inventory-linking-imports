@@ -25,7 +25,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class ValidateMovementConnector @Inject()(wsHttp: WSHttp) {
+class ImportsConnector @Inject()(wsHttp: WSHttp) {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 

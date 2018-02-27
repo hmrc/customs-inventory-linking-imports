@@ -20,23 +20,23 @@ import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.Status.ACCEPTED
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder, ValidateMovementConnector}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ValidateMovementMessageSender, XmlValidationService}
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder, ImportsConnector}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, XmlValidationService}
 import uk.gov.hmrc.http.HttpResponse
 import util.TestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ValidateMovementMessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
+class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
 
   trait Setup {
     val httpResponse: AnyRef with HttpResponse = HttpResponse(ACCEPTED)
     private val outgoingRequestBuilder = mock[OutgoingRequestBuilder]
     val xmlValidationService: XmlValidationService = mock[XmlValidationService]
-    val connector: ValidateMovementConnector = mock[ValidateMovementConnector]
+    val connector: ImportsConnector = mock[ImportsConnector]
     val headers: Map[String, String] = Map("header" -> "value")
-    val sender: ValidateMovementMessageSender = new ValidateMovementMessageSender(outgoingRequestBuilder, xmlValidationService, connector)
+    val sender: MessageSender = new MessageSender(outgoingRequestBuilder, xmlValidationService, connector)
 
     val outgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
     when(outgoingRequestBuilder.build(serviceConfig, requestInfo, headers, body)).thenReturn(outgoingRequest)
