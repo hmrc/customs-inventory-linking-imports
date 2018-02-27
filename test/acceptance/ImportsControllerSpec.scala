@@ -91,29 +91,29 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
     ("Validate Movement", validateMovementRequest, validateMovementUrl)
   )
 
-  forAll(controllers) { case (controllerName, controller, url) =>
+  forAll(controllers) { case (messageType, request, url) =>
 
-    feature(s"CSP Submits ($controllerName) Message") {
+    feature(s"CSP Submits ($messageType) Message") {
       info("As a CSP")
-      info(s"I want to submit an import inventory linking $controllerName message")
+      info(s"I want to submit an import inventory linking $messageType message")
       info("So that my consignment can continue on its journey")
 
-      scenario(s"A valid $controllerName message submitted and successfully forwarded to the backend") {
+      scenario(s"A valid $messageType message submitted and successfully forwarded to the backend") {
         Given("a CSP is authorised to use the API endpoint")
 
         And("the Back End Service will return a successful response")
 
         stubFor(validMessageMatcher(url) willReturn aResponse().withStatus(ACCEPTED))
 
-        When(s"a valid $controllerName message is submitted with valid headers")
-        val result: Future[Result] = route(app, controller).get
+        When(s"a valid $messageType message is submitted with valid headers")
+        val result: Future[Result] = route(app, request).get
 
         And("an Accepted (202) response is returned")
         status(result) shouldBe ACCEPTED
         header("X-Conversation-ID", result).get shouldNot be("")
       }
 
-      scenario(s"A valid $controllerName submitted and the Back End service fails") {
+      scenario(s"A valid $messageType submitted and the Back End service fails") {
         Given("a CSP is authorised to use the API endpoint")
 
         And("the Back End Service will return an error response")
@@ -122,8 +122,8 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
             willReturn(aResponse().withStatus(NOT_FOUND)))
 
 
-        When(s"a valid $controllerName message request is submitted")
-        val result = route(app, controller).get
+        When(s"a valid $messageType message request is submitted")
+        val result = route(app, request).get
 
         Then("an 500 Internal Server Error response is returned")
         status(result) shouldBe INTERNAL_SERVER_ERROR
