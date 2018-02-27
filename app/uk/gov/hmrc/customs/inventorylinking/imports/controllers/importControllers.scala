@@ -37,7 +37,7 @@ abstract class ImportController @Inject()(configProvider: ServiceConfigProvider,
                                  configName: String) extends BaseController {
 
 
-  def process(id: String): Action[AnyContent] = Action.async { implicit request =>
+  def process(): Action[AnyContent] = Action.async { implicit request =>
 
     def addConversationIdHeader(r: Result, conversationId: String) = {
       r.withHeaders(XConversationId -> conversationId)
@@ -72,7 +72,7 @@ class GoodsArrivalController @Inject()(configProvider: ServiceConfigProvider,
   extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.GoodsArrivalConfig) {
 
   def post(id: String): Action[AnyContent] = {
-    super.process(id)
+    super.process()
   }
 }
 
@@ -82,8 +82,8 @@ class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider
                                            messageSender: MessageSender)
   extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.ValidateMovementConfig) {
 
-  def post(id: String): Action[AnyContent] = {
-     super.process(id)
+  def post(): Action[AnyContent] = {
+     super.process()
   }
 
 }

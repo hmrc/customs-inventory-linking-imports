@@ -39,7 +39,7 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
   private val goodsArrivalUrl = "/inventorylinkingimports/goodsarrivalnotification"
   private val id = "id"
 
-  private val validateMovementRequest = FakeRequest("POST", s"/$id/movement-validation")
+  private val validateMovementRequest = FakeRequest("POST", "/movement-validation")
     .withXmlBody(ValidInventoryLinkingMovementRequestXML)
     .withHeaders(TestData.Headers.validHeaders: _*)
 

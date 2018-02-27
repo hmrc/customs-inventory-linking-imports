@@ -22,7 +22,7 @@ documentation:
   - title: Testing
     content: !include docs/testing.md
 
-/customs/consignments/{id}/movement-validation:
+/customs/inventory-linking-imports/movement-validation:
   uriParameters:
     id:
       description: Declaration Id (MRN). Used to match against the provided Inventory Consignment Reference (ICR).
@@ -80,7 +80,7 @@ documentation:
                     <message>Internal server error</message>
                 </errorResponse>
 
-/customs/consignments/{id}/arrival-notification:
+/customs/inventory-linking-imports/{id}/arrival-notification:
   uriParameters:
     id:
       description: Declaration Id (MRN). Used to match against the provided Inventory Consignment Reference (ICR).
