@@ -21,6 +21,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.XmlValidationErrorsMapper
@@ -34,7 +35,8 @@ import scala.xml.{NodeSeq, SAXException}
 abstract class ImportController @Inject()(configProvider: ServiceConfigProvider,
                                  requestInfoGenerator: RequestInfoGenerator,
                                  messageSender: MessageSender,
-                                 configName: String) extends BaseController {
+                                 configName: String,
+                                 logger: CdsLogger) extends BaseController {
 
 
   def process(): Action[AnyContent] = Action.async { implicit request =>
@@ -45,11 +47,14 @@ abstract class ImportController @Inject()(configProvider: ServiceConfigProvider,
 
     def recover: PartialFunction[Throwable, Future[Result]] = {
       case NonFatal(saxe: SAXException) =>
+        logger.debug("XML processing error", saxe)
         Future.successful(
           ErrorResponse.ErrorGenericBadRequest.withErrors(
             XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
 
-      case NonFatal(_) => Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
+      case NonFatal(e) =>
+        logger.debug("Something went wrong", e)
+        Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
     }
 
     val body = request.body.asXml.getOrElse(NodeSeq.Empty)
@@ -68,8 +73,9 @@ abstract class ImportController @Inject()(configProvider: ServiceConfigProvider,
 @Singleton
 class GoodsArrivalController @Inject()(configProvider: ServiceConfigProvider,
                                        requestInfoGenerator: RequestInfoGenerator,
-                                       messageSender: MessageSender)
-  extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.GoodsArrivalConfig) {
+                                       messageSender: MessageSender,
+                                       logger: CdsLogger)
+  extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.GoodsArrivalConfig, logger) {
 
   def post(id: String): Action[AnyContent] = {
     super.process()
@@ -79,8 +85,9 @@ class GoodsArrivalController @Inject()(configProvider: ServiceConfigProvider,
 @Singleton
 class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider,
                                            requestInfoGenerator: RequestInfoGenerator,
-                                           messageSender: MessageSender)
-  extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.ValidateMovementConfig) {
+                                           messageSender: MessageSender,
+                                           logger: CdsLogger)
+  extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.ValidateMovementConfig, logger) {
 
   def post(): Action[AnyContent] = {
      super.process()
