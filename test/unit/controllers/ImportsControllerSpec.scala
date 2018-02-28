@@ -25,8 +25,8 @@ import org.xml.sax.SAXException
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
-import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.test.UnitSpec
@@ -37,37 +37,34 @@ import scala.concurrent.Future
 
 class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
 
-  val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
-  val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
-  val clientId = "clientId"
-  val badgeIdentifier = "badge"
-  val messageSender: MessageSender = mock[MessageSender]
+  private val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
+  private val clientId = "clientId"
+  private val badgeIdentifier = "badge"
+  private val messageSender: MessageSender = mock[MessageSender]
 
-  val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
+  private val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
     withHeaders(xClientIdName -> clientId.toString, xBadgeIdentifierName -> badgeIdentifier)
 
-  val validateMovementController: ValidateMovementController = new ValidateMovementController(serviceConfigProvider, requestInfoGenerator, messageSender)
-  val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(serviceConfigProvider, requestInfoGenerator, messageSender)
+  val validateMovementController: ValidateMovementController = new ValidateMovementController(requestInfoGenerator, messageSender)
+  val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(requestInfoGenerator, messageSender)
 
   override protected def beforeEach() {
-    reset(serviceConfigProvider, requestInfoGenerator)
+    reset(requestInfoGenerator)
     when(requestInfoGenerator.newRequestInfo).thenReturn(requestInfo)
-    when(serviceConfigProvider.getConfig("validatemovement")).thenReturn(serviceConfig)
-    when(serviceConfigProvider.getConfig("goodsarrival")).thenReturn(serviceConfig)
   }
 
 
-  private val controllers = Table(("controller name", "controller post"),
-    ("Goods Arrival", goodsArrivalController.post("id")),
-    ("Validate Movement", validateMovementController.post())
+  private val controllers = Table(("Message Type Name", "Imports Message Type", "controller post"),
+    ("Goods Arrival", GoodsArrival, goodsArrivalController.post()),
+    ("Validate Movement", ValidateMovement, validateMovementController.post())
   )
 
-  forAll(controllers) { case (controllerName, controller) =>
+  forAll(controllers) { case (messageTypeName, importsMessageType,  controller) =>
 
     "POST valid declaration" when {
       "message is sent successfully" should {
-        s"return 202 ACCEPTED for $controllerName" in {
-          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, serviceConfig)).
+        s"return 202 ACCEPTED for $messageTypeName" in {
+          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -75,8 +72,8 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
           status(result) shouldBe ACCEPTED
         }
 
-        s"return X-Conversation-Id header for $controllerName" in {
-          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, serviceConfig)).
+        s"return X-Conversation-Id header for $messageTypeName" in {
+          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -85,9 +82,9 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
       }
 
-      s"message fails due to backend service error for $controllerName" should {
+      s"message fails due to backend service error for $messageTypeName" should {
         "return 500 Internal Server Error" in {
-          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, serviceConfig)).
+          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
           val result = await(controller.apply(request))
@@ -95,8 +92,8 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
           status(result) shouldBe INTERNAL_SERVER_ERROR
         }
 
-        s"return X-Conversation-Id header for $controllerName" in {
-          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, serviceConfig)).
+        s"return X-Conversation-Id header for $messageTypeName" in {
+          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
           val result = await(controller.apply(request))
@@ -106,9 +103,9 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       }
     }
 
-    s"POST invalid declaration for $controllerName" should {
+    s"POST invalid declaration for $messageTypeName" should {
       "return bad request" in {
-        when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, serviceConfig)).
+        when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
           thenReturn(Future.failed(new SAXException()))
 
         val result = await(controller.apply(request))

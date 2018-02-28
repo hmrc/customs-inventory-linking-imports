@@ -19,7 +19,9 @@ package unit.services
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
+import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import util.TestData.Headers._
 import util.TestData._
@@ -27,13 +29,15 @@ import util.TestData._
 class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with MockitoSugar {
 
   trait Setup {
+    val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
     val headers: Map[String, String] = Map(xClientId, xBadgeIdentifier)
     val decorator: PayloadDecorator = mock[PayloadDecorator]
-    val builder: OutgoingRequestBuilder = new OutgoingRequestBuilder(decorator)
+    val builder: OutgoingRequestBuilder = new OutgoingRequestBuilder(serviceConfigProvider, decorator)
 
-    when(decorator.wrap(body, requestInfo, clientId, badgeIdentifier)).thenReturn(decoratedBody)
+    when(decorator.wrap(body, requestInfo, clientId, badgeIdentifier, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
+    when(serviceConfigProvider.getConfig("validatemovement")).thenReturn(serviceConfig)
 
-    val result: OutgoingRequest = builder.build(serviceConfig, requestInfo, headers, body)
+    val result: OutgoingRequest = builder.build(requestInfo, headers, body, ValidateMovement)
   }
 
   "build" should {

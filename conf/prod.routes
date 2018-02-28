@@ -2,5 +2,5 @@
 ->         /                            dynamicDefinition.Routes
 
 POST       /movement-validation         @uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementController.post()
-POST       /:id/arrival-notification    @uk.gov.hmrc.customs.inventorylinking.imports.controllers.GoodsArrivalController.post(id)
+POST       /arrival-notifications       @uk.gov.hmrc.customs.inventorylinking.imports.controllers.GoodsArrivalController.post()
 GET        /admin/metrics               @com.kenshoo.play.metrics.MetricsController.metrics

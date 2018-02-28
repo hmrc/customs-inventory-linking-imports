@@ -21,10 +21,9 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
 
 import scala.xml.NodeSeq
 
-//TODO: maybe this can be reused if wrap is made into an abstract interface with implementations per message
 class PayloadDecorator {
-  def wrap(xml: NodeSeq, requestInfo: RequestInfo, clientId: String, badgeIdentifier: String): NodeSeq =
-    <n1:InventoryLinkingImportsInboundValidateMovementResponse
+  def wrap(xml: NodeSeq, requestInfo: RequestInfo, clientId: String, badgeIdentifier: String, rootElementLabel: String): NodeSeq =
+    <n1:rootElementToBeRenamed
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:n1="http://gov.uk/customs/inventoryLinkingImport/v1"
     xsi:schemaLocation="http://gov.uk/customs/inventoryLinkingImport/v1request_schema.xsd">
@@ -38,5 +37,5 @@ class PayloadDecorator {
       <n1:requestDetail>
         { xml }
       </n1:requestDetail>
-    </n1:InventoryLinkingImportsInboundValidateMovementResponse>
+    </n1:rootElementToBeRenamed>.copy(label = rootElementLabel)
 }

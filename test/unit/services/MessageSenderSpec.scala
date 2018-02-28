@@ -20,7 +20,8 @@ import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.Status.ACCEPTED
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder, ImportsConnector}
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest, OutgoingRequestBuilder}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, XmlValidationService}
 import uk.gov.hmrc.http.HttpResponse
 import util.TestData._
@@ -39,7 +40,7 @@ class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
     val sender: MessageSender = new MessageSender(outgoingRequestBuilder, xmlValidationService, connector)
 
     val outgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
-    when(outgoingRequestBuilder.build(serviceConfig, requestInfo, headers, body)).thenReturn(outgoingRequest)
+    when(outgoingRequestBuilder.build(requestInfo, headers, body, ValidateMovement)).thenReturn(outgoingRequest)
 
     when(xmlValidationService.validate(body)).thenReturn(Future.successful(()))
   }
@@ -49,7 +50,7 @@ class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
       "return the result from the connector" in new Setup {
         when(connector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
 
-        val result = sender.send(body, requestInfo, headers, serviceConfig)
+        val result = sender.send(body, requestInfo, headers, ValidateMovement)
 
         result.foreach(r => r shouldBe httpResponse)
       }
@@ -59,7 +60,7 @@ class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
       "return failed future" in new Setup {
         when(xmlValidationService.validate(body)).thenReturn(Future.failed(emulatedServiceFailure))
 
-        val result = sender.send(body, requestInfo, headers, serviceConfig)
+        val result = sender.send(body, requestInfo, headers, ValidateMovement)
 
         result.foreach(r => r shouldBe httpResponse)
       }
