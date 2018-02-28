@@ -29,13 +29,13 @@ import scala.xml.NodeSeq
 class OutgoingRequestBuilder @Inject()(configProvider: ServiceConfigProvider,
                                        payloadDecorator: PayloadDecorator) {
 
-  def build(requestInfo: RequestInfo, headers: Map[String, String], body: NodeSeq, importsMessageType: ImportsMessageType): OutgoingRequest = {
+  def build(importsMessageType: ImportsMessageType, requestInfo: RequestInfo, headers: Map[String, String], body: NodeSeq): OutgoingRequest = {
     val clientId = headers.getOrElse(XClientId, "")
     val xBadgeIdentifierValue = headers.getOrElse(XBadgeIdentifier, "")
 
     OutgoingRequest(
       configProvider.getConfig(importsMessageType.name),
-      payloadDecorator.wrap(body, requestInfo, clientId, xBadgeIdentifierValue, importsMessageType.rootElementLabel),
+      payloadDecorator.wrap(body, requestInfo, clientId, xBadgeIdentifierValue, importsMessageType.wrapperRootElementLabel),
       requestInfo)
   }
 }

@@ -54,7 +54,7 @@ abstract class ImportController @Inject()(requestInfoGenerator: RequestInfoGener
     val requestInfo = requestInfoGenerator.newRequestInfo
     val headers = request.headers.toSimpleMap
 
-    messageSender.send(body, requestInfo, headers, importsMessageType).
+    messageSender.send(importsMessageType, body, requestInfo, headers).
       map(_ => Accepted).
       recoverWith(recover).
       map(r => addConversationIdHeader(r, requestInfo.conversationId.toString))

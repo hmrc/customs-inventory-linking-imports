@@ -22,7 +22,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
 import scala.xml.NodeSeq
 
 class PayloadDecorator {
-  def wrap(xml: NodeSeq, requestInfo: RequestInfo, clientId: String, badgeIdentifier: String, rootElementLabel: String): NodeSeq =
+  def wrap(xml: NodeSeq, requestInfo: RequestInfo, clientId: String, badgeIdentifier: String, wrapperRootElementLabel: String): NodeSeq =
     <n1:rootElementToBeRenamed
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:n1="http://gov.uk/customs/inventoryLinkingImport/v1"
@@ -37,5 +37,5 @@ class PayloadDecorator {
       <n1:requestDetail>
         { xml }
       </n1:requestDetail>
-    </n1:rootElementToBeRenamed>.copy(label = rootElementLabel)
+    </n1:rootElementToBeRenamed>.copy(label = wrapperRootElementLabel)
 }

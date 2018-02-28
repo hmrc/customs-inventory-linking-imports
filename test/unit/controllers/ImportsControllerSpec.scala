@@ -64,7 +64,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     "POST valid declaration" when {
       "message is sent successfully" should {
         s"return 202 ACCEPTED for $messageTypeName" in {
-          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
+          when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -73,7 +73,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
 
         s"return X-Conversation-Id header for $messageTypeName" in {
-          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
+          when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -84,7 +84,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
       s"message fails due to backend service error for $messageTypeName" should {
         "return 500 Internal Server Error" in {
-          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
+          when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
           val result = await(controller.apply(request))
@@ -93,7 +93,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
 
         s"return X-Conversation-Id header for $messageTypeName" in {
-          when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
+          when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
           val result = await(controller.apply(request))
@@ -105,7 +105,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
     s"POST invalid declaration for $messageTypeName" should {
       "return bad request" in {
-        when(messageSender.send(body, requestInfo, request.headers.toSimpleMap, importsMessageType)).
+        when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
           thenReturn(Future.failed(new SAXException()))
 
         val result = await(controller.apply(request))

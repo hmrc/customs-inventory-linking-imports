@@ -37,7 +37,7 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
     when(decorator.wrap(body, requestInfo, clientId, badgeIdentifier, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
     when(serviceConfigProvider.getConfig("validatemovement")).thenReturn(serviceConfig)
 
-    val result: OutgoingRequest = builder.build(requestInfo, headers, body, ValidateMovement)
+    val result: OutgoingRequest = builder.build(ValidateMovement, requestInfo, headers, body)
   }
 
   "build" should {

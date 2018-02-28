@@ -30,9 +30,9 @@ class MessageSender @Inject()(outgoingRequestBuilder: OutgoingRequestBuilder,
                               xmlValidationService: XmlValidationService,
                               connector: ImportsConnector) {
 
-  def send(body: NodeSeq, requestInfo: RequestInfo, headers: Map[String, String], importsMessageType: ImportsMessageType): Future[HttpResponse] = {
+  def send(importsMessageType: ImportsMessageType, body: NodeSeq, requestInfo: RequestInfo, headers: Map[String, String]): Future[HttpResponse] = {
 
-    val outgoingRequest = outgoingRequestBuilder.build(requestInfo, headers, body, importsMessageType)
+    val outgoingRequest = outgoingRequestBuilder.build(importsMessageType, requestInfo, headers, body)
 
     for {
       _ <- xmlValidationService.validate(body)

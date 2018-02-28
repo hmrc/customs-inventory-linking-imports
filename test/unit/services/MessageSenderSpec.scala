@@ -40,7 +40,7 @@ class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
     val sender: MessageSender = new MessageSender(outgoingRequestBuilder, xmlValidationService, connector)
 
     val outgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
-    when(outgoingRequestBuilder.build(requestInfo, headers, body, ValidateMovement)).thenReturn(outgoingRequest)
+    when(outgoingRequestBuilder.build(ValidateMovement, requestInfo, headers, body)).thenReturn(outgoingRequest)
 
     when(xmlValidationService.validate(body)).thenReturn(Future.successful(()))
   }
@@ -50,7 +50,7 @@ class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
       "return the result from the connector" in new Setup {
         when(connector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
 
-        val result = sender.send(body, requestInfo, headers, ValidateMovement)
+        val result = sender.send(ValidateMovement, body, requestInfo, headers)
 
         result.foreach(r => r shouldBe httpResponse)
       }
@@ -60,7 +60,7 @@ class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
       "return failed future" in new Setup {
         when(xmlValidationService.validate(body)).thenReturn(Future.failed(emulatedServiceFailure))
 
-        val result = sender.send(body, requestInfo, headers, ValidateMovement)
+        val result = sender.send(ValidateMovement, body, requestInfo, headers)
 
         result.foreach(r => r shouldBe httpResponse)
       }

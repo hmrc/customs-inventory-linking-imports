@@ -18,15 +18,15 @@ package uk.gov.hmrc.customs.inventorylinking.imports.model
 
 sealed trait ImportsMessageType {
   def name: String
-  def rootElementLabel: String
+  def wrapperRootElementLabel: String
 }
 
 case object GoodsArrival extends ImportsMessageType {
   val name = "goodsarrival"
-  val rootElementLabel = "InventoryLinkingImportsInboundGoodsArrival"
+  val wrapperRootElementLabel = "InventoryLinkingImportsInboundGoodsArrival"
 }
 
 case object ValidateMovement extends ImportsMessageType {
   val name = "validatemovement"
-  val rootElementLabel = "InventoryLinkingImportsInboundValidateMovementResponse"
+  val wrapperRootElementLabel = "InventoryLinkingImportsInboundValidateMovementResponse"
 }
