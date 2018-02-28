@@ -23,10 +23,6 @@ documentation:
     content: !include docs/testing.md
 
 /customs/inventory-linking-imports/movement-validation:
-  uriParameters:
-    id:
-      description: Declaration Id (MRN). Used to match against the provided Inventory Consignment Reference (ICR).
-      type: string
   post:
     displayName: Send validated movement response messages provided by the CSP as a result of a previous validate movement request
     description: This validate movement response message is provided by the CSP as a result of a previous validate movement request. It represents the (positive/negative) outcome of matching a declaration Id (MRN) against the provided Inventory Consignment Reference (ICR)

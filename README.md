@@ -23,32 +23,29 @@ switching of the endpoint there must be a corresponding section in the applicati
 The service `customs-inventory-linking-imports` has a `default` configuration and a `stub` configuration. Note
 that `default` configuration is declared directly inside the `customs-inventory-linking-imports` section.
 
-    Prod {
-        ...
-      services {
-        ...
-    
-        imports {
-          host = some.host
-          port = 80
-          bearer-token = "some_token"
-          context = "/imports"
-    
-          stub {
-            host = localhost
-            port = 9479
-            bearer-token = "some_stub_token"
-             context = "/imports"
-          }
-        }
+  services {
+    ...
+
+    validatemovement {
+      host = some.host
+      port = 80
+      bearer-token = "some_token"
+      context = "/imports"
+
+      stub {
+        host = localhost
+        port = 9479
+        bearer-token = "some_stub_token"
+         context = "/imports"
       }
     }
+  }
     
 ### Switch service configuration for an endpoint
 
 #### REQUEST
     default:
-    curl -X "POST" http://customs-inventory-linking-imports-host/test-only/service/imports/configuration -H 'content-type: application/json' -d '{ "environment": "stub" }'
+    curl -X "POST" http://customs-inventory-linking-imports-host/test-only/service/validatemovement/configuration -H 'content-type: application/json' -d '{ "environment": "stub" }'
 
 #### RESPONSE
 
@@ -58,7 +55,7 @@ that `default` configuration is declared directly inside the `customs-inventory-
 
 #### REQUEST
 
-    curl -X "POST" http://customs-inventory-linking-imports-host/test-only/service/imports/configuration -H 'content-type: application/json' -d '{ "environment": "default" }'
+    curl -X "POST" http://customs-inventory-linking-imports-host/test-only/service/validatemovement/configuration -H 'content-type: application/json' -d '{ "environment": "default" }'
 
 #### RESPONSE
 
@@ -68,12 +65,12 @@ that `default` configuration is declared directly inside the `customs-inventory-
 
 #### REQUEST
 
-    curl -X "GET" http://customs-inventory-linking-imports-host/test-only/service/imports/configuration
+    curl -X "GET" http://customs-inventory-linking-imports-host/test-only/service/validatemovement/configuration
 
 #### RESPONSE
 
     {
-      "service": "imports",
+      "service": "validatemovement",
       "environment": "stub",
       "url": "http://currenturl/customs-inventory-linking-imports"
       "bearerToken": "current token"
