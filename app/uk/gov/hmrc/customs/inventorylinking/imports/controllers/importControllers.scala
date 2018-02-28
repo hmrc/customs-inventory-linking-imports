@@ -19,11 +19,10 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import javax.inject.{Inject, Singleton}
 
 import play.api.mvc.{Action, AnyContent, Result}
-import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.XmlValidationErrorsMapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator, XmlValidationErrorsMapper}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.Future
@@ -31,10 +30,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 import scala.xml.{NodeSeq, SAXException}
 
-abstract class ImportController @Inject()(configProvider: ServiceConfigProvider,
-                                 requestInfoGenerator: RequestInfoGenerator,
+abstract class ImportController @Inject()(requestInfoGenerator: RequestInfoGenerator,
                                  messageSender: MessageSender,
-                                 configName: String) extends BaseController {
+                                 importsMessageType: ImportsMessageType) extends BaseController {
 
 
   def process(): Action[AnyContent] = Action.async { implicit request =>
@@ -56,7 +54,7 @@ abstract class ImportController @Inject()(configProvider: ServiceConfigProvider,
     val requestInfo = requestInfoGenerator.newRequestInfo
     val headers = request.headers.toSimpleMap
 
-    messageSender.send(body, requestInfo, headers, configProvider.getConfig(configName)).
+    messageSender.send(importsMessageType, body, requestInfo, headers).
       map(_ => Accepted).
       recoverWith(recover).
       map(r => addConversationIdHeader(r, requestInfo.conversationId.toString))
@@ -66,21 +64,19 @@ abstract class ImportController @Inject()(configProvider: ServiceConfigProvider,
 }
 
 @Singleton
-class GoodsArrivalController @Inject()(configProvider: ServiceConfigProvider,
-                                       requestInfoGenerator: RequestInfoGenerator,
+class GoodsArrivalController @Inject()(requestInfoGenerator: RequestInfoGenerator,
                                        messageSender: MessageSender)
-  extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.GoodsArrivalConfig) {
+  extends ImportController(requestInfoGenerator, messageSender, GoodsArrival) {
 
-  def post(id: String): Action[AnyContent] = {
+  def post(): Action[AnyContent] = {
     super.process()
   }
 }
 
 @Singleton
-class ValidateMovementController @Inject()(configProvider: ServiceConfigProvider,
-                                           requestInfoGenerator: RequestInfoGenerator,
+class ValidateMovementController @Inject()(requestInfoGenerator: RequestInfoGenerator,
                                            messageSender: MessageSender)
-  extends ImportController(configProvider, requestInfoGenerator, messageSender, ConfigNames.ValidateMovementConfig) {
+  extends ImportController(requestInfoGenerator, messageSender, ValidateMovement) {
 
   def post(): Action[AnyContent] = {
      super.process()
