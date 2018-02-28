@@ -29,10 +29,17 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
   private val payloadWrapper = new PayloadDecorator
 
-  private def wrapPayload() = payloadWrapper.wrap(xml, requestInfo, clientId, badgeIdentifier)
+  private def wrapPayload() = payloadWrapper.wrap(xml, requestInfo, clientId, badgeIdentifier, "InventoryLinkingImportsInboundValidateMovementResponse")
 
-  "WcoDmsPayloadWrapper" should {
-    "wrap passed XML in DMS wrapper" in {
+  "PayloadWrapper" should {
+
+    "set the root element label" in {
+      val result = wrapPayload()
+
+      result \\ "InventoryLinkingImportsInboundValidateMovementResponse" should not be empty
+    }
+
+    "wrap passed XML in wrapper" in {
       val result = wrapPayload()
 
       val reqDet = result \\ "requestDetail"

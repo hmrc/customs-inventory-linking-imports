@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.controllers
+package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-object ConfigNames {
-  val ValidateMovementConfig = "validatemovement"
-  val GoodsArrivalConfig = "goodsarrival"
+sealed trait ImportsMessageType {
+  def name: String
+  def wrapperRootElementLabel: String
+}
+
+case object GoodsArrival extends ImportsMessageType {
+  val name = "goodsarrival"
+  val wrapperRootElementLabel = "InventoryLinkingImportsInboundGoodsArrival"
+}
+
+case object ValidateMovement extends ImportsMessageType {
+  val name = "validatemovement"
+  val wrapperRootElementLabel = "InventoryLinkingImportsInboundValidateMovementResponse"
 }
