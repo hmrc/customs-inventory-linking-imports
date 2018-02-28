@@ -25,6 +25,7 @@ import org.xml.sax.SAXException
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
+import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator}
@@ -45,8 +46,9 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
   private val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
     withHeaders(xClientIdName -> clientId.toString, xBadgeIdentifierName -> badgeIdentifier)
 
-  val validateMovementController: ValidateMovementController = new ValidateMovementController(requestInfoGenerator, messageSender)
-  val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(requestInfoGenerator, messageSender)
+  val logger = mock[CdsLogger]
+  val validateMovementController: ValidateMovementController = new ValidateMovementController(requestInfoGenerator, messageSender, logger)
+  val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(requestInfoGenerator, messageSender, logger)
 
   override protected def beforeEach() {
     reset(requestInfoGenerator)

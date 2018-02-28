@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import play.api.mvc.{Action, AnyContent, Result}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator, XmlValidationErrorsMapper}
@@ -32,7 +33,8 @@ import scala.xml.{NodeSeq, SAXException}
 
 abstract class ImportController @Inject()(requestInfoGenerator: RequestInfoGenerator,
                                  messageSender: MessageSender,
-                                 importsMessageType: ImportsMessageType) extends BaseController {
+                                 importsMessageType: ImportsMessageType,
+                                 logger: CdsLogger) extends BaseController {
 
 
   def process(): Action[AnyContent] = Action.async { implicit request =>
@@ -43,11 +45,14 @@ abstract class ImportController @Inject()(requestInfoGenerator: RequestInfoGener
 
     def recover: PartialFunction[Throwable, Future[Result]] = {
       case NonFatal(saxe: SAXException) =>
+        logger.debug("XML processing error", saxe)
         Future.successful(
           ErrorResponse.ErrorGenericBadRequest.withErrors(
             XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
 
-      case NonFatal(_) => Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
+      case NonFatal(e) =>
+        logger.debug("Something went wrong", e)
+        Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
     }
 
     val body = request.body.asXml.getOrElse(NodeSeq.Empty)
@@ -65,8 +70,8 @@ abstract class ImportController @Inject()(requestInfoGenerator: RequestInfoGener
 
 @Singleton
 class GoodsArrivalController @Inject()(requestInfoGenerator: RequestInfoGenerator,
-                                       messageSender: MessageSender)
-  extends ImportController(requestInfoGenerator, messageSender, GoodsArrival) {
+                                       messageSender: MessageSender, logger: CdsLogger)
+  extends ImportController(requestInfoGenerator, messageSender, GoodsArrival, logger) {
 
   def post(): Action[AnyContent] = {
     super.process()
@@ -75,8 +80,9 @@ class GoodsArrivalController @Inject()(requestInfoGenerator: RequestInfoGenerato
 
 @Singleton
 class ValidateMovementController @Inject()(requestInfoGenerator: RequestInfoGenerator,
-                                           messageSender: MessageSender)
-  extends ImportController(requestInfoGenerator, messageSender, ValidateMovement) {
+                                           messageSender: MessageSender,
+                                           logger: CdsLogger)
+  extends ImportController(requestInfoGenerator, messageSender, ValidateMovement, logger) {
 
   def post(): Action[AnyContent] = {
      super.process()
