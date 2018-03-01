@@ -28,8 +28,17 @@ object TestData {
   type EmulatedServiceFailure = UnsupportedOperationException
   val emulatedServiceFailure = new EmulatedServiceFailure("Emulated service failure.")
 
-  val xsdLocations = List(
+  val validateMovementsXsdElementName = "InventoryLinkingImportsValidateMovementResponse"
+
+  val validateMovementsXsdLocations = List(
     "/api/conf/1.0/schemas/imports/inventoryLinkingImportValidateMovementResponse.xsd",
-    "/api/conf/1.0/schemas/imports/inventoryLinkingImportArriveGoods.xsd"
+    "/api/conf/1.0/schemas/imports/inventoryLinkingImportCommonTypes.xsd"
+  )
+
+  val goodsArrivalXsdElementName= "inventoryLinkingImportsGoodsArrival"
+
+  val goodsArrivalXsdLocations = List(
+    "/api/conf/1.0/schemas/imports/inventoryLinkingImportArriveGoods.xsd",
+    "/api/conf/1.0/schemas/imports/inventoryLinkingImportCommonTypes.xsd"
   )
 }

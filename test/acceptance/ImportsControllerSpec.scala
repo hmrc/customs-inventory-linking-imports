@@ -26,7 +26,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import unit.util.XMLTestData.ValidInventoryLinkingMovementRequestXML
+import unit.util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 import util.{ExternalServicesConfig, TestData, WireMockRunner}
 
 import scala.concurrent.Future
@@ -43,7 +43,7 @@ class ImportsControllerSpec extends FeatureSpec with GivenWhenThen with GuiceOne
     .withHeaders(TestData.Headers.validHeaders: _*)
 
   private val goodsArrivalRequest = FakeRequest("POST", "/arrival-notifications")
-    .withXmlBody(ValidInventoryLinkingMovementRequestXML)
+    .withXmlBody(ValidInventoryLinkingGoodsArrivalRequestXML)
     .withHeaders(TestData.Headers.validHeaders: _*)
 
   private val internalServerError =

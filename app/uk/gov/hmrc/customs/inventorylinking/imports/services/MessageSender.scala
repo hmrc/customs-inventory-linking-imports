@@ -16,26 +16,32 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequestBuilder}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsMessageType, RequestInfo}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, RequestInfo, ValidateMovement}
 import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 
+@Singleton
 class MessageSender @Inject()(outgoingRequestBuilder: OutgoingRequestBuilder,
-                              xmlValidationService: XmlValidationService,
+                              goodsArrivalXmlValidationService: GoodsArrivalXmlValidationService,
+                              validateMovementXmlValidationService: ValidateMovementXmlValidationService,
                               connector: ImportsConnector) {
 
-  def send(importsMessageType: ImportsMessageType, body: NodeSeq, requestInfo: RequestInfo, headers: Map[String, String]): Future[HttpResponse] = {
+  def send(messageType: ImportsMessageType, body: NodeSeq, requestInfo: RequestInfo, headers: Map[String, String]): Future[HttpResponse] = {
+    val outgoingRequest = outgoingRequestBuilder.build(messageType, requestInfo, headers, body)
 
-    val outgoingRequest = outgoingRequestBuilder.build(importsMessageType, requestInfo, headers, body)
+    def service = messageType match {
+      case GoodsArrival => goodsArrivalXmlValidationService
+      case ValidateMovement => validateMovementXmlValidationService
+    }
 
     for {
-      _ <- xmlValidationService.validate(body)
+      _ <- service.validate(body)
       result <- connector.post(outgoingRequest)
     } yield result
   }

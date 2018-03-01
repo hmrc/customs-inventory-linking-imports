@@ -18,52 +18,71 @@ package unit.services
 
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest, OutgoingRequestBuilder}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidateMovement
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, XmlValidationService}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.services._
 import uk.gov.hmrc.http.HttpResponse
 import util.TestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar {
+class MessageSenderSpec extends WordSpecLike with Matchers with MockitoSugar with TableDrivenPropertyChecks {
 
-  trait Setup {
+  trait SetUp {
+    protected val importsMessageType: ImportsMessageType
+
     val httpResponse: AnyRef with HttpResponse = HttpResponse(ACCEPTED)
     private val outgoingRequestBuilder = mock[OutgoingRequestBuilder]
-    val xmlValidationService: XmlValidationService = mock[XmlValidationService]
+    lazy val goodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
+    lazy val validateMovementXmlValidationService: ValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
     val connector: ImportsConnector = mock[ImportsConnector]
     val headers: Map[String, String] = Map("header" -> "value")
-    val sender: MessageSender = new MessageSender(outgoingRequestBuilder, xmlValidationService, connector)
-
+    val sender: MessageSender = new MessageSender(outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, connector)
     val outgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
+
+    protected def service: XmlValidationService = importsMessageType match {
+      case GoodsArrival => goodsArrivalXmlValidationService
+      case ValidateMovement => validateMovementXmlValidationService
+    }
+
     when(outgoingRequestBuilder.build(ValidateMovement, requestInfo, headers, body)).thenReturn(outgoingRequest)
-
-    when(xmlValidationService.validate(body)).thenReturn(Future.successful(()))
   }
 
-  "send" when {
-    "message is valid" should {
-      "return the result from the connector" in new Setup {
-        when(connector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
+  val messageTypes = Table(
+    "Message type",
+    GoodsArrival,
+    ValidateMovement
+  )
 
-        val result = sender.send(ValidateMovement, body, requestInfo, headers)
+  forAll(messageTypes){(messageType) =>
+    s"$messageType send" when {
+      "message is valid" should {
+        "return the result from the connector" in new SetUp {
+          val importsMessageType: ImportsMessageType = messageType
+          when(connector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
+          when(service.validate(body)).thenReturn(Future.successful(()))
 
-        result.foreach(r => r shouldBe httpResponse)
+          private val result = sender.send(messageType, body, requestInfo, headers)
+
+          result.foreach(r => r shouldBe httpResponse)
+        }
       }
-    }
 
-    "message is invalid" should {
-      "return failed future" in new Setup {
-        when(xmlValidationService.validate(body)).thenReturn(Future.failed(emulatedServiceFailure))
+      "message is invalid" should {
+        "return failed future" in new SetUp {
+          val importsMessageType: ImportsMessageType = messageType
+          when(service.validate(body)).thenReturn(Future.failed(emulatedServiceFailure))
 
-        val result = sender.send(ValidateMovement, body, requestInfo, headers)
+          private val result = sender.send(messageType, body, requestInfo, headers)
 
-        result.foreach(r => r shouldBe httpResponse)
+          result.foreach(r => r shouldBe httpResponse)
+        }
       }
     }
   }
+
 }

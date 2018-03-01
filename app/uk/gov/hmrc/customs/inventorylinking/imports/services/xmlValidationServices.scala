@@ -27,21 +27,21 @@ import javax.xml.validation.{Schema, SchemaFactory}
 import com.google.inject.Singleton
 import org.xml.sax.{ErrorHandler, SAXParseException}
 import play.api.Configuration
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{NodeSeq, SAXException}
 
-@Singleton
-class XmlValidationService @Inject()(configuration: Configuration) {
+abstract class XmlValidationService(configuration: Configuration, messageType: ImportsMessageType) {
 
   private lazy val schema: Schema = {
     def resourceUrl(resourcePath: String): URL = Option(getClass.getResource(resourcePath))
       .getOrElse(throw new FileNotFoundException(s"XML Schema resource file: $resourcePath"))
 
-    val sources = configuration.getStringSeq("xsd.locations")
+    val sources = configuration.getStringSeq(s"xsd.locations.${messageType.name}")
       .filter(_.nonEmpty)
-      .getOrElse(throw new IllegalStateException("application.conf is missing mandatory property 'xsd.locations'"))
+      .getOrElse(throw new IllegalStateException(s"application.conf is missing mandatory property 'xsd.locations.${messageType.name}'"))
       .map(resourceUrl(_).toString)
       .map(systemId => new StreamSource(systemId)).toArray[Source]
 
@@ -91,3 +91,11 @@ class XmlValidationService @Inject()(configuration: Configuration) {
     override def fatalError(exception: SAXParseException): Unit = accumulateError(exception)
   }
 }
+
+@Singleton
+class GoodsArrivalXmlValidationService @Inject()(configuration: Configuration)
+  extends XmlValidationService(configuration, GoodsArrival)
+
+@Singleton
+class ValidateMovementXmlValidationService @Inject()(configuration: Configuration)
+  extends XmlValidationService(configuration, ValidateMovement)

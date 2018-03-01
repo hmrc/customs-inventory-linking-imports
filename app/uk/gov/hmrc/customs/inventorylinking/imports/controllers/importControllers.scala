@@ -26,15 +26,15 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Imports
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator, XmlValidationErrorsMapper}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.xml.{NodeSeq, SAXException}
 
-abstract class ImportController @Inject()(requestInfoGenerator: RequestInfoGenerator,
-                                 messageSender: MessageSender,
-                                 importsMessageType: ImportsMessageType,
-                                 logger: CdsLogger) extends BaseController {
+abstract class ImportController(requestInfoGenerator: RequestInfoGenerator,
+                                messageSender: MessageSender,
+                                importsMessageType: ImportsMessageType,
+                                logger: CdsLogger) extends BaseController {
 
 
   def process(): Action[AnyContent] = Action.async { implicit request =>

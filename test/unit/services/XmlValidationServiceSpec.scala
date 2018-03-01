@@ -19,151 +19,211 @@ package unit.services
 import java.io.FileNotFoundException
 
 import org.mockito.ArgumentMatchers.{eq => ameq}
-import org.mockito.Mockito.{reset, verify, when}
-import org.scalatest.BeforeAndAfterEach
+import org.mockito.Mockito.{verify, when}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.Configuration
-import uk.gov.hmrc.customs.inventorylinking.imports.services.XmlValidationService
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService, XmlValidationService}
 import uk.gov.hmrc.play.test.UnitSpec
-import unit.util.TestData.xsdLocations
+import unit.util.TestData._
 import unit.util.XMLTestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{Node, SAXException}
 
-class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach with TableDrivenPropertyChecks {
+class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
 
-  private val MockConfiguration = mock[Configuration]
-  private val MockXml = mock[Node]
+  trait SetUp {
+    protected val importsMessageType: ImportsMessageType
 
-  private def testService(test: XmlValidationService => Unit) = {
-    test(new XmlValidationService(MockConfiguration))
-  }
+    protected lazy val mockConfiguration: Configuration = mock[Configuration]
+    protected lazy val mockXml: Node = mock[Node]
 
-  override protected def beforeEach() {
-    reset(MockConfiguration)
-    when(MockConfiguration.getStringSeq("xsd.locations")).thenReturn(Some(xsdLocations))
-    when(MockConfiguration.getInt("xml.max-errors")).thenReturn(None)
-  }
+    protected lazy val xsdPropertyPathLocation = s"xsd.locations.${importsMessageType.name}"
 
-  "XmlValidationService with valid input" should {
-    "get location of xsd resource files from configuration" in testService { xmlValidationService =>
-      await(xmlValidationService.validate(ValidInventoryLinkingMovementRequestXML))
-
-      verify(MockConfiguration).getStringSeq(ameq("xsd.locations"))
+    protected def service: XmlValidationService = importsMessageType match {
+      case GoodsArrival => new GoodsArrivalXmlValidationService(mockConfiguration)
+      case ValidateMovement => new ValidateMovementXmlValidationService(mockConfiguration)
     }
 
-    val xmlRequests = Table(
-      ("linking message type", "xml"),
-      ("MovementRequest", ValidInventoryLinkingMovementRequestXML),
-      ("GoodsArrival", ValidInventoryGoodsArrivalRequestXML)
-    )
+    def elementName: String = importsMessageType match {
+      case GoodsArrival => goodsArrivalXsdElementName
+      case ValidateMovement => validateMovementsXsdElementName
+    }
 
-    forAll(xmlRequests) { (linkingType, xml) =>
-      s"not throw exceptions for valid XML for linking type $linkingType" in testService {
-        xmlValidationService =>
-          xmlValidationService.validate(xml)
-      }
+    def otherElementName: String = importsMessageType match {
+      case GoodsArrival => validateMovementsXsdElementName
+      case ValidateMovement => goodsArrivalXsdElementName
+    }
+
+    def xsdLocations: Seq[String] = importsMessageType match {
+      case GoodsArrival => goodsArrivalXsdLocations
+      case ValidateMovement => validateMovementsXsdLocations
     }
   }
 
-  "XmlValidationService with invalid input" should {
-    "fail the future when in configuration there are no locations of xsd resource files" in testService {
-      xmlValidationService =>
-        when(MockConfiguration.getStringSeq("xsd.locations")).thenReturn(None)
+  private val testXmlDataByMessageType = Table(
+    ("Message Type",
+      "Valid xml",
+      "Valid xml for other element",
+      "Invalid xml with single error",
+      "Invalid xml With multiple errors"),
+    (ValidateMovement,
+      ValidInventoryLinkingMovementRequestXML,
+      ValidInventoryLinkingGoodsArrivalRequestXML,
+      InvalidInventoryLinkingMovementRequestXML,
+      InvalidInventoryLinkingMovementRequestXMLWithMultipleErrors),
+    (GoodsArrival,
+      ValidInventoryLinkingGoodsArrivalRequestXML,
+      ValidInventoryLinkingMovementRequestXML,
+      InvalidInventoryLinkingGoodsArrivalRequestXML,
+      InvalidInventoryLinkingGoodsArrivalRequestXMLWithMultipleErrors)
+  )
 
-        val caught = intercept[IllegalStateException] {
-          await(xmlValidationService.validate(MockXml))
-        }
-        caught.getMessage shouldBe "application.conf is missing mandatory property 'xsd.locations'"
-    }
+  forAll(testXmlDataByMessageType) { (messageType, validXml, _, _, _) =>
+    s"$messageType XmlValidationService with valid input" should {
+      s"not throw exceptions for valid XML for linking type ${messageType.name}" in new SetUp {
+        protected val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
 
-    "fail the future when in configuration there is an empty list for locations of xsd resource files" in testService {
-      xmlValidationService =>
-        when(MockConfiguration.getStringSeq("xsd.locations")).thenReturn(Some(Nil))
+        await(service.validate(validXml))
 
-        val caught = intercept[IllegalStateException] {
-          await(xmlValidationService.validate(MockXml))
-        }
-        caught.getMessage shouldBe "application.conf is missing mandatory property 'xsd.locations'"
-    }
-
-    "fail the future when a configured xsd resource file cannot be found" in testService { xmlValidationService =>
-      when(MockConfiguration.getStringSeq("xsd.locations")).thenReturn(Some(List("there/is/no/such/file")))
-
-      val caught = intercept[FileNotFoundException] {
-        await(xmlValidationService.validate(MockXml))
-      }
-      caught.getMessage shouldBe "XML Schema resource file: there/is/no/such/file"
-    }
-
-    "fail the future with SAXException when there is an error in XML" in testService { xmlValidationService =>
-      val caught = intercept[SAXException] {
-        await(xmlValidationService.validate(InvalidXML))
+        verify(mockConfiguration).getStringSeq(ameq(xsdPropertyPathLocation))
       }
 
-      caught.getMessage shouldBe "cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element 'InventoryLinkingImportsValidateMovementResponse'."
-      Option(caught.getException) shouldBe None
     }
+  }
 
-    "fail the future with wrapped SAXExceptions when there are multiple errors in XML" in testService { xmlValidationService =>
-      val caught = intercept[SAXException] {
-        await(xmlValidationService.validate(InvalidXMLWithMultipleErrors))
+  forAll(testXmlDataByMessageType) { (messageType, _, validXmlForOtherElement, invalidXml, invalidXmlWithMultipleErrors) =>
+    s"$messageType XmlValidationService with invalid input" should {
+      "fail the future when in configuration there are no locations of xsd resource files" in new SetUp {
+          val importsMessageType: ImportsMessageType = messageType
+          when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(None)
+          when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+
+          private val caught = intercept[IllegalStateException] {
+            await(service.validate(mockXml))
+          }
+          caught.getMessage shouldBe s"application.conf is missing mandatory property '$xsdPropertyPathLocation'"
       }
 
-      caught.getMessage shouldBe "cvc-type.3.1.3: The value 'A' of element 'entryVersionNumber' is not valid."
-      Option(caught.getException) shouldBe 'nonEmpty
+      s"fail the future when in configuration there is an empty list for locations of xsd resource files" in new SetUp {
+        val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(Nil))
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
 
-      val wrapped1 = caught.getException
-      wrapped1.getMessage shouldBe "cvc-datatype-valid.1.2.1: 'A' is not a valid value for 'integer'."
-      wrapped1.isInstanceOf[SAXException] shouldBe true
-
-      Option(wrapped1.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
-      val wrapped2 = wrapped1.asInstanceOf[SAXException].getException
-      wrapped2.getMessage shouldBe "cvc-type.3.1.3: The value 'abc_123' of element 'entryNumber' is not valid."
-      wrapped2.isInstanceOf[SAXException] shouldBe true
-
-      Option(wrapped2.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
-      val wrapped3 = wrapped2.asInstanceOf[SAXException].getException
-      wrapped3.getMessage shouldBe "cvc-pattern-valid: Value 'abc_123' is not facet-valid with respect to pattern '([a-zA-Z0-9])*' for type 'entryNumber'."
-      wrapped3.isInstanceOf[SAXException] shouldBe true
-
-      Option(wrapped3.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
-      val wrapped4 = wrapped3.asInstanceOf[SAXException].getException
-      wrapped4.getMessage shouldBe "cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element 'InventoryLinkingImportsValidateMovementResponse'."
-      wrapped4.isInstanceOf[SAXException] shouldBe true
-
-      Option(wrapped4.asInstanceOf[SAXException].getException) shouldBe None
-    }
-
-    "fail the future with configured number of wrapped SAXExceptions when there are multiple errors in XML" in testService {
-      xmlValidationService =>
-        when(MockConfiguration.getInt("xml.max-errors")).thenReturn(Some(2))
-
-        val caught = intercept[SAXException] {
-          await(xmlValidationService.validate(InvalidXMLWithMultipleErrors))
+        private val caught = intercept[IllegalStateException] {
+          await(service.validate(mockXml))
         }
-        verify(MockConfiguration).getInt("xml.max-errors")
+        caught.getMessage shouldBe s"application.conf is missing mandatory property '$xsdPropertyPathLocation'"
+      }
+
+      "fail the future when a configured xsd resource file cannot be found" in new SetUp {
+        val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(List("there/is/no/such/file")))
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+
+        private val caught = intercept[FileNotFoundException] {
+          await(service.validate(mockXml))
+        }
+        caught.getMessage shouldBe "XML Schema resource file: there/is/no/such/file"
+      }
+
+      "fail the future with SAXException when there is an valid XML for other XSD" in new SetUp {
+        val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+
+        private val caught = intercept[SAXException] {
+          await(service.validate(validXmlForOtherElement))
+        }
+
+
+        caught.getMessage shouldBe s"cvc-elt.1.a: Cannot find the declaration of element '$otherElementName'."
+        Option(caught.getException) shouldBe None
+      }
+
+      "fail the future with SAXException when there is an error in XML" in new SetUp {
+        val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+
+        private val caught = intercept[SAXException] {
+          await(service.validate(invalidXml))
+        }
+
+        caught.getMessage shouldBe s"cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element '$elementName'."
+        Option(caught.getException) shouldBe None
+      }
+
+      "fail the future with wrapped SAXExceptions when there are multiple errors in XML" in new SetUp {
+        val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+
+        private val caught = intercept[SAXException] {
+          await(service.validate(invalidXmlWithMultipleErrors))
+        }
+
+        caught.getMessage shouldBe "cvc-type.3.1.3: The value 'A' of element 'entryVersionNumber' is not valid."
+        Option(caught.getException) shouldBe 'nonEmpty
+
+        private val wrapped1 = caught.getException
+        wrapped1.getMessage shouldBe "cvc-datatype-valid.1.2.1: 'A' is not a valid value for 'integer'."
+        wrapped1.isInstanceOf[SAXException] shouldBe true
+
+        Option(wrapped1.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
+        private val wrapped2 = wrapped1.asInstanceOf[SAXException].getException
+        wrapped2.getMessage shouldBe "cvc-type.3.1.3: The value 'abc_123' of element 'entryNumber' is not valid."
+        wrapped2.isInstanceOf[SAXException] shouldBe true
+
+        Option(wrapped2.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
+        private val wrapped3 = wrapped2.asInstanceOf[SAXException].getException
+        wrapped3.getMessage shouldBe "cvc-pattern-valid: Value 'abc_123' is not facet-valid with respect to pattern '([a-zA-Z0-9])*' for type 'entryNumber'."
+        wrapped3.isInstanceOf[SAXException] shouldBe true
+
+        Option(wrapped3.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
+        private val wrapped4 = wrapped3.asInstanceOf[SAXException].getException
+        wrapped4.getMessage shouldBe s"cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element '$elementName'."
+        wrapped4.isInstanceOf[SAXException] shouldBe true
+
+        Option(wrapped4.asInstanceOf[SAXException].getException) shouldBe None
+      }
+
+      "fail the future with configured number of wrapped SAXExceptions when there are multiple errors in XML" in new SetUp {
+        val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(Some(2))
+
+        private val caught = intercept[SAXException] {
+          await(service.validate(invalidXmlWithMultipleErrors))
+        }
+        verify(mockConfiguration).getInt("xml.max-errors")
 
         caught.getMessage shouldBe "cvc-pattern-valid: Value 'abc_123' is not facet-valid with respect to pattern '([a-zA-Z0-9])*' for type 'entryNumber'."
 
         Option(caught.getException) shouldBe 'nonEmpty
-        val wrapped1 = caught.getException
-        wrapped1.getMessage shouldBe "cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element 'InventoryLinkingImportsValidateMovementResponse'."
+        private val wrapped1 = caught.getException
+        wrapped1.getMessage shouldBe s"cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element '$elementName'."
         wrapped1.isInstanceOf[SAXException] shouldBe true
 
         Option(wrapped1.asInstanceOf[SAXException].getException) shouldBe None
-    }
+      }
 
-    "fail the future with system error when a configured maximum of xml errors is not a positive number" in testService {
-      xmlValidationService =>
-        when(MockConfiguration.getInt("xml.max-errors")).thenReturn(Some(0))
+      "fail the future with system error when a configured maximum of xml errors is not a positive number" in new SetUp {
+        val importsMessageType: ImportsMessageType = messageType
+        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(Some(0))
 
-        val caught = intercept[IllegalArgumentException] {
-          await(xmlValidationService.validate(MockXml))
+        private val caught = intercept[IllegalArgumentException] {
+          await(service.validate(mockXml))
         }
         caught.getMessage shouldBe "requirement failed: maxErrors should be a positive number but 0 was provided instead."
+      }
     }
+
   }
+
 }
