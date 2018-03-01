@@ -51,20 +51,23 @@ object TestData {
   lazy val ValidXClientIdHeader = XClientIdHeaderName -> XClientIdHeaderValue
   lazy val ValidXBadgeIdentifierHeader = XBadgeIdentifierHeaderName -> XBadgeIdentifierHeaderValue
 
-//  lazy val validHeaders = Map(
-//    ValidAcceptHeader,
-//    ValidContentTypeHeader,
-//    ValidXClientIdHeader,
-//    ValidXBadgeIdentifierHeader)
-
   val validBasicAuthToken = s"Basic ${Random.alphanumeric.take(18).mkString}=="
 
   val cspBearerToken = "CSP-Bearer-Token"
   val nonCspBearerToken = "Software-House-Bearer-Token"
 
-  val xsdLocations = List(
+  val validateMovementsXsdElementName = "InventoryLinkingImportsValidateMovementResponse"
+
+  val validateMovementsXsdLocations = List(
     "/api/conf/1.0/schemas/imports/inventoryLinkingImportValidateMovementResponse.xsd",
-    "/api/conf/1.0/schemas/imports/inventoryLinkingImportArriveGoods.xsd"
+    "/api/conf/1.0/schemas/imports/inventoryLinkingImportCommonTypes.xsd"
+  )
+
+  val goodsArrivalXsdElementName= "inventoryLinkingImportsGoodsArrival"
+
+  val goodsArrivalXsdLocations = List(
+    "/api/conf/1.0/schemas/imports/inventoryLinkingImportArriveGoods.xsd",
+    "/api/conf/1.0/schemas/imports/inventoryLinkingImportCommonTypes.xsd"
   )
 
   val requestDateTime: DateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)

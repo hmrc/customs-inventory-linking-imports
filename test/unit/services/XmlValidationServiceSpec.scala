@@ -26,7 +26,7 @@ import play.api.Configuration
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService, XmlValidationService}
 import uk.gov.hmrc.play.test.UnitSpec
-import unit.util.TestData._
+import util.TestData._
 import unit.util.XMLTestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global

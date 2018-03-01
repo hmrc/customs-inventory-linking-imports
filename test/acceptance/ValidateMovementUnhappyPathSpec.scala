@@ -23,7 +23,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import unit.util.XMLTestData.InvalidInventoryLinkingMovementRequestXML
+import unit.util.XMLTestData.InvalidInventoryLinkingMovementRequestXMLWithMultipleErrors
 import util.TestData.XConversationIdHeaderName
 import util.{ExternalServicesConfig, TestData, WireMockRunner}
 
@@ -122,7 +122,7 @@ class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen wit
       Given("an authorised CSP wants to submit a customs UKCIRM message with an invalid XML payload")
       When("a POST request with data is sent to the API")
 
-      val result = postValidMovementMessage(InvalidInventoryLinkingMovementRequestXML)
+      val result = postValidMovementMessage(InvalidInventoryLinkingMovementRequestXMLWithMultipleErrors)
 
       Then("a response with a 400 status is returned by the API")
       result shouldBe 'defined
