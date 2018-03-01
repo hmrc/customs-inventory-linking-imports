@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 import scala.xml.{NodeSeq, SAXException}
 
-abstract class ImportController @Inject()(requestInfoGenerator: RequestInfoGenerator,
+abstract class ImportController (requestInfoGenerator: RequestInfoGenerator,
                                  messageSender: MessageSender,
                                  importsMessageType: ImportsMessageType,
                                  logger: CdsLogger) extends BaseController with HeaderValidator {
