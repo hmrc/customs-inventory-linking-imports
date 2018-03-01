@@ -17,8 +17,7 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
-
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.{Action, AnyContent, Result, _}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
@@ -26,18 +25,17 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Imports
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator, XmlValidationErrorsMapper}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.control.NonFatal
 import scala.xml.{NodeSeq, SAXException}
 
-abstract class ImportController(requestInfoGenerator: RequestInfoGenerator,
-                                messageSender: MessageSender,
-                                importsMessageType: ImportsMessageType,
-                                logger: CdsLogger) extends BaseController {
+abstract class ImportController (requestInfoGenerator: RequestInfoGenerator,
+                                 messageSender: MessageSender,
+                                 importsMessageType: ImportsMessageType,
+                                 logger: CdsLogger) extends BaseController with HeaderValidator {
 
-
-  def process(): Action[AnyContent] = Action.async { implicit request =>
+  def process(): Action[AnyContent] = validateHeaders().async(bodyParser = xmlOrEmptyBody) { implicit request =>
 
     def addConversationIdHeader(r: Result, conversationId: String) = {
       r.withHeaders(XConversationId -> conversationId)
@@ -65,7 +63,10 @@ abstract class ImportController(requestInfoGenerator: RequestInfoGenerator,
       map(r => addConversationIdHeader(r, requestInfo.conversationId.toString))
   }
 
-
+  private def xmlOrEmptyBody: BodyParser[AnyContent] = BodyParser(rq => parse.xml(rq).map {
+    case Right(xml) => Right(AnyContentAsXml(xml))
+    case _ => Right(AnyContentAsEmpty)
+  })
 }
 
 @Singleton
@@ -87,6 +88,4 @@ class ValidateMovementController @Inject()(requestInfoGenerator: RequestInfoGene
   def post(): Action[AnyContent] = {
      super.process()
   }
-
 }
-

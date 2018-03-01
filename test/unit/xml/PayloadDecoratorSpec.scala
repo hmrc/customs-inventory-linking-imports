@@ -29,7 +29,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
   private val payloadWrapper = new PayloadDecorator
 
-  private def wrapPayload() = payloadWrapper.wrap(xml, requestInfo, clientId, badgeIdentifier, "InventoryLinkingImportsInboundValidateMovementResponse")
+  private def wrapPayload() = payloadWrapper.wrap(xml, requestInfo, XClientIdHeaderValue, XBadgeIdentifierHeaderValue, "InventoryLinkingImportsInboundValidateMovementResponse")
 
   "PayloadWrapper" should {
 
@@ -67,7 +67,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "clientID"
 
-      rd.head.text shouldBe clientId
+      rd.head.text shouldBe XClientIdHeaderValue
     }
 
     "set the correlationID" in {
@@ -83,7 +83,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "badgeIdentifier"
 
-      rd.head.text shouldBe badgeIdentifier
+      rd.head.text shouldBe XBadgeIdentifierHeaderValue
     }
   }
 }

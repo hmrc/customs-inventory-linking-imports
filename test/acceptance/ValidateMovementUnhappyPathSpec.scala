@@ -15,23 +15,23 @@
  */
 
 package acceptance
+import com.github.tomakehurst.wiremock.client.WireMock.{status => _}
 import org.scalatest._
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.{Headers, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import unit.util.XMLTestData.InvalidInventoryLinkingMovementRequestXMLWithMultipleErrors
-import util.{ExternalServicesConfig, WireMockRunner}
+import util.TestData.XConversationIdHeaderName
+import util.{ExternalServicesConfig, TestData, WireMockRunner}
 
-import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.xml.{Node, NodeSeq, Utility, XML}
 
 class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
-  with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner with OptionValues {
+  with Matchers with BeforeAndAfterAll with BeforeAndAfterEach with WireMockRunner with OptionValues with TableDrivenPropertyChecks {
 
   val mdgImportMovementUrl = "/InventoryLinking/ImportMovement"
 
@@ -57,8 +57,7 @@ class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen wit
   val id = "id"
   val payload = <import>payload</import>
   val cspBearerToken = "CSP-Bearer-Token"
-  val X_CONVERSATION_ID_NAME = "X-Conversation-ID"
-  private val endpoint = s"/$id/movement-validation"
+  private val endpoint = "/movement-validation"
 
   private val BadRequestError =
     """<?xml version="1.0" encoding="UTF-8"?>
@@ -131,7 +130,7 @@ class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen wit
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(X_CONVERSATION_ID_NAME) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
       And("the response body is a \"invalid xml\" XML")
       string2xml(contentAsString(resultFuture)) shouldBe string2xml(BadRequestError)
@@ -149,7 +148,7 @@ class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen wit
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(X_CONVERSATION_ID_NAME) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
       And("the response body is a \"malformed xml body\" XML")
       string2xml(contentAsString(resultFuture)) shouldBe string2xml(malformedXmlBadRequest)
@@ -167,7 +166,7 @@ class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen wit
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(X_CONVERSATION_ID_NAME) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
       And("the response body is a \"malformed xml body\" XML")
       string2xml(contentAsString(resultFuture)) shouldBe string2xml(nonXmlPayloadBadRequest)
@@ -184,12 +183,16 @@ class ValidateMovementUnhappyPathSpec extends FeatureSpec with GivenWhenThen wit
   }
 
   private def postValidMovementMessage(payload: String) = {
-    val request = FakeRequest("POST", "/movement-validation").withBody(payload)
+    val request = FakeRequest("POST", endpoint)
+      .withBody(payload)
+      .withHeaders(TestData.Headers.validHeaders.toSeq: _*)
     route(app, request)
   }
 
   private def postValidMovementMessage(payload: NodeSeq) = {
-    val request = FakeRequest("POST", "/movement-validation").withXmlBody(payload)
+    val request = FakeRequest("POST", endpoint)
+      .withXmlBody(payload)
+      .withHeaders(TestData.Headers.validHeaders.toSeq: _*)
     route(app, request)
   }
 }
