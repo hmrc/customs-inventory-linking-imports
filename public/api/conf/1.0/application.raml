@@ -76,11 +76,7 @@ documentation:
                     <message>Internal server error</message>
                 </errorResponse>
 
-/customs/inventory-linking-imports/{id}/arrival-notification:
-  uriParameters:
-    id:
-      description: Declaration Id (MRN). Used to match against the provided Inventory Consignment Reference (ICR).
-      type: string
+/customs/inventory-linking-imports/arrival-notifications:
   post:
     displayName: Inventory Linking Imports Goods Arrival
     description: Send validated movement response messages provided by the CSP as a result of a previous validate movement request.

@@ -30,13 +30,13 @@ that `default` configuration is declared directly inside the `customs-inventory-
       host = some.host
       port = 80
       bearer-token = "some_token"
-      context = "/imports"
+      context = "/imports-sample-context"
 
       stub {
         host = localhost
         port = 9479
         bearer-token = "some_stub_token"
-         context = "/imports"
+         context = "/imports-sample-context"
       }
     }
   }
