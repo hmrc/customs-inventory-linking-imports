@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package unit.util
+package util
 
 import java.util.UUID
 
 import org.joda.time.{DateTime, DateTimeZone}
-import org.scalatest.prop.TableDrivenPropertyChecks.Table
 
 import scala.xml.Elem
 

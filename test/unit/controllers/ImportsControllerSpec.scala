@@ -34,7 +34,6 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Validat
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.play.test.UnitSpec
-import util.TestData.Headers._
 import util.TestData._
 
 import scala.concurrent.Future
@@ -51,8 +50,8 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     withHeaders(
       ACCEPT -> AcceptHeaderValue,
       CONTENT_TYPE -> MimeTypes.XML,
-      xClientIdName -> clientId.toString,
-      xBadgeIdentifierName -> badgeIdentifier)
+      XClientIdHeaderName -> clientId.toString,
+      XBadgeIdentifierHeaderName -> badgeIdentifier)
 
   val logger = mock[CdsLogger]
   val validateMovementController: ValidateMovementController = new ValidateMovementController(requestInfoGenerator, messageSender, logger)
@@ -88,7 +87,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
           val result = await(controller.apply(request))
 
-          result.header.headers should contain(conversationIdHeader)
+          result.header.headers should contain(XConversationIdHeader)
         }
       }
 
@@ -108,7 +107,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
           val result = await(controller.apply(request))
 
-          result.header.headers should contain(conversationIdHeader)
+          result.header.headers should contain(XConversationIdHeader)
         }
       }
     }

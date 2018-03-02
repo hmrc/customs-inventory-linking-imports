@@ -27,7 +27,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Imports
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService, XmlValidationService}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData._
-import unit.util.XMLTestData._
+import util.XMLTestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.xml.{Node, SAXException}
