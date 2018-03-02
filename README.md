@@ -43,7 +43,7 @@ that `default` configuration is declared directly inside the `customs-inventory-
     
 ### Switch service configuration for an endpoint
 
-#### REQUEST 
+#### REQUEST
     default:
     curl -X "POST" http://customs-inventory-linking-imports-host/test-only/service/validatemovement/configuration -H 'content-type: application/json' -d '{ "environment": "stub" }'
 
