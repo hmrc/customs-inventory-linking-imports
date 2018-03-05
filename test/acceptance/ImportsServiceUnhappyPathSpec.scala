@@ -16,7 +16,6 @@
 
 package acceptance
 
-import com.github.tomakehurst.wiremock.client.WireMock.{status => _}
 import org.scalatest._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.test.Helpers._
@@ -24,8 +23,8 @@ import util.TestData._
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 import util.externalservices.InventoryLinkingImportsService
 
-class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers with OptionValues with BeforeAndAfterAll
-  with BeforeAndAfterEach with TableDrivenPropertyChecks with InventoryLinkingImportsService {
+class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers with OptionValues
+  with TableDrivenPropertyChecks with InventoryLinkingImportsService {
 
   override protected def beforeAll() {
     startMockServer()

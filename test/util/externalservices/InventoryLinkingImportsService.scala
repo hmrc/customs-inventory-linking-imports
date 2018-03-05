@@ -17,14 +17,14 @@
 package util.externalservices
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.matching.UrlPattern
+import play.api.http.MimeTypes
 import play.api.test.Helpers.{ACCEPT, ACCEPTED, AUTHORIZATION, CONTENT_TYPE, DATE, XML, X_FORWARDED_HOST}
 import util.TestData._
 import util.{ExternalServicesConfig, WireMockRunner}
 
 trait InventoryLinkingImportsService extends WireMockRunner {
 
-  def startImportsService(requestPath: UrlPattern): Unit = {
+  def startImportsService(requestPath: String): Unit = {
     setupImportsServiceToReturn(requestPath, ACCEPTED)
 
     stubFor(post(requestPath).
@@ -33,7 +33,7 @@ trait InventoryLinkingImportsService extends WireMockRunner {
           .withStatus(ACCEPTED)))
   }
 
-  def setupImportsServiceToReturn(requestPath: UrlPattern, status: Int): Unit =
+  def setupImportsServiceToReturn(requestPath: String, status: Int): Unit =
     stubFor(post(requestPath).
       willReturn(
         aResponse()
@@ -58,5 +58,17 @@ trait InventoryLinkingImportsService extends WireMockRunner {
       verify(0, postRequestedFor(urlMatching(requestPath)).withHeader(AUTHORIZATION, equalTo(s"Bearer $unexpectedAuthToken")))
     }
   }
+
+  def setupBackendServiceToReturn(requestPath: String, status: Int): Unit =
+    stubFor(post(urlMatching(requestPath))
+        .withHeader(ACCEPT, equalTo(MimeTypes.XML))
+        .withHeader(CONTENT_TYPE, equalTo(s"${MimeTypes.XML}; charset=UTF-8"))
+        .withHeader(DATE, notMatching(""))
+        .withHeader(XCorrelationIdHeaderName, notMatching(""))
+        .withHeader(XConversationIdHeaderName, notMatching(""))
+        .withHeader(X_FORWARDED_HOST, equalTo("MDTP"))
+        .withHeader(AUTHORIZATION, equalTo(s"Bearer ${ExternalServicesConfig.AuthToken}"))
+          willReturn aResponse()
+            .withStatus(status))
 
 }

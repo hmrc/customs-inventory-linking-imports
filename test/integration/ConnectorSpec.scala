@@ -16,7 +16,6 @@
 
 package integration
 
-import com.github.tomakehurst.wiremock.client.WireMock._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -74,23 +73,23 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
     "ImportsConnector" should {
 
       s"make a correct request for $messageType" in {
-        setupImportsServiceToReturn(urlMatching(url), ACCEPTED)
+        setupImportsServiceToReturn(url, ACCEPTED)
         await(connector.post(request))
         verifyImportsConnectorServiceWasCalledWith(url, requestBody = "<payload>payload</payload>")
       }
 
       s"return a failed future when $messageType service returns 404" in {
-        setupImportsServiceToReturn(urlMatching(url), NOT_FOUND)
+        setupImportsServiceToReturn(url, NOT_FOUND)
         intercept[RuntimeException](await(connector.post(request))).getCause.getClass shouldBe classOf[NotFoundException]
       }
 
       s"return a failed future when $messageType service returns 400" in {
-        setupImportsServiceToReturn(urlMatching(url), BAD_REQUEST)
+        setupImportsServiceToReturn(url, BAD_REQUEST)
         intercept[RuntimeException](await(connector.post(request))).getCause.getClass shouldBe classOf[BadRequestException]
       }
 
       s"return a failed future when $messageType service returns 500" in {
-        setupImportsServiceToReturn(urlMatching(url), INTERNAL_SERVER_ERROR)
+        setupImportsServiceToReturn(url, INTERNAL_SERVER_ERROR)
         intercept[Upstream5xxResponse](await(connector.post(request)))
       }
 
