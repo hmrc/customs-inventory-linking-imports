@@ -25,19 +25,13 @@ import util.{ExternalServicesConfig, WireMockRunner}
 trait InventoryLinkingImportsService extends WireMockRunner {
 
   def startImportsService(requestPath: String): Unit = {
-    setupImportsServiceToReturn(requestPath, ACCEPTED)
+    setupBackendServiceToReturn(requestPath, ACCEPTED)
 
     stubFor(post(requestPath).
       willReturn(
         aResponse()
           .withStatus(ACCEPTED)))
   }
-
-  def setupImportsServiceToReturn(requestPath: String, status: Int): Unit =
-    stubFor(post(requestPath).
-      willReturn(
-        aResponse()
-          .withStatus(status)))
 
   def verifyImportsConnectorServiceWasCalledWith(requestPath: String,
                                                  requestBody: String,

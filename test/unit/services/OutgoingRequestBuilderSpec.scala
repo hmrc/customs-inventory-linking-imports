@@ -51,5 +51,11 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
     "return outgoing request with request info" in new Setup {
       result.requestInfo shouldBe requestInfo
     }
+
+    "return outgoing request when no headers" in new Setup {
+      val resultWithoutHeaders = builder.build(ValidateMovement, requestInfo, Map.empty, body)
+      resultWithoutHeaders.requestInfo shouldBe requestInfo
+    }
+
   }
 }

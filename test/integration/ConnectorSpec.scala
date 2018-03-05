@@ -73,29 +73,36 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
     "ImportsConnector" should {
 
       s"make a correct request for $messageType" in {
-        setupImportsServiceToReturn(url, ACCEPTED)
+        setupBackendServiceToReturn(url, ACCEPTED)
+
         await(connector.post(request))
+
         verifyImportsConnectorServiceWasCalledWith(url, requestBody = "<payload>payload</payload>")
       }
 
       s"return a failed future when $messageType service returns 404" in {
-        setupImportsServiceToReturn(url, NOT_FOUND)
+        setupBackendServiceToReturn(url, NOT_FOUND)
+
         intercept[RuntimeException](await(connector.post(request))).getCause.getClass shouldBe classOf[NotFoundException]
       }
 
       s"return a failed future when $messageType service returns 400" in {
-        setupImportsServiceToReturn(url, BAD_REQUEST)
+        setupBackendServiceToReturn(url, BAD_REQUEST)
+
         intercept[RuntimeException](await(connector.post(request))).getCause.getClass shouldBe classOf[BadRequestException]
       }
 
       s"return a failed future when $messageType service returns 500" in {
-        setupImportsServiceToReturn(url, INTERNAL_SERVER_ERROR)
+        setupBackendServiceToReturn(url, INTERNAL_SERVER_ERROR)
+
         intercept[Upstream5xxResponse](await(connector.post(request)))
       }
 
       s"return a failed future when failed to connect the $messageType service" in {
         stopMockServer()
+
         intercept[RuntimeException](await(connector.post(request))).getCause.getClass shouldBe classOf[BadGatewayException]
+
         startMockServer()
       }
 
