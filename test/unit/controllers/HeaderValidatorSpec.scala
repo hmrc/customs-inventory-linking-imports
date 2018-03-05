@@ -24,8 +24,6 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.play.test.UnitSpec
-import util.TestData
-import util.TestData.Headers.validHeaders
 import util.TestData._
 
 class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks {
@@ -39,15 +37,15 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks {
   val headersTable =
     Table(
       ("description", "Headers", "Expected response"),
-      ("Missing accept header", validHeaders- ACCEPT, ErrorAcceptHeaderInvalid.XmlResult),
-      ("Missing content type header", validHeaders - CONTENT_TYPE, ErrorContentTypeHeaderInvalid.XmlResult),
-      ("Missing X-Client-ID header", validHeaders - XClientIdHeaderName, ErrorInternalServerError.XmlResult),
-      ("Missing X-Badge-Identifier header", validHeaders - XBadgeIdentifierHeaderName, ErrorGenericBadRequest.XmlResult),
-
-      ("Invalid accept header", Map(TestData.InvalidAcceptHeader), ErrorAcceptHeaderInvalid.XmlResult),
-      ("Invalid content type header", validHeaders + InvalidContentTypeHeader, ErrorContentTypeHeaderInvalid.XmlResult),
-      ("Invalid X-Client-ID header", validHeaders + InvalidXClientIdHeader, ErrorInternalServerError.XmlResult),
-      ("Invalid X-Badge-Identifier header", validHeaders + InvalidXBadgeIdentifier, ErrorGenericBadRequest.XmlResult)
+      ("Valid Headers", ValidHeaders, Ok),
+      ("Missing accept header", ValidHeaders - ACCEPT, ErrorAcceptHeaderInvalid.XmlResult),
+      ("Missing content type header", ValidHeaders - CONTENT_TYPE, ErrorContentTypeHeaderInvalid.XmlResult),
+      ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, ErrorInternalServerError.XmlResult),
+      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, ErrorGenericBadRequest.XmlResult),
+      ("Invalid accept header", ValidHeaders + InvalidAcceptHeader, ErrorAcceptHeaderInvalid.XmlResult),
+      ("Invalid content type header", ValidHeaders + InvalidContentTypeHeader, ErrorContentTypeHeaderInvalid.XmlResult),
+      ("Invalid X-Client-ID header", ValidHeaders + InvalidXClientIdHeader, ErrorInternalServerError.XmlResult),
+      ("Invalid X-Badge-Identifier header", ValidHeaders + InvalidXBadgeIdentifier, ErrorGenericBadRequest.XmlResult)
     )
 
   private def requestWithHeaders(headers: Map[String, String]) =

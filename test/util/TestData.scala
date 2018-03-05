@@ -19,18 +19,19 @@ package util
 import java.util.UUID
 
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.http.MimeTypes
+import play.api.mvc.AnyContentAsXml
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
-import util.TestData.{XBadgeIdentifierHeaderName, XClientIdHeaderName}
+import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML, _}
+import play.api.http.MimeTypes.{XML, JSON}
 
 import scala.util.Random
 import scala.xml.Elem
 
 object TestData {
 
-  val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val XBadgeIdentifierHeaderName = "X-Badge-Identifier"
   val XClientIdHeaderName = "X-Client-ID"
   val XConversationIdHeaderName = "X-Conversation-ID"
@@ -40,16 +41,20 @@ object TestData {
   val correlationId: UUID = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
   val XClientIdHeaderValue = "c9503c3d-6df7-448d-a01b-e623a3b8806d"
   val XBadgeIdentifierHeaderValue = "ABC123"
+  val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
+  val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
-  lazy val InvalidAcceptHeader = ACCEPT -> MimeTypes.JSON
-  lazy val InvalidContentTypeHeader = CONTENT_TYPE -> MimeTypes.JSON
+  lazy val InvalidAcceptHeader = ACCEPT -> JSON
+  lazy val InvalidContentTypeHeader = CONTENT_TYPE -> JSON
   lazy val InvalidXClientIdHeader = XClientIdHeaderName -> "This is not a UUID"
   lazy val InvalidXBadgeIdentifier = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
 
   lazy val ValidAcceptHeader = ACCEPT -> AcceptHeaderValue
-  lazy val ValidContentTypeHeader = CONTENT_TYPE -> MimeTypes.XML
+  lazy val ValidContentTypeHeader = CONTENT_TYPE -> XML
   lazy val ValidXClientIdHeader = XClientIdHeaderName -> XClientIdHeaderValue
   lazy val ValidXBadgeIdentifierHeader = XBadgeIdentifierHeaderName -> XBadgeIdentifierHeaderValue
+  lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> conversationId.toString
+  val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader)
 
   val validBasicAuthToken = s"Basic ${Random.alphanumeric.take(18).mkString}=="
 
@@ -76,25 +81,22 @@ object TestData {
   val bearerToken: String = "token"
   val serviceConfig: ServiceConfig = ServiceConfig("url", Some(bearerToken), "env")
 
+  type EmulatedServiceFailure = UnsupportedOperationException
+  val emulatedServiceFailure = new EmulatedServiceFailure("Emulated service failure.")
+
   val body: Elem = <payload>payload</payload>
   val decoratedBody = <wrapped><payload>payload</payload></wrapped>
 
-  object Headers {
+  val ValidValidateMovementRequest = FakeRequest("POST", "/movement-validation")
+    .withXmlBody(ValidInventoryLinkingMovementRequestXML)
+    .withHeaders(ValidHeaders.toSeq: _*)
 
-    val accept: (String, String) = (ACCEPT, AcceptHeaderValue)
-    val contentType: (String, String) = (CONTENT_TYPE, MimeTypes.XML)
+  val ValidGoodsArrivalRequest = FakeRequest("POST", "/arrival-notifications")
+    .withXmlBody(ValidInventoryLinkingGoodsArrivalRequestXML)
+    .withHeaders(ValidHeaders.toSeq: _*)
 
-    val xClientIdName: String = XClientIdHeaderName
-    val xClientId: (String, String) = ValidXClientIdHeader
+  lazy val InvalidRequest: FakeRequest[AnyContentAsXml] = ValidValidateMovementRequest.withXmlBody(InvalidInventoryLinkingGoodsArrivalRequestXML)
+  lazy val InvalidRequestWithMalformedXml: FakeRequest[String] = ValidValidateMovementRequest.withBody("<xm> malformed xml <xm>")
+  lazy val InvalidRequestWithNonXml: FakeRequest[String] = ValidValidateMovementRequest.withBody("""  {"valid": "json payload" }  """)
 
-    val xBadgeIdentifierName: String = XBadgeIdentifierHeaderName
-    val xBadgeIdentifier: (String, String) = ValidXBadgeIdentifierHeader
-
-    val conversationIdHeader: (String, String) = XConversationIdHeaderName -> conversationId.toString
-
-    val validHeaders: Map[String, String] = Map(accept, contentType, xClientId, xBadgeIdentifier)
-  }
-
-  type EmulatedServiceFailure = UnsupportedOperationException
-  val emulatedServiceFailure = new EmulatedServiceFailure("Emulated service failure.")
 }

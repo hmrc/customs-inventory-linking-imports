@@ -23,15 +23,13 @@ import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
-import util.TestData
-import util.TestData.Headers._
 import util.TestData._
 
 class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with MockitoSugar {
 
   trait Setup {
     val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
-    val headers: Map[String, String] = Map(xClientId, xBadgeIdentifier)
+    val headers: Map[String, String] = Map(ValidXClientIdHeader, ValidXBadgeIdentifierHeader)
     val decorator: PayloadDecorator = mock[PayloadDecorator]
     val builder: OutgoingRequestBuilder = new OutgoingRequestBuilder(serviceConfigProvider, decorator)
 
@@ -53,5 +51,11 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
     "return outgoing request with request info" in new Setup {
       result.requestInfo shouldBe requestInfo
     }
+
+    "return outgoing request when no headers" in new Setup {
+      val resultWithoutHeaders = builder.build(ValidateMovement, requestInfo, Map.empty, body)
+      resultWithoutHeaders.requestInfo shouldBe requestInfo
+    }
+
   }
 }
