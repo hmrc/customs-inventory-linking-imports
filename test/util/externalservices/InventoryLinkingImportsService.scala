@@ -17,11 +17,27 @@
 package util.externalservices
 
 import com.github.tomakehurst.wiremock.client.WireMock._
-import play.api.test.Helpers.{ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE, XML, X_FORWARDED_HOST}
+import com.github.tomakehurst.wiremock.matching.UrlPattern
+import play.api.test.Helpers.{ACCEPT, ACCEPTED, AUTHORIZATION, CONTENT_TYPE, DATE, XML, X_FORWARDED_HOST}
 import util.TestData._
 import util.{ExternalServicesConfig, WireMockRunner}
 
 trait InventoryLinkingImportsService extends WireMockRunner {
+
+  def startImportsService(requestPath: UrlPattern): Unit = {
+    setupImportsServiceToReturn(requestPath, ACCEPTED)
+
+    stubFor(post(requestPath).
+      willReturn(
+        aResponse()
+          .withStatus(ACCEPTED)))
+  }
+
+  def setupImportsServiceToReturn(requestPath: UrlPattern, status: Int): Unit =
+    stubFor(post(requestPath).
+      willReturn(
+        aResponse()
+          .withStatus(status)))
 
   def verifyImportsConnectorServiceWasCalledWith(requestPath: String,
                                                  requestBody: String,

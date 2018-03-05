@@ -19,13 +19,13 @@ package util
 import java.util.UUID
 
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.http.MimeTypes
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
 import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML, _}
+import play.api.http.MimeTypes.{XML, JSON}
 
 import scala.util.Random
 import scala.xml.Elem
@@ -42,15 +42,15 @@ object TestData {
   val XClientIdHeaderValue = "c9503c3d-6df7-448d-a01b-e623a3b8806d"
   val XBadgeIdentifierHeaderValue = "ABC123"
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
-  val ConnectorContentTypeHeaderValue = s"$MimeTypes.XML; charset=UTF-8"
+  val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
-  lazy val InvalidAcceptHeader = ACCEPT -> MimeTypes.JSON
-  lazy val InvalidContentTypeHeader = CONTENT_TYPE -> MimeTypes.JSON
+  lazy val InvalidAcceptHeader = ACCEPT -> JSON
+  lazy val InvalidContentTypeHeader = CONTENT_TYPE -> JSON
   lazy val InvalidXClientIdHeader = XClientIdHeaderName -> "This is not a UUID"
   lazy val InvalidXBadgeIdentifier = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
 
   lazy val ValidAcceptHeader = ACCEPT -> AcceptHeaderValue
-  lazy val ValidContentTypeHeader = CONTENT_TYPE -> MimeTypes.XML
+  lazy val ValidContentTypeHeader = CONTENT_TYPE -> XML
   lazy val ValidXClientIdHeader = XClientIdHeaderName -> XClientIdHeaderValue
   lazy val ValidXBadgeIdentifierHeader = XBadgeIdentifierHeaderName -> XBadgeIdentifierHeaderValue
   lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> conversationId.toString
