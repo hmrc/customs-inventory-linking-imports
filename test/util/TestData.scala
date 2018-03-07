@@ -39,7 +39,7 @@ object TestData {
 
   val conversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
   val correlationId: UUID = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
-  val XClientIdHeaderValue = "c9503c3d-6df7-448d-a01b-e623a3b8806d"
+  val XClientIdHeaderValue = "yc9503c3d6df7448da01be623a3b8806d"
   val XBadgeIdentifierHeaderValue = "ABC123"
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
