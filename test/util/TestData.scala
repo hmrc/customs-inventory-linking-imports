@@ -19,13 +19,13 @@ package util
 import java.util.UUID
 
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.mvc.AnyContentAsXml
+import play.api.http.HeaderNames.AUTHORIZATION
+import play.api.http.MimeTypes.{JSON, XML}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE}
+import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE, POST}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
-import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML, _}
-import play.api.http.MimeTypes.{XML, JSON}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, RequestInfo, ValidateMovement}
+import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 
 import scala.util.Random
 import scala.xml.Elem
@@ -75,6 +75,16 @@ object TestData {
     "/api/conf/1.0/schemas/imports/inventoryLinkingImportCommonTypes.xsd"
   )
 
+  def elementName(messageType: ImportsMessageType): String = messageType match {
+    case GoodsArrival => goodsArrivalXsdElementName
+    case ValidateMovement => validateMovementsXsdElementName
+  }
+
+  def otherElementName(messageType: ImportsMessageType): String = messageType match {
+    case GoodsArrival => validateMovementsXsdElementName
+    case ValidateMovement => goodsArrivalXsdElementName
+  }
+
   val requestDateTime: DateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
   val requestDateTimeHttp: String = "2017-06-08T13:55:00Z"
   val requestInfo: RequestInfo = RequestInfo(conversationId, correlationId, requestDateTime)
@@ -95,8 +105,10 @@ object TestData {
     .withXmlBody(ValidInventoryLinkingGoodsArrivalRequestXML)
     .withHeaders(ValidHeaders.toSeq: _*)
 
-  lazy val InvalidRequest: FakeRequest[AnyContentAsXml] = ValidValidateMovementRequest.withXmlBody(InvalidInventoryLinkingGoodsArrivalRequestXML)
-  lazy val InvalidRequestWithMalformedXml: FakeRequest[String] = ValidValidateMovementRequest.withBody("<xm> malformed xml <xm>")
-  lazy val InvalidRequestWithNonXml: FakeRequest[String] = ValidValidateMovementRequest.withBody("""  {"valid": "json payload" }  """)
+  implicit class FakeRequestOps[R](val fakeRequest: FakeRequest[R]) extends AnyVal {
+    def fromCsp: FakeRequest[R] = fakeRequest.withHeaders(AUTHORIZATION -> s"Bearer $cspBearerToken")
+
+    def postTo(endpoint: String): FakeRequest[R] = fakeRequest.copyFakeRequest(method = POST, uri = endpoint)
+  }
 
 }

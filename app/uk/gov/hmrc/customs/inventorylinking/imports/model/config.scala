@@ -30,3 +30,9 @@ case object ValidateMovement extends ImportsMessageType {
   val name = "validatemovement"
   val wrapperRootElementLabel = "InventoryLinkingImportsInboundValidateMovementResponse"
 }
+
+case class ApiDefinitionConfig(apiScope: String, whiteListedCsps: Seq[String])
+
+trait ImportsConfig {
+  val apiDefinitionConfig: ApiDefinitionConfig
+}

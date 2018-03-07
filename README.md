@@ -18,7 +18,6 @@ Dynamic switching of service endpoints has been implemented for inventory linkin
 switching of the endpoint there must be a corresponding section in the application config file
 (see example below). This should contain the endpoint config details.
 
-
 ## Example
 The service `customs-inventory-linking-imports` has a `default` configuration and a `stub` configuration. Note
 that `default` configuration is declared directly inside the `customs-inventory-linking-imports` section.

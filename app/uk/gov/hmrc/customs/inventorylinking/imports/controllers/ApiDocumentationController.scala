@@ -18,18 +18,17 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
 
-import play.api.Configuration
 import play.api.http.HttpErrorHandler
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.customs.api.common.controllers.DocumentationController
+import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 
 @Singleton
-class ApiDocumentationController @Inject()(httpErrorHandler: HttpErrorHandler, configuration: Configuration) extends DocumentationController(httpErrorHandler) {
+class ApiDocumentationController @Inject()(httpErrorHandler: HttpErrorHandler, importsConfigService: ImportsConfigService) extends DocumentationController(httpErrorHandler) {
 
-  private val apiScopeConfigKey = "customs.definition.api-scope"
-  private lazy val apiScopeKey = configuration.getString(apiScopeConfigKey).getOrElse(throw new IllegalStateException(s"$apiScopeConfigKey is not configured"))
-  private lazy val whitelistedApplicationIds = configuration.getStringSeq("api.access.version-2.0.whitelistedApplicationIds").getOrElse(Seq.empty)
+  private lazy val apiScopeKey = importsConfigService.apiDefinitionConfig.apiScope
+  private lazy val whitelistedApplicationIds = importsConfigService.apiDefinitionConfig.whiteListedCsps
 
   def definition(): Action[AnyContent] = Action {
     Ok(txt.definition(apiScopeKey, whitelistedApplicationIds)).withHeaders(CONTENT_TYPE -> JSON)

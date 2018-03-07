@@ -16,7 +16,9 @@
 
 package unit.controllers
 
-import org.mockito.Mockito.{reset, when}
+import akka.stream.Materializer
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.Mockito.{reset, verifyZeroInteractions, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -27,39 +29,56 @@ import play.api.http.MimeTypes
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
+import play.api.test.Helpers.UNAUTHORIZED
+import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
+import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
+import uk.gov.hmrc.auth.core.{AuthProviders, AuthorisationException, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{MessageSender, RequestInfoGenerator}
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, GoodsArrival, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
 
-  val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
-  val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
-  val clientId = "8e1043ef-fb32-4e90-9682-a8ff4a07228a"
-  val badgeIdentifier = "badge"
-  val messageSender: MessageSender = mock[MessageSender]
+  private val mockAuthConnector: MicroserviceAuthConnector = mock[MicroserviceAuthConnector]
+  private val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
+  private val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
+  private val clientId = "8e1043ef-fb32-4e90-9682-a8ff4a07228a"
+  private val badgeIdentifier = "badge"
+  private val messageSender: MessageSender = mock[MessageSender]
+  private val configuration = mock[ImportsConfigService]
+  private implicit val mockMaterialiser = mock[Materializer]
 
-  val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
+  private val apiScope = "write:customs-inventory-linking-imports"
+  private val cspAuthPredicate = Enrolment(apiScope) and AuthProviders(PrivilegedApplication)
+
+  private val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
     withHeaders(
       ACCEPT -> AcceptHeaderValue,
       CONTENT_TYPE -> MimeTypes.XML,
       XClientIdHeaderName -> clientId.toString,
       XBadgeIdentifierHeaderName -> badgeIdentifier)
 
-  val logger = mock[CdsLogger]
-  val validateMovementController: ValidateMovementController = new ValidateMovementController(requestInfoGenerator, messageSender, logger)
-  val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(requestInfoGenerator, messageSender, logger)
+  private val logger = mock[CdsLogger]
+  private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockAuthConnector, requestInfoGenerator, messageSender, logger)
+  private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockAuthConnector, requestInfoGenerator, messageSender, logger)
+
+  private val errorResultUnauthorised = ErrorResponse(UNAUTHORIZED, errorCode = "UNAUTHORIZED",
+    message = "Unauthorised request").XmlResult.withHeaders("X-Conversation-ID" -> conversationId.toString)
 
   override protected def beforeEach() {
-    reset(serviceConfigProvider, requestInfoGenerator)
+    reset(serviceConfigProvider, requestInfoGenerator, messageSender)
     when(requestInfoGenerator.newRequestInfo).thenReturn(requestInfo)
+    when(configuration.apiDefinitionConfig).thenReturn(ApiDefinitionConfig(apiScope, Seq.empty))
+    authoriseCsp()
   }
 
 
@@ -88,6 +107,17 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
           val result = await(controller.apply(request))
 
           result.header.headers should contain(XConversationIdHeader)
+        }
+      }
+
+      "called by unauthorised CSP" should {
+        s"return result 401 UNAUTHORISED for $messageTypeName" in {
+          unauthoriseCsp()
+          val result = await(controller.apply(request))
+
+          result shouldBe errorResultUnauthorised
+
+          verifyZeroInteractions(messageSender)
         }
       }
 
@@ -122,5 +152,15 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         status(result) shouldBe BAD_REQUEST
       }
     }
+  }
+
+  private def authoriseCsp(): Unit = {
+    when(mockAuthConnector.authorise(ameq(cspAuthPredicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(())
+  }
+
+  private def unauthoriseCsp(authException: AuthorisationException = new InsufficientEnrolments): Unit = {
+    when(mockAuthConnector.authorise(ameq(cspAuthPredicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(Future.failed(authException))
   }
 }

@@ -18,13 +18,37 @@ package acceptance
 
 import org.scalatest._
 import org.scalatest.prop.TableDrivenPropertyChecks
+import play.api.mvc.AnyContentAsXml
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import util.TestData._
-import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
-import util.externalservices.InventoryLinkingImportsService
+import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML}
+import util.externalservices.{AuthService, InventoryLinkingImportsService}
 
 class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers with OptionValues
-  with TableDrivenPropertyChecks with InventoryLinkingImportsService {
+  with TableDrivenPropertyChecks with InventoryLinkingImportsService with AuthService {
+
+  private case class InvalidRequest(
+    invalidRequest: FakeRequest[AnyContentAsXml],
+    invalidRequestWithMalformedXml: FakeRequest[String],
+    invalidRequestWithNonXml: FakeRequest[String]
+  )
+  private case class InvalidRequests(goodsArrival: InvalidRequest, validateMovement: InvalidRequest)
+
+  private val invalidRequests =
+    InvalidRequests(
+      goodsArrival = InvalidRequest(
+        invalidRequest = ValidValidateMovementRequest.withXmlBody(InvalidInventoryLinkingGoodsArrivalRequestXML),
+        invalidRequestWithMalformedXml = ValidValidateMovementRequest.withBody("<xm> malformed xml <xm>"),
+        invalidRequestWithNonXml = ValidValidateMovementRequest.withBody("""  {"valid": "json payload" }  """)
+      ),
+      validateMovement = InvalidRequest(
+        invalidRequest = ValidGoodsArrivalRequest.withXmlBody(InvalidInventoryLinkingMovementRequestXML),
+        invalidRequestWithMalformedXml = ValidGoodsArrivalRequest.withBody("<xm> malformed xml <xm>"),
+        invalidRequestWithNonXml = ValidGoodsArrivalRequest.withBody("""  {"valid": "json payload" }  """)
+      )
+    )
 
   override protected def beforeAll() {
     startMockServer()
@@ -38,21 +62,20 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers wit
     stopMockServer()
   }
 
-  private val BadRequestError =
-    """<?xml version="1.0" encoding="UTF-8"?>
+  private def badRequestError(messageType: ImportsMessageType) =
+    s"""<?xml version="1.0" encoding="UTF-8"?>
       |<errorResponse>
       | <code>BAD_REQUEST</code>
       | <message>Bad Request</message>
       | <errors>
       |   <error>
       |     <code>xml_validation_error</code>
-      |     <message>cvc-elt.1.a: Cannot find the declaration of element 'inventoryLinkingImportsGoodsArrival'.</message>
+      |     <message>cvc-elt.1.a: Cannot find the declaration of element '${elementName(messageType)}'.</message>
       |   </error>
       | </errors>
       |</errorResponse>""".stripMargin
 
-
-  private val malformedXmlBadRequest =
+  private val malformedXmlError =
     """<?xml version="1.0" encoding="UTF-8"?>
       |<errorResponse>
       |  <code>BAD_REQUEST</code>
@@ -65,7 +88,7 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers wit
       |  </errors>
       |</errorResponse>""".stripMargin
 
-  private val nonXmlPayloadBadRequest =
+  private val nonXmlPayloadError =
     """<?xml version="1.0" encoding="UTF-8"?>
       |<errorResponse>
       |  <code>BAD_REQUEST</code>
@@ -78,20 +101,62 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers wit
       |  </errors>
       |</errorResponse>""".stripMargin
 
-  private val controllers = Table(("Message Type", "request", "url"),
-    ("Goods Arrival", ValidGoodsArrivalRequest, goodsArrivalConnectorContext),
-    ("Validate Movement", ValidValidateMovementRequest, validateMovementConnectorContext)
-  )
+  private val unAuthorisedError =
+    """<errorResponse>
+      |    <code>UNAUTHORIZED</code>
+      |    <message>Unauthorised request</message>
+      |</errorResponse>""".stripMargin
 
-  forAll(controllers) { case (messageType, request, url) =>
+  private val xmlRequestsByMessageType = Table(
+      ("Message Type Description",
+        "messageType",
+        "Valid Request",
+        "Invalid Request",
+        "Invalid Request With Malformed Xml",
+        "non XML"),
+      ("Goods Arrival",
+        GoodsArrival,
+        ValidValidateMovementRequest,
+        invalidRequests.goodsArrival.invalidRequest,
+        invalidRequests.goodsArrival.invalidRequestWithMalformedXml,
+        invalidRequests.goodsArrival.invalidRequestWithNonXml),
+      ("Validate Movement",
+        ValidateMovement,
+        ValidGoodsArrivalRequest,
+        invalidRequests.validateMovement.invalidRequest,
+        invalidRequests.validateMovement.invalidRequestWithMalformedXml,
+        invalidRequests.validateMovement.invalidRequestWithNonXml)
+    )
+
+  forAll(xmlRequestsByMessageType) { case (messageTypeDesc, messageType, validRequest, invalidRequest, invalidRequestWithMalformedXml, invalidRequestWithNonXml) =>
 
     feature(s"The $messageType endpoint handles errors as expected") {
 
-      scenario(s"Response status 400 when user submits a $messageType message with an XML payload that does not adhere to schema") {
+      scenario(s"Response status 401 when non authorised user submits a valid $messageTypeDesc message") {
 
-        Given(s"an authorised CSP wants to submit a customs $messageType message with an invalid XML payload")
+        Given(s"an un-authorised CSP wants to submit a customs $messageTypeDesc message with an invalid XML payload")
+        authServiceUnAuthorisesScopeForCSP()
         When("a POST request with data is sent to the API")
-        val result = route(app, InvalidRequest)
+        val result = route(app, validRequest.fromCsp)
+
+        Then("a response with a 401 status is returned by the API")
+        result shouldBe 'defined
+
+        val resultFuture = result.get
+
+        status(resultFuture) shouldBe UNAUTHORIZED
+        headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+
+        And("the response body is a \"invalid xml\" XML")
+        stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(unAuthorisedError)
+      }
+
+      scenario(s"Response status 400 when user submits a $messageTypeDesc message with an XML payload that does not adhere to schema") {
+
+        Given(s"an authorised CSP wants to submit a customs $messageTypeDesc message with an invalid XML payload")
+        authServiceAuthorisesCSP()
+        When("a POST request with data is sent to the API")
+        val result = route(app, invalidRequest.fromCsp)
 
         Then("a response with a 400 status is returned by the API")
         result shouldBe 'defined
@@ -101,15 +166,16 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers wit
         status(resultFuture) shouldBe BAD_REQUEST
         headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
-        And("the response body is a \"invalid xml\" XML")
-        stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(BadRequestError)
+        And("the response body is a \"Unauthorised request\" XML")
+        stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(badRequestError(messageType))
       }
 
-      scenario(s"Response status 400 when user submits a $messageType message with a malformed XML payload") {
+      scenario(s"Response status 400 when user submits a $messageTypeDesc message with a malformed XML payload") {
 
-        Given(s"an authorised CSP wants to submit a customs $messageType message with a malformed XML payload")
+        Given(s"an authorised CSP wants to submit a customs $messageTypeDesc message with a malformed XML payload")
+        authServiceAuthorisesCSP()
         When("a POST request with data is sent to the API")
-        val result = route(app, InvalidRequestWithMalformedXml)
+        val result = route(app, invalidRequestWithMalformedXml.fromCsp)
 
         Then("a response with a 400 status is received")
         result shouldBe 'defined
@@ -120,14 +186,15 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers wit
         headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
         And("the response body is a \"malformed xml body\" XML")
-        stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlBadRequest)
+        stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlError)
       }
 
-      scenario(s"Response status 400 when user submits a $messageType message with a non-xml payload") {
+      scenario(s"Response status 400 when user submits a $messageTypeDesc message with a non-xml payload") {
 
-        Given(s"an authorised CSP wants to submit a customs $messageType message with a non-XML payload")
+        Given(s"an authorised CSP wants to submit a customs $messageTypeDesc message with a non-XML payload")
+        authServiceAuthorisesCSP()
         When("a POST request with data is sent to the API")
-        val result = route(app, InvalidRequestWithNonXml)
+        val result = route(app, invalidRequestWithNonXml.fromCsp)
 
         Then("a response with a 400 status is received")
         result shouldBe 'defined
@@ -138,7 +205,7 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers wit
         headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
         And("the response body is a \"malformed xml body\" XML")
-        stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(nonXmlPayloadBadRequest)
+        stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(nonXmlPayloadError)
       }
     }
   }
