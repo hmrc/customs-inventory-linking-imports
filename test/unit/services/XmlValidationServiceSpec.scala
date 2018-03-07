@@ -26,6 +26,7 @@ import play.api.Configuration
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService, XmlValidationService}
 import uk.gov.hmrc.play.test.UnitSpec
+import util.TestData
 import util.TestData._
 import util.XMLTestData._
 
@@ -47,15 +48,9 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
       case ValidateMovement => new ValidateMovementXmlValidationService(mockConfiguration)
     }
 
-    def elementName: String = importsMessageType match {
-      case GoodsArrival => goodsArrivalXsdElementName
-      case ValidateMovement => validateMovementsXsdElementName
-    }
+    def elementName: String = TestData.elementName(importsMessageType)
 
-    def otherElementName: String = importsMessageType match {
-      case GoodsArrival => validateMovementsXsdElementName
-      case ValidateMovement => goodsArrivalXsdElementName
-    }
+    def otherElementName: String = TestData.otherElementName(importsMessageType)
 
     def xsdLocations: Seq[String] = importsMessageType match {
       case GoodsArrival => goodsArrivalXsdLocations

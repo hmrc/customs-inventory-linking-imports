@@ -30,8 +30,8 @@ import scala.concurrent.Future
 class DefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite with Matchers {
 
   override implicit lazy val app: Application = new GuiceApplicationBuilder().configure(Map(
-    "api.access.version-2.0.whitelistedApplicationIds.0" -> "someId-1",
-    "api.access.version-2.0.whitelistedApplicationIds.1" -> "someId-2"
+    "api.access.version-1.0.whitelistedApplicationIds.0" -> "someId-1",
+    "api.access.version-1.0.whitelistedApplicationIds.1" -> "someId-2"
   )).build()
 
   feature("Ensure definition file") {

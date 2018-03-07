@@ -29,6 +29,8 @@ trait AcceptanceTestSpec extends FeatureSpec with GivenWhenThen with GuiceOneApp
   with BeforeAndAfterAll with BeforeAndAfterEach {
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
+    "microservice.services.auth.host" -> ExternalServicesConfig.Host,
+    "microservice.services.auth.port" -> ExternalServicesConfig.Port,
     "microservice.services.validatemovement.host" -> ExternalServicesConfig.Host,
     "microservice.services.validatemovement.port" -> ExternalServicesConfig.Port,
     "microservice.services.validatemovement.context" -> InventoryLinkingImportsExternalServicesConfig.validateMovementConnectorContext,
@@ -43,6 +45,5 @@ trait AcceptanceTestSpec extends FeatureSpec with GivenWhenThen with GuiceOneApp
   def stringToXml(str: String): Node = {
     Utility.trim(XML.loadString(str))
   }
-
 
 }

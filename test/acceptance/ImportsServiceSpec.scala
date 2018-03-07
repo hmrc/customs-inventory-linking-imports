@@ -22,12 +22,12 @@ import play.api.mvc.Result
 import play.api.test.Helpers._
 import util.TestData._
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
-import util.externalservices.InventoryLinkingImportsService
+import util.externalservices.{AuthService, InventoryLinkingImportsService}
 
 import scala.concurrent.Future
 
 class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionValues with BeforeAndAfterAll
-  with BeforeAndAfterEach with TableDrivenPropertyChecks with InventoryLinkingImportsService {
+  with BeforeAndAfterEach with TableDrivenPropertyChecks with InventoryLinkingImportsService with AuthService {
 
   private val internalServerError =
     """<?xml version="1.0" encoding="UTF-8"?>
@@ -50,8 +50,8 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
   }
 
   private val controllers = Table(("Message Type", "request", "url"),
-    ("Goods Arrival", ValidGoodsArrivalRequest, goodsArrivalConnectorContext),
-    ("Validate Movement", ValidValidateMovementRequest, validateMovementConnectorContext)
+    ("Goods Arrival", ValidGoodsArrivalRequest.fromCsp, goodsArrivalConnectorContext),
+    ("Validate Movement", ValidValidateMovementRequest.fromCsp, validateMovementConnectorContext)
   )
 
   forAll(controllers) { case (messageType, request, url) =>
@@ -63,6 +63,7 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
 
       scenario(s"A valid $messageType message submitted and successfully forwarded to the backend") {
         Given("a CSP is authorised to use the API endpoint")
+        authServiceAuthorisesCSP()
 
         And("the Back End Service will return a successful response")
         setupBackendServiceToReturn(url, ACCEPTED)
@@ -77,6 +78,7 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
 
       scenario(s"A valid $messageType submitted and the Back End service fails") {
         Given("a CSP is authorised to use the API endpoint")
+        authServiceAuthorisesCSP()
 
         And("the Back End Service will return an error response")
         setupBackendServiceToReturn(url, NOT_FOUND)

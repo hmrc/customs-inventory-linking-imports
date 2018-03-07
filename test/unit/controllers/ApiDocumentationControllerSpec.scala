@@ -19,32 +19,32 @@ package unit.controllers
 import java.io.FileNotFoundException
 
 import akka.stream.Materializer
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Configuration
-import play.api.http.DefaultHttpErrorHandler
+import play.api.Application
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.http.Status.OK
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ApiDocumentationController
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 import uk.gov.hmrc.play.test.UnitSpec
 
-class ApiDocumentationControllerSpec extends UnitSpec with GuiceOneAppPerSuite {
-  implicit val materializer: Materializer = app.materializer
+class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
 
-  private lazy val applicationRamlContent = getResourceFileContent("/public/api/conf/1.0/application.raml")
   private val apiScope = "scope"
-  private lazy val config = Configuration("customs.definition.api-scope" -> apiScope)
-  private lazy val controller = new ApiDocumentationController(DefaultHttpErrorHandler, config)
+  private val whiteList0 = "whiteList0"
+  private val whiteList1 = "whiteList1"
+  private implicit val materializer: Materializer = app.materializer
+  private lazy val applicationRamlContent = getResourceFileContent("/public/api/conf/1.0/application.raml")
+  private lazy val controller = app.injector.instanceOf[ApiDocumentationController]
 
-  "with empty configuration DocumentationController.defintion" should {
-    "throw IllegalStateException" in {
-      val controller = new ApiDocumentationController(DefaultHttpErrorHandler, Configuration())
-      val thrown = the[IllegalStateException] thrownBy getDefinition(controller)
-      thrown.getMessage should equal("customs.definition.api-scope is not configured")
-    }
-  }
+  override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
+    "customs.definition.api-scope" -> apiScope,
+    "api.access.version-1.0.whitelistedApplicationIds.0" -> whiteList0,
+    "api.access.version-1.0.whitelistedApplicationIds.1" -> whiteList1
+  )).build()
 
   "With valid configuration ApiDocumentationController.definition" should {
     val result = getDefinition(controller)
@@ -58,7 +58,7 @@ class ApiDocumentationControllerSpec extends UnitSpec with GuiceOneAppPerSuite {
     }
 
     "return definition in the body" in {
-      jsonBodyOf(result) shouldBe Json.parse(txt.definition("scope", Seq.empty).toString())
+      jsonBodyOf(result) shouldBe Json.parse(txt.definition("scope", Seq(whiteList0, whiteList1)).toString())
     }
   }
 
@@ -87,6 +87,5 @@ class ApiDocumentationControllerSpec extends UnitSpec with GuiceOneAppPerSuite {
       throw new FileNotFoundException(s"Resource file not found: $resourceFile"))
     scala.io.Source.fromInputStream(is).mkString
   }
-
 
 }
