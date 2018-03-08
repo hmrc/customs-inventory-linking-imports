@@ -82,7 +82,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
       val requestInfo = requestInfoGenerator.newRequestInfo
       val headers = request.headers.toSimpleMap
 
-      messageSender.send(importsMessageType, body, requestInfo, headers).
+      messageSender.validateAndSend(importsMessageType, body, requestInfo, headers).
         map(_ => Accepted)
     }.recoverWith(recover).
       map(r => addConversationIdHeader(r, requestInfo.conversationId.toString))

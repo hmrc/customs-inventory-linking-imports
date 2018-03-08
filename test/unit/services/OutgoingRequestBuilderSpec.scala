@@ -23,6 +23,7 @@ import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
+import util.ApiSubscriptionFieldsTestData
 import util.TestData._
 
 class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with MockitoSugar {
@@ -33,10 +34,10 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
     val decorator: PayloadDecorator = mock[PayloadDecorator]
     val builder: OutgoingRequestBuilder = new OutgoingRequestBuilder(serviceConfigProvider, decorator)
 
-    when(decorator.wrap(body, requestInfo, XClientIdHeaderValue, XBadgeIdentifierHeaderValue, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
+    when(decorator.wrap(body, requestInfo, ApiSubscriptionFieldsTestData.FieldsIdAsString, XBadgeIdentifierHeaderValueAsString, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
     when(serviceConfigProvider.getConfig("validatemovement")).thenReturn(serviceConfig)
 
-    val result: OutgoingRequest = builder.build(ValidateMovement, requestInfo, headers, body)
+    val result: OutgoingRequest = builder.build(ValidateMovement, requestInfo, ApiSubscriptionFieldsTestData.TestFieldsId, XBadgeIdentifierHeaderValue, body)
   }
 
   "build" should {
@@ -50,11 +51,6 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
 
     "return outgoing request with request info" in new Setup {
       result.requestInfo shouldBe requestInfo
-    }
-
-    "return outgoing request when no headers" in new Setup {
-      val resultWithoutHeaders = builder.build(ValidateMovement, requestInfo, Map.empty, body)
-      resultWithoutHeaders.requestInfo shouldBe requestInfo
     }
 
   }

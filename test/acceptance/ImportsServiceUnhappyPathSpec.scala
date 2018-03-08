@@ -24,10 +24,15 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import util.TestData._
 import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML}
-import util.externalservices.{AuthService, InventoryLinkingImportsService}
+import util.externalservices.{ApiSubscriptionFieldsService, AuthService, InventoryLinkingImportsService}
 
-class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec with Matchers with OptionValues
-  with TableDrivenPropertyChecks with InventoryLinkingImportsService with AuthService {
+class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
+  with Matchers
+  with OptionValues
+  with TableDrivenPropertyChecks
+  with InventoryLinkingImportsService
+  with ApiSubscriptionFieldsService
+  with AuthService {
 
   private case class InvalidRequest(
     invalidRequest: FakeRequest[AnyContentAsXml],

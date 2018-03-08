@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package util.externalservices
+package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-object InventoryLinkingImportsExternalServicesConfig {
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionKey
 
-  val GoodsArrivalConnectorContext = "/inventorylinkingimports/goodsarrivalnotification"
-  val ValidateMovementConnectorContext = "/inventorylinkingimports/validatemovementresponse"
-  val ApiSubscriptionFieldsContext = "/api-subscription-fields/field"
-
+object ApiSubscriptionFieldsPath {
+  def url(baseUrlAndContext: String, apiSubscriptionKey: ApiSubscriptionKey): String =
+    s"$baseUrlAndContext/application/${apiSubscriptionKey.clientId}/context/${apiSubscriptionKey.context}/version/${apiSubscriptionKey.version}"
 }

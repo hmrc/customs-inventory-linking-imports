@@ -69,7 +69,7 @@ class DefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerS
          |        "status": "BETA",
          |        "endpointsEnabled": true,
          |        "access": {
-         |          "type": "PUBLIC",
+         |          "type": "PRIVATE",
          |          "whitelistedApplicationIds": [
          |            "someId-1",
          |            "someId-2"

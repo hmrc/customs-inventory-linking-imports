@@ -27,12 +27,15 @@ import uk.gov.hmrc.play.config.inject.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
 
-class ImportConfigServiceSpec extends UnitSpec with MockitoSugar {
+class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
   private val validAppConfig: Config = ConfigFactory.parseString(
     """
       |customs.definition.api-scope = "write:customs-inventory-linking-imports"
       |api.access.version-1.0.whitelistedApplicationIds.0 = someId-1
       |api.access.version-1.0.whitelistedApplicationIds.1 = someId-2
+      |microservice.services.api-subscription-fields.host=some-host
+      |microservice.services.api-subscription-fields.port=1111
+      |microservice.services.api-subscription-fields.context=/some-context
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
@@ -49,10 +52,13 @@ class ImportConfigServiceSpec extends UnitSpec with MockitoSugar {
       val configService = customsConfigService(validServicesConfiguration)
 
       configService.apiDefinitionConfig shouldBe ApiDefinitionConfig("write:customs-inventory-linking-imports", Seq("someId-1", "someId-2"))
+      configService.apiSubscriptionFieldsBaseUrl shouldBe "http://some-host:1111/some-context"
     }
 
     "throw an exception when configuration is invalid, that contains AGGREGATED error messages" in {
-      val expectedErrorMessage = "\nCould not find config key 'customs.definition.api-scope'"
+      val expectedErrorMessage = "\nCould not find config key 'customs.definition.api-scope'" +
+        "\nCould not find config api-subscription-fields.host" +
+        "\nService configuration not found for key: api-subscription-fields.context"
 
       val caught = intercept[IllegalStateException](customsConfigService(emptyServicesConfiguration))
 

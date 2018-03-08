@@ -24,7 +24,8 @@ import play.api.http.MimeTypes.{JSON, XML}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE, POST}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, RequestInfo, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import util.ApiSubscriptionFieldsTestData.TestXClientId
 import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 
 import scala.util.Random
@@ -39,20 +40,20 @@ object TestData {
 
   val conversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
   val correlationId: UUID = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
-  val XClientIdHeaderValue = "yc9503c3d6df7448da01be623a3b8806d"
-  val XBadgeIdentifierHeaderValue = "ABC123"
+  val XBadgeIdentifierHeaderValueAsString = "ABC123"
+  val XBadgeIdentifierHeaderValue = XBadgeIdentifier("ABC123")
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
   lazy val InvalidAcceptHeader = ACCEPT -> JSON
-  lazy val InvalidContentTypeHeader = CONTENT_TYPE -> JSON
+  lazy val InvalidContentTypeJsonHeader = CONTENT_TYPE -> JSON
   lazy val InvalidXClientIdHeader = XClientIdHeaderName -> "This is not a UUID"
   lazy val InvalidXBadgeIdentifier = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
 
   lazy val ValidAcceptHeader = ACCEPT -> AcceptHeaderValue
-  lazy val ValidContentTypeHeader = CONTENT_TYPE -> XML
-  lazy val ValidXClientIdHeader = XClientIdHeaderName -> XClientIdHeaderValue
-  lazy val ValidXBadgeIdentifierHeader = XBadgeIdentifierHeaderName -> XBadgeIdentifierHeaderValue
+  lazy val ValidContentTypeHeader = CONTENT_TYPE -> (XML + "; charset=utf-8")
+  lazy val ValidXClientIdHeader = XClientIdHeaderName -> TestXClientId
+  lazy val ValidXBadgeIdentifierHeader = XBadgeIdentifierHeaderName -> XBadgeIdentifierHeaderValueAsString
   lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> conversationId.toString
   val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader)
 
