@@ -38,6 +38,7 @@ import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, GoodsArrival, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -67,7 +68,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       XClientIdHeaderName -> ApiSubscriptionFieldsTestData.TestXClientId,
       XBadgeIdentifierHeaderName -> badgeIdentifier)
 
-  private val logger = mock[CdsLogger]
+  private val logger = mock[DeclarationsLogger]
   private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockAuthConnector, requestInfoGenerator, messageSender, logger)
   private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockAuthConnector, requestInfoGenerator, messageSender, logger)
 

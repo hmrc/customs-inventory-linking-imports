@@ -18,29 +18,25 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
-import play.api.mvc.{ActionBuilder, Headers, Request, Result}
+import play.api.mvc.{Headers, Request}
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames
-
-import scala.concurrent.Future
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderNames, Ids, RequestInfo}
 
 trait HeaderValidator {
 
-  def validateHeaders(): ActionBuilder[Request] = new ActionBuilder[Request] {
-
-    def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = {
-      implicit val headers = request.headers
-      if (!hasAccept) {
-        Future.successful(ErrorAcceptHeaderInvalid.XmlResult)
-      } else if (!hasContentType) {
-        Future.successful(ErrorContentTypeHeaderInvalid.XmlResult)
-      } else if (!hasXClientId) {
-        Future.successful(ErrorInternalServerError.XmlResult)
-      } else if (!hasXBadgeIdentifier) {
-        Future.successful(ErrorGenericBadRequest.XmlResult)
-      } else {
-        block(request)
-      }
+  def validate[A](implicit ids: Ids, request: Request[A]): Option[ErrorResponse] = {
+    implicit val headers = request.headers
+    if (!hasAccept) {
+      Some(ErrorAcceptHeaderInvalid)
+    } else if (!hasContentType) {
+      Some(ErrorContentTypeHeaderInvalid)
+    } else if (!hasXClientId) {
+      Some(ErrorInternalServerError)
+    } else if (!hasXBadgeIdentifier) {
+      Some(ErrorGenericBadRequest)
+    } else {
+      None
     }
   }
 
