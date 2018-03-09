@@ -39,7 +39,7 @@ import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, GoodsArrival, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, GoodsArrival, Ids, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -76,11 +76,13 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     message = "Unauthorised request").XmlResult.withHeaders("X-Conversation-ID" -> conversationId.toString)
 
   private implicit val headerCarrier: HeaderCarrier = mock[HeaderCarrier]
+  private val ids = Ids.empty()
 
   override protected def beforeEach() {
     reset(serviceConfigProvider, requestInfoGenerator, messageSender)
     when(requestInfoGenerator.newRequestInfo).thenReturn(requestInfo)
     when(configuration.apiDefinitionConfig).thenReturn(ApiDefinitionConfig(apiScope, Seq.empty))
+    when(logger.ids).thenReturn(ids)
     authoriseCsp()
   }
 

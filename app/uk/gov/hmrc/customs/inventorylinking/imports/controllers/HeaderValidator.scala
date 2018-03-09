@@ -25,7 +25,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderNames, Ids, Req
 
 trait HeaderValidator {
 
-  def validate[A](implicit ids: Ids, request: Request[A]): Option[ErrorResponse] = {
+  def validate[A](implicit request: Request[A]): Option[ErrorResponse] = {
     implicit val headers = request.headers
     if (!hasAccept) {
       Some(ErrorAcceptHeaderInvalid)
