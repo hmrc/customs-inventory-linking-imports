@@ -59,7 +59,7 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |        "status": "BETA",
           |        "endpointsEnabled": true,
           |        "access": {
-          |          "type": "PUBLIC",
+          |          "type": "PRIVATE",
           |          "whitelistedApplicationIds": []
           |        },
           |        "fieldDefinitions": [

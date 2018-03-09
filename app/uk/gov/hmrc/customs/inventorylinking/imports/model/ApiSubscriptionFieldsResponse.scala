@@ -18,6 +18,10 @@ package uk.gov.hmrc.customs.inventorylinking.imports.model
 
 import java.util.UUID
 
-import org.joda.time.DateTime
+import play.api.libs.json.Json
 
-case class RequestInfo(conversationId: UUID, correlationId: UUID, dateTime: DateTime)
+case class ApiSubscriptionFieldsResponse(fieldsId: UUID)
+
+object ApiSubscriptionFieldsResponse {
+  implicit val format = Json.format[ApiSubscriptionFieldsResponse]
+}

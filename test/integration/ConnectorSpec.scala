@@ -27,7 +27,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector
 import uk.gov.hmrc.http.{BadGatewayException, BadRequestException, NotFoundException, Upstream5xxResponse}
 import util.ExternalServicesConfig.{AuthToken, Host, Port}
 import util.TestData.{body, requestInfo}
-import util.externalservices.InventoryLinkingImportsExternalServicesConfig.{goodsArrivalConnectorContext, validateMovementConnectorContext}
+import util.externalservices.InventoryLinkingImportsExternalServicesConfig.{GoodsArrivalConnectorContext, ValidateMovementConnectorContext}
 import util.externalservices.InventoryLinkingImportsService
 
 
@@ -38,11 +38,11 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
     new GuiceApplicationBuilder().configure(Map(
       "microservice.services.validatemovement.host" -> Host,
       "microservice.services.validatemovement.port" -> Port,
-      "microservice.services.validatemovement.context" -> validateMovementConnectorContext,
+      "microservice.services.validatemovement.context" -> ValidateMovementConnectorContext,
       "microservice.services.validatemovement.bearer-token" -> AuthToken,
       "microservice.services.goodsarrival.host" -> Host,
       "microservice.services.goodsarrival.port" -> Port,
-      "microservice.services.goodsarrival.context" -> goodsArrivalConnectorContext,
+      "microservice.services.goodsarrival.context" -> GoodsArrivalConnectorContext,
       "microservice.services.goodsarrival.bearer-token" -> AuthToken
     )).build()
 
@@ -64,8 +64,8 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
   }
 
   private val messageTypes = Table(("Message Type", "request", "url"),
-    ("Goods Arrival", goodsArrivalRequest, goodsArrivalConnectorContext),
-    ("Validate Movement", validateMovementRequest, validateMovementConnectorContext)
+    ("Goods Arrival", goodsArrivalRequest, GoodsArrivalConnectorContext),
+    ("Validate Movement", validateMovementRequest, ValidateMovementConnectorContext)
   )
 
   forAll(messageTypes) { case (messageType, request, url) =>

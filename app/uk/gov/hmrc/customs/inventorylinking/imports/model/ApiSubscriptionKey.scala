@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-package util.externalservices
+package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-object InventoryLinkingImportsExternalServicesConfig {
-
-  val GoodsArrivalConnectorContext = "/inventorylinkingimports/goodsarrivalnotification"
-  val ValidateMovementConnectorContext = "/inventorylinkingimports/validatemovementresponse"
-  val ApiSubscriptionFieldsContext = "/api-subscription-fields/field"
-
-}
+case class ApiSubscriptionKey(clientId: String, context: String, version: String)

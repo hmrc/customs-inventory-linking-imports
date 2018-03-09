@@ -19,8 +19,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.{XBadgeIdentifier, XClientId}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsMessageType, RequestInfo}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{FieldsId, ImportsMessageType, RequestInfo, XBadgeIdentifier}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 
 import scala.xml.NodeSeq
@@ -29,13 +28,12 @@ import scala.xml.NodeSeq
 class OutgoingRequestBuilder @Inject()(configProvider: ServiceConfigProvider,
                                        payloadDecorator: PayloadDecorator) {
 
-  def build(importsMessageType: ImportsMessageType, requestInfo: RequestInfo, headers: Map[String, String], body: NodeSeq): OutgoingRequest = {
-    val clientId = headers.getOrElse(XClientId, "")
-    val xBadgeIdentifierValue = headers.getOrElse(XBadgeIdentifier, "")
+  def build(importsMessageType: ImportsMessageType, requestInfo: RequestInfo, fieldsId: FieldsId, xBadgeIdentifier: XBadgeIdentifier, body: NodeSeq): OutgoingRequest = {
+    val clientId = fieldsId.value
 
     OutgoingRequest(
       configProvider.getConfig(importsMessageType.name),
-      payloadDecorator.wrap(body, requestInfo, clientId, xBadgeIdentifierValue, importsMessageType.wrapperRootElementLabel),
+      payloadDecorator.wrap(body, requestInfo, clientId, xBadgeIdentifier.value, importsMessageType.wrapperRootElementLabel),
       requestInfo)
   }
 }

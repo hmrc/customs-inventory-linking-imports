@@ -30,12 +30,19 @@ import scalaz.syntax.traverse._
 class ImportsConfigService @Inject() (configValidationNel: ConfigValidationNelAdaptor, logger: CdsLogger) extends ImportsConfig {
   private val root = configValidationNel.root
 
+  private case class ImportsConfigImpl(apiDefinitionConfig: ApiDefinitionConfig, apiSubscriptionFieldsBaseUrl: String) extends ImportsConfig
+
   private val validatedApiDefinitionConfig: ValidationNel[String, ApiDefinitionConfig] = (
     root.string("customs.definition.api-scope") |@|
     root.stringSeq("api.access.version-1.0.whitelistedApplicationIds")
   )(ApiDefinitionConfig.apply)
 
-  val apiDefinitionConfig: ApiDefinitionConfig = validatedApiDefinitionConfig.fold({
+  private val validatedImportsConfig: ValidationNel[String, ImportsConfig] = (
+    validatedApiDefinitionConfig |@|
+    configValidationNel.service("api-subscription-fields").serviceUrl
+  )(ImportsConfigImpl.apply)
+
+  val importsConfig: ImportsConfig = validatedImportsConfig.fold({
     nel => // error case exposes nel (a NotEmptyList)
       val errorMsg = "\n" + nel.toList.mkString("\n")
       logger.error(errorMsg)
@@ -44,4 +51,6 @@ class ImportsConfigService @Inject() (configValidationNel: ConfigValidationNelAd
     config => config // success case exposes the value class
   )
 
+  override val apiDefinitionConfig: ApiDefinitionConfig = importsConfig.apiDefinitionConfig
+  override val apiSubscriptionFieldsBaseUrl: String = importsConfig.apiSubscriptionFieldsBaseUrl
 }

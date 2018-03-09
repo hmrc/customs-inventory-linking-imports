@@ -42,6 +42,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, 
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
+import util.ApiSubscriptionFieldsTestData
 import util.TestData._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,7 +52,6 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
   private val mockAuthConnector: MicroserviceAuthConnector = mock[MicroserviceAuthConnector]
   private val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
   private val requestInfoGenerator: RequestInfoGenerator = mock[RequestInfoGenerator]
-  private val clientId = "8e1043ef-fb32-4e90-9682-a8ff4a07228a"
   private val badgeIdentifier = "badge"
   private val messageSender: MessageSender = mock[MessageSender]
   private val configuration = mock[ImportsConfigService]
@@ -63,8 +63,8 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
   private val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
     withHeaders(
       ACCEPT -> AcceptHeaderValue,
-      CONTENT_TYPE -> MimeTypes.XML,
-      XClientIdHeaderName -> clientId.toString,
+      CONTENT_TYPE -> (MimeTypes.XML + "; charset=utf-8"),
+      XClientIdHeaderName -> ApiSubscriptionFieldsTestData.TestXClientId,
       XBadgeIdentifierHeaderName -> badgeIdentifier)
 
   private val logger = mock[CdsLogger]
@@ -73,6 +73,8 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
   private val errorResultUnauthorised = ErrorResponse(UNAUTHORIZED, errorCode = "UNAUTHORIZED",
     message = "Unauthorised request").XmlResult.withHeaders("X-Conversation-ID" -> conversationId.toString)
+
+  private implicit val headerCarrier: HeaderCarrier = mock[HeaderCarrier]
 
   override protected def beforeEach() {
     reset(serviceConfigProvider, requestInfoGenerator, messageSender)
@@ -92,7 +94,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     "POST valid declaration" when {
       "message is sent successfully" should {
         s"return 202 ACCEPTED for $messageTypeName" in {
-          when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
+          when(messageSender.validateAndSend(ameq(importsMessageType), ameq(body), ameq(requestInfo), ameq(request.headers.toSimpleMap))(any[HeaderCarrier])).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -101,7 +103,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
 
         s"return X-Conversation-Id header for $messageTypeName" in {
-          when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
+          when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -123,7 +125,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
       s"message fails due to backend service error for $messageTypeName" should {
         "return 500 Internal Server Error" in {
-          when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
+          when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
           val result = await(controller.apply(request))
@@ -132,7 +134,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
 
         s"return X-Conversation-Id header for $messageTypeName" in {
-          when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
+          when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
           val result = await(controller.apply(request))
@@ -144,7 +146,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
     s"POST invalid declaration for $messageTypeName" should {
       "return bad request" in {
-        when(messageSender.send(importsMessageType, body, requestInfo, request.headers.toSimpleMap)).
+        when(messageSender.validateAndSend(ameq(importsMessageType), ameq(body), ameq(requestInfo), ameq(request.headers.toSimpleMap))(any[HeaderCarrier])).
           thenReturn(Future.failed(new SAXException()))
 
         val result = await(controller.apply(request))

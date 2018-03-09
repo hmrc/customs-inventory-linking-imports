@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package util.externalservices
+package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-object InventoryLinkingImportsExternalServicesConfig {
+import java.util.UUID
 
-  val GoodsArrivalConnectorContext = "/inventorylinkingimports/goodsarrivalnotification"
-  val ValidateMovementConnectorContext = "/inventorylinkingimports/validatemovementresponse"
-  val ApiSubscriptionFieldsContext = "/api-subscription-fields/field"
+import org.joda.time.DateTime
 
-}
+case class RequestInfo(conversationId: UUID, correlationId: UUID, dateTime: DateTime)
+
+case class XClientId(value: String) extends AnyVal
+
+case class FieldsId(value: String) extends AnyVal
+
+case class XBadgeIdentifier(value: String) extends AnyVal

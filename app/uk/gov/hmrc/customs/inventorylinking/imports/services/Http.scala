@@ -19,13 +19,13 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 import javax.inject.Singleton
 
 import com.google.inject.ImplementedBy
-import uk.gov.hmrc.http.HttpPost
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.hooks.HttpHooks
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.audit.http.config.AuditingConfig
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.config.AppName
-import uk.gov.hmrc.play.http.ws.WSPost
+import uk.gov.hmrc.play.http.ws.{WSGet, WSPost}
 import uk.gov.hmrc.play.microservice.config.LoadAuditingConfig
 
 object MicroserviceAuditConnector extends AuditConnector {
@@ -38,7 +38,7 @@ trait Hooks extends HttpHooks with HttpAuditing {
 }
 
 @ImplementedBy(classOf[WSHttpImpl])
-trait WSHttp extends HttpPost with WSPost with Hooks with AppName
+trait WSHttp extends HttpGet with WSGet with HttpPost with WSPost with Hooks with AppName
 
 @Singleton
 class WSHttpImpl extends WSHttp
