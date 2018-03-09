@@ -20,7 +20,6 @@ import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.http.HeaderNames._
-import play.api.mvc.Results.Ok
 import play.api.mvc.{AnyContent, Headers, Request}
 import play.api.test.Helpers.CONTENT_TYPE
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
@@ -40,14 +39,14 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
     Table(
       ("description", "Headers", "Expected response"),
       ("Valid Headers", ValidHeaders, None),
-      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), Ok),
+      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), None),
       ("Missing accept header", ValidHeaders - ACCEPT, Some(ErrorAcceptHeaderInvalid)),
       ("Missing content type header", ValidHeaders - CONTENT_TYPE, Some(ErrorContentTypeHeaderInvalid)),
       ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, Some(ErrorInternalServerError)),
       ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, Some(ErrorGenericBadRequest)),
       ("Invalid accept header", ValidHeaders + InvalidAcceptHeader, Some(ErrorAcceptHeaderInvalid)),
-      ("Invalid content type header", ValidHeaders + InvalidContentTypeHeader, Some(ErrorContentTypeHeaderInvalid)),
-      ("Invalid content type XML without UTF-8 header", ValidHeaders + (CONTENT_TYPE -> "application/xml"), ErrorContentTypeHeaderInvalid.XmlResult),
+      ("Invalid content type header JSON header", ValidHeaders + InvalidContentTypeJsonHeader, Some(ErrorContentTypeHeaderInvalid)),
+      ("Invalid content type XML without UTF-8 header", ValidHeaders + (CONTENT_TYPE -> "application/xml"), Some(ErrorContentTypeHeaderInvalid)),
       ("Invalid X-Client-ID header", ValidHeaders + InvalidXClientIdHeader, Some(ErrorInternalServerError)),
       ("Invalid X-Badge-Identifier header", ValidHeaders + InvalidXBadgeIdentifier, Some(ErrorGenericBadRequest))
     )
