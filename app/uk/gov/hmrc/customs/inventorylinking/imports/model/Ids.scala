@@ -33,3 +33,9 @@ case class Ids(map: mutable.Map[String, String]) {
 //
 //  }
 }
+
+object Ids {
+  def empty(): Ids = {
+    Ids(mutable.Map.empty[String, String])
+  }
+}

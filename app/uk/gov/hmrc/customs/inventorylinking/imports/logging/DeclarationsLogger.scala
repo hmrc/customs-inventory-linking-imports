@@ -26,10 +26,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 @Singleton
 class DeclarationsLogger @Inject()(logger: CdsLogger) {
 
-  def debug(s: => String)(implicit hc: HeaderCarrier, ids: Ids): Unit = logger.debug(formatDebug(s, ids))
-  def info(s: => String)(implicit hc: HeaderCarrier, ids: Ids): Unit = logger.info(formatInfo(s, Some(ids)))
-  def warn(s: => String)(implicit hc: HeaderCarrier, ids: Ids): Unit = logger.warn(formatWarn(s, Some(ids)))
-  def error(s: => String)(implicit hc: HeaderCarrier, ids: Ids): Unit = logger.error(formatError(s, Some(ids)))
+  val ids: Ids = Ids.empty()
+
+  def debug(s: => String)(implicit hc: HeaderCarrier): Unit = logger.debug(formatDebug(s, ids))
+  def info(s: => String)(implicit hc: HeaderCarrier): Unit = logger.info(formatInfo(s, Some(ids)))
+  def warn(s: => String)(implicit hc: HeaderCarrier): Unit = logger.warn(formatWarn(s, Some(ids)))
+  def error(s: => String)(implicit hc: HeaderCarrier): Unit = logger.error(formatError(s, Some(ids)))
   def errorWithoutHeaderCarrier(s: => String): Unit = logger.error(s)
 
 }

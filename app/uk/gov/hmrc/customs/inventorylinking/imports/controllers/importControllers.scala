@@ -24,7 +24,6 @@ import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.implicitLogging.ids
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator, XmlValidationErrorsMapper}
@@ -48,13 +47,14 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
   def process(): Action[AnyContent] = Action.async(bodyParser = xmlOrEmptyBody) { implicit request =>
     val requestInfo = requestInfoGenerator.newRequestInfo
-    ids.addDataFromRequestInfo(requestInfo)
+    logger.ids.addDataFromRequestInfo(requestInfo)
 
     validate match {
       case None => {
         authoriseAndSend(requestInfo)
       }
       case Some(errorResponse) => {
+        logger.error("Header validation failed")
         Future.successful(errorResponse.XmlResult)
       }
     }
