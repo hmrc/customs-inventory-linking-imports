@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
-import com.google.inject.Inject
 import javax.inject.Singleton
+
+import com.google.inject.Inject
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.Ids
-import uk.gov.hmrc.http.HeaderCarrier
 
 @Singleton
 class DeclarationsLogger @Inject()(logger: CdsLogger) {
 
-  def debug(s: => String)(implicit hc: HeaderCarrier, ids: Ids): Unit = logger.debug(formatDebug(s, ids))
-  def info(s: => String)(implicit hc: HeaderCarrier, ids: Ids): Unit = logger.info(formatInfo(s, Some(ids)))
-  def warn(s: => String)(implicit hc: HeaderCarrier, ids: Ids): Unit = logger.warn(formatWarn(s, Some(ids)))
-  def error(s: => String)(implicit hc: HeaderCarrier, ids: Ids): Unit = logger.error(formatError(s, Some(ids)))
+  def debug(s: => String)(implicit ids: Ids): Unit = logger.debug(formatDebug(s, ids))
+  def info(s: => String)(implicit ids: Ids): Unit = logger.info(formatInfo(s, Some(ids)))
+  def warn(s: => String)(implicit ids: Ids): Unit = logger.warn(formatWarn(s, Some(ids)))
+  def error(s: => String)(implicit ids: Ids): Unit = logger.error(formatError(s, Some(ids)))
   def errorWithoutHeaderCarrier(s: => String): Unit = logger.error(s)
 
 }

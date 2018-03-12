@@ -36,7 +36,11 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
 
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
 
-  def validateAndSend(messageType: ImportsMessageType, body: NodeSeq, requestInfo: RequestInfo, headers: Map[String, String])(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+  def validateAndSend(messageType: ImportsMessageType)(implicit ids: Ids): Future[HttpResponse] = {
+
+    val body: NodeSeq = ids.getBody
+    val requestInfo: RequestInfo = ids.getRequestInfo
+    val headers: Map[String, String] = ids.getHeaders
 
     def service = messageType match {
       case GoodsArrival => goodsArrivalXmlValidationService

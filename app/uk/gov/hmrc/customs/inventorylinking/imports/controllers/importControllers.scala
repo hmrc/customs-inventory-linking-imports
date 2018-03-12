@@ -24,7 +24,6 @@ import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.implicitLogging.ids
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator, XmlValidationErrorsMapper}
@@ -48,11 +47,11 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
   def process(): Action[AnyContent] = Action.async(bodyParser = xmlOrEmptyBody) { implicit request =>
     val requestInfo = requestInfoGenerator.newRequestInfo
-    ids.addDataFromRequestInfo(requestInfo)
+    implicit val ids: Ids = Ids.fromDataFromRequestInfo(requestInfo, request, hc).addDataFromHeaders(request.headers)
 
     validate match {
       case None => {
-        authoriseAndSend(requestInfo)
+        authoriseAndSend
       }
       case Some(errorResponse) => {
         Future.successful(errorResponse.XmlResult)
@@ -69,7 +68,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     r.withHeaders(XConversationId -> conversationId)
   }
 
-  private def recover(implicit hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
+  private def recover(implicit ids: Ids): PartialFunction[Throwable, Future[Result]] = {
     case NonFatal(saxe: SAXException) =>
       logger.debug("XML processing error" + saxe.getMessage)
       Future.successful(
@@ -77,8 +76,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
           XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
 
     case NonFatal(_: AuthorisationException) =>
-      val requestInfo = requestInfoGenerator.newRequestInfo
-      Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, requestInfo.conversationId.toString))
+      Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, ids.getConversationId))
 
     case NonFatal(e) =>
       logger.debug("Something went wrong" + e.getMessage)
@@ -86,16 +84,14 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
   }
 
-  private def authoriseAndSend(requestInfo: RequestInfo)(implicit request: Request[AnyContent]): Future[Result] = {
+  private def authoriseAndSend(implicit ids: Ids): Future[Result] = {
+    implicit val hc = ids.getHeaderCarrier
     authorised(Enrolment(importsConfigService.apiDefinitionConfig.apiScope) and AuthProviders(PrivilegedApplication)) {
-      val body = request.body.asXml.getOrElse(NodeSeq.Empty)
-      val requestInfo = requestInfoGenerator.newRequestInfo
-      val headers = request.headers.toSimpleMap
 
-      messageSender.validateAndSend(importsMessageType, body, requestInfo, headers).
+      messageSender.validateAndSend(importsMessageType).
         map(_ => Accepted)
     }.recoverWith(recover).
-      map(r => addConversationIdHeader(r, requestInfo.conversationId.toString))
+      map(r => addConversationIdHeader(r, ids.getConversationId)) //TODO MC revisit
   }
 }
 

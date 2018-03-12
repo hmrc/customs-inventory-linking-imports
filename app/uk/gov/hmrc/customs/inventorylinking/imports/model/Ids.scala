@@ -16,20 +16,45 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.model
 
+import play.api.http.HeaderNames.AUTHORIZATION
+import play.api.mvc.{AnyContent, Headers, Request}
+import uk.gov.hmrc.http.HeaderCarrier
+
 import scala.collection.mutable
+import scala.xml.NodeSeq
 
 
-case class Ids(map: mutable.Map[String, String]) {
+case class Ids(private val map: mutable.Map[String, String], request: Request[AnyContent], hc: HeaderCarrier) {
 
-  private val requiredHeaders = Map("X-Client-ID" -> "clientId")
 
-  def addDataFromRequestInfo(requestInfo: RequestInfo): mutable.Map[String, String] = {
-    map += "conversationId" -> requestInfo.conversationId.toString +
-      "correlationId" -> requestInfo.correlationId.toString
-  }
+
+  private val headerOverwriteValue = "value-not-logged"
+  private val headersToOverwrite = Set(AUTHORIZATION)
 
   //TODO MC
-//  def addDataFromHeaders(headers: SeqOfHeader): mutable.Map[String, String] = {
-//
-//  }
+  def addDataFromHeaders(headers: Headers): Ids = {
+    //TODO use overwriteHeaderValues here
+    map += "data" -> "from headers"
+    this
+  }
+
+  def getConversationId: String = ???
+  def getBody: NodeSeq = request.body.asXml.getOrElse(NodeSeq.Empty)
+  def getRequestInfo: RequestInfo = ???
+  def getHeaders: Map[String, String] = request.headers.toSimpleMap
+  def getHeaderCarrier: HeaderCarrier = hc
+
+  private def overwriteHeaderValues(headers: SeqOfHeader, overwrittenHeaderNames: Set[String]): SeqOfHeader = {
+    headers map {
+      case (rewriteHeader, _) if overwrittenHeaderNames.contains(rewriteHeader) => rewriteHeader -> headerOverwriteValue
+      case header => header
+    }
+  }
+}
+
+object Ids {
+  def fromDataFromRequestInfo(requestInfo: RequestInfo, request: Request[AnyContent], hc: HeaderCarrier): Ids = {
+    Ids(mutable.Map("conversationId" -> requestInfo.conversationId.toString +
+      "correlationId" -> requestInfo.correlationId.toString), request, hc)
+  }
 }
