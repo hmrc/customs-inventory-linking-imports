@@ -38,9 +38,9 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
 
   def validateAndSend(messageType: ImportsMessageType)(implicit rdWrapper: RequestDataWrapper): Future[HttpResponse] = {
 
-    val body: NodeSeq = rdWrapper.getBody
-    val requestInfo: RequestInfo = rdWrapper.getRequestInfo
-    val headers: Map[String, String] = rdWrapper.getHeaders
+    val body: NodeSeq = rdWrapper.body
+    val requestInfo: RequestInfo = rdWrapper.requestInfo
+    val headers: Map[String, String] = rdWrapper.headers
 
     def service = messageType match {
       case GoodsArrival => goodsArrivalXmlValidationService

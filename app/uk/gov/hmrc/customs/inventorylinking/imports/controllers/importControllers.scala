@@ -75,7 +75,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
           XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
 
     case NonFatal(_: AuthorisationException) =>
-      Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, rdWrapper.getConversationId))
+      Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, rdWrapper.conversationId))
 
     case NonFatal(e) =>
       logger.debug("Something went wrong" + e.getMessage)
@@ -84,13 +84,13 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
   }
 
   private def authoriseAndSend(implicit rdWrapper: RequestDataWrapper): Future[Result] = {
-    implicit val hc: HeaderCarrier = rdWrapper.getHeaderCarrier
+    implicit val hc: HeaderCarrier = rdWrapper.headerCarrier
     authorised(Enrolment(importsConfigService.apiDefinitionConfig.apiScope) and AuthProviders(PrivilegedApplication)) {
 
       messageSender.validateAndSend(importsMessageType).
         map(_ => Accepted)
     }.recoverWith(recover).
-      map(r => addConversationIdHeader(r, rdWrapper.getConversationId)) //TODO MC revisit
+      map(r => addConversationIdHeader(r, rdWrapper.conversationId)) //TODO MC revisit
   }
 }
 

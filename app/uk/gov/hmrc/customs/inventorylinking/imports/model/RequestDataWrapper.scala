@@ -22,17 +22,13 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.xml.NodeSeq
 
 
-case class RequestDataWrapper(requestInfo: RequestInfo, request: Request[AnyContent], hc: HeaderCarrier) {
+case class RequestDataWrapper(requestInfo: RequestInfo, request: Request[AnyContent], headerCarrier: HeaderCarrier) {
 
   //TODO MC requestedApiVersion
-  def getConversationId: String = requestInfo.conversationId.toString
+  lazy val conversationId: String = requestInfo.conversationId.toString
 
-  def getBody: NodeSeq = request.body.asXml.getOrElse(NodeSeq.Empty)
+  lazy val body: NodeSeq = request.body.asXml.getOrElse(NodeSeq.Empty)
 
-  def getRequestInfo: RequestInfo = requestInfo
-
-  def getHeaders: Map[String, String] = request.headers.toSimpleMap
-
-  def getHeaderCarrier: HeaderCarrier = hc
+  lazy val headers: Map[String, String] = request.headers.toSimpleMap
 
 }

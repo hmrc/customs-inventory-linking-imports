@@ -48,7 +48,7 @@ object LoggingHelper {
 
 
   private def format(rdWrapper: RequestDataWrapper, headersGetter: Option[Map[String, String] => Map[String, String]]): String = {
-    s"[conversationId=${rdWrapper.getConversationId}]\n[headers=${headersGetter.fold(rdWrapper.getHeaders) { f => f(rdWrapper.getHeaders) }}]"
+    s"[conversationId=${rdWrapper.conversationId}]\n[headers=${headersGetter.fold(rdWrapper.headers) { f => f(rdWrapper.headers) }}]"
   }
 
 

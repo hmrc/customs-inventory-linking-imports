@@ -33,7 +33,7 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
 
   def getSubscriptionFields(apiSubsKey: ApiSubscriptionKey)(implicit rdWrapper: RequestDataWrapper): Future[ApiSubscriptionFieldsResponse] = {
     val url = ApiSubscriptionFieldsPath.url(s"${servicesConfig.apiSubscriptionFieldsBaseUrl}", apiSubsKey)
-    get(url)(rdWrapper.getHeaderCarrier)
+    get(url)(rdWrapper.headerCarrier)
   }
 
   private def get(url: String)(implicit hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
