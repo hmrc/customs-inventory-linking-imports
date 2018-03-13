@@ -96,7 +96,8 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     "POST valid declaration" when {
       "message is sent successfully" should {
         s"return 202 ACCEPTED for $messageTypeName" in {
-          when(messageSender.validateAndSend(ameq(importsMessageType))(ameq(data))).
+
+          when(messageSender.validateAndSend(ameq(importsMessageType))(any[RequestDataWrapper])).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
