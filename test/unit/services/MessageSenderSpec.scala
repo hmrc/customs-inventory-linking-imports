@@ -47,7 +47,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     lazy val validateMovementXmlValidationService: ValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
     val importsConnector: ImportsConnector = mock[ImportsConnector]
     val apiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
-    val headers: Map[String, String] = Map(HeaderNames.XClientId -> TestXClientId, HeaderNames.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
+    val headers: Map[String, String] = Map(HeaderConstants.XClientId -> TestXClientId, HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
     val sender: MessageSender = new MessageSender(apiSubscriptionFieldsConnector, outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, importsConnector)
     lazy val outgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
     private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
@@ -100,7 +100,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         "return failed future when expected header X-Client-ID is not present" in new SetUp {
           val importsMessageType: ImportsMessageType = messageType
           when(service.validate(body)).thenReturn(Future.successful(()))
-          val headersWithOnlyXBadgeIdentifier = Map(HeaderNames.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
+          val headersWithOnlyXBadgeIdentifier = Map(HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
           when(data.headers).thenReturn(headersWithOnlyXBadgeIdentifier)
           val caught = intercept[IllegalStateException](await(sender.validateAndSend(messageType)))
 
@@ -110,7 +110,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         "return failed future when expected header X-Badge-ID is not present" in new SetUp {
           val importsMessageType: ImportsMessageType = messageType
           when(service.validate(body)).thenReturn(Future.successful(()))
-          val headersWithOnlyXClientId = Map(HeaderNames.XClientId -> TestXClientId)
+          val headersWithOnlyXClientId = Map(HeaderConstants.XClientId -> TestXClientId)
           when(data.headers).thenReturn(headersWithOnlyXClientId)
           val caught = intercept[IllegalStateException](await(sender.validateAndSend(messageType)))
 

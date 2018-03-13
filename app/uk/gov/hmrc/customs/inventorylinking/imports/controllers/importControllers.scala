@@ -25,7 +25,7 @@ import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderNames.XConversationId
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator, XmlValidationErrorsMapper}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -52,9 +52,8 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     validate match {
       case None =>
         authoriseAndSend
-      case Some(errorResponse) => {
+      case Some(errorResponse) =>
         Future.successful(errorResponse.XmlResult)
-      }
     }
   }
 

@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports
+package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-package object model {
+object HeaderConstants {
 
-  case class RequestedVersion(versionNumber: String, configPrefix: Option[String])
+  val XClientId: String = "X-Client-ID"
+  val XConversationId: String = "X-Conversation-ID"
+  val XForwardedHost: String = "X-Forwarded-Host"
+  val XCorrelationId: String = "X-Correlation-ID"
+  val XBadgeIdentifier: String = "X-Badge-Identifier"
 
+  val Version1AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
 }

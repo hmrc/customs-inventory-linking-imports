@@ -21,7 +21,8 @@ import play.api.http.MimeTypes
 import play.api.mvc.{Headers, Request}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderNames, RequestDataWrapper, RequestInfo}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderConstants, RequestDataWrapper}
+import HeaderConstants.Version1AcceptHeaderValue
 
 trait HeaderValidator {
 
@@ -40,7 +41,8 @@ trait HeaderValidator {
     }
   }
 
-  private lazy val validAcceptHeaders = Seq("application/vnd.hmrc.1.0+xml")
+
+  private lazy val validAcceptHeaders = Seq(Version1AcceptHeaderValue)
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Za-z]{1,12}$".r
@@ -49,8 +51,8 @@ trait HeaderValidator {
 
   private def hasContentType(implicit h: Headers) = h.get(CONTENT_TYPE).fold(false)(h => validContentTypeHeaders.contains(h.toLowerCase()))
 
-  private def hasXClientId(implicit h: Headers) = h.get(HeaderNames.XClientId).fold(false)(xClientIdRegex.findFirstIn(_).nonEmpty)
+  private def hasXClientId(implicit h: Headers) = h.get(HeaderConstants.XClientId).fold(false)(xClientIdRegex.findFirstIn(_).nonEmpty)
 
-  private def hasXBadgeIdentifier(implicit h: Headers) = h.get(HeaderNames.XBadgeIdentifier).fold(false)(xBadgeIdentifierRegex.findFirstIn(_).nonEmpty)
+  private def hasXBadgeIdentifier(implicit h: Headers) = h.get(HeaderConstants.XBadgeIdentifier).fold(false)(xBadgeIdentifierRegex.findFirstIn(_).nonEmpty)
 
 }

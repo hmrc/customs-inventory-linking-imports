@@ -54,8 +54,8 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
 
     def rdWrapperFromHeaders: Future[(XClientId, XBadgeIdentifier)] = {
       (for {
-        xClientId <- headers.get(HeaderNames.XClientId)
-        xBadgeIdentifier <- headers.get(HeaderNames.XBadgeIdentifier)
+        xClientId <- headers.get(HeaderConstants.XClientId)
+        xBadgeIdentifier <- headers.get(HeaderConstants.XBadgeIdentifier)
       } yield (XClientId(xClientId), XBadgeIdentifier(xBadgeIdentifier))) match {
         case Some(idsTuple) =>
           Future.successful(idsTuple)

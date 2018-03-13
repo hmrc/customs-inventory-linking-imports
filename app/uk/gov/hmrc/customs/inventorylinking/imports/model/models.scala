@@ -27,3 +27,5 @@ case class XClientId(value: String) extends AnyVal
 case class FieldsId(value: String) extends AnyVal
 
 case class XBadgeIdentifier(value: String) extends AnyVal
+
+case class RequestedVersion(versionNumber: String, configPrefix: Option[String])
