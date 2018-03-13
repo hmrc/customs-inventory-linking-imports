@@ -33,7 +33,6 @@ import uk.gov.hmrc.play.test.UnitSpec
 
 class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
 
-  private val apiScope = "scope"
   private val whiteList0 = "whiteList0"
   private val whiteList1 = "whiteList1"
   private implicit val materializer: Materializer = app.materializer
@@ -41,7 +40,6 @@ class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with Gui
   private lazy val controller = app.injector.instanceOf[ApiDocumentationController]
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
-    "customs.definition.api-scope" -> apiScope,
     "api.access.version-1.0.whitelistedApplicationIds.0" -> whiteList0,
     "api.access.version-1.0.whitelistedApplicationIds.1" -> whiteList1
   )).build()
@@ -58,7 +56,7 @@ class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with Gui
     }
 
     "return definition in the body" in {
-      jsonBodyOf(result) shouldBe Json.parse(txt.definition("scope", Seq(whiteList0, whiteList1)).toString())
+      jsonBodyOf(result) shouldBe Json.parse(txt.definition(Seq(whiteList0, whiteList1)).toString())
     }
   }
 

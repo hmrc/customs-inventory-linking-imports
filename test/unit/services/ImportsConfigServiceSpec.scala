@@ -21,7 +21,7 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.customs.api.common.config.ConfigValidationNelAdaptor
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, ImportsConfig}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.play.config.inject.ServicesConfig
 import uk.gov.hmrc.play.test.UnitSpec
@@ -30,7 +30,6 @@ import util.MockitoPassByNameHelper.PassByNameVerifier
 class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
   private val validAppConfig: Config = ConfigFactory.parseString(
     """
-      |customs.definition.api-scope = "write:customs-inventory-linking-imports"
       |api.access.version-1.0.whitelistedApplicationIds.0 = someId-1
       |api.access.version-1.0.whitelistedApplicationIds.1 = someId-2
       |microservice.services.api-subscription-fields.host=some-host
@@ -51,12 +50,12 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
     "return config as object model when configuration is valid" in {
       val configService = customsConfigService(validServicesConfiguration)
 
-      configService.apiDefinitionConfig shouldBe ApiDefinitionConfig("write:customs-inventory-linking-imports", Seq("someId-1", "someId-2"))
+      configService.whiteListedCspApplicationIds shouldBe Seq("someId-1", "someId-2")
       configService.apiSubscriptionFieldsBaseUrl shouldBe "http://some-host:1111/some-context"
     }
 
     "throw an exception when configuration is invalid, that contains AGGREGATED error messages" in {
-      val expectedErrorMessage = "\nCould not find config key 'customs.definition.api-scope'" +
+      val expectedErrorMessage =
         "\nCould not find config api-subscription-fields.host" +
         "\nService configuration not found for key: api-subscription-fields.context"
 

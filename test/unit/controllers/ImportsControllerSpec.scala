@@ -30,15 +30,15 @@ import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
 import play.api.test.Helpers.UNAUTHORIZED
-import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
+import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
-import uk.gov.hmrc.auth.core.{AuthProviders, AuthorisationException, Enrolment, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.{AuthorisationException, InsufficientEnrolments}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, GoodsArrival, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -56,9 +56,6 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
   private val messageSender: MessageSender = mock[MessageSender]
   private val configuration = mock[ImportsConfigService]
   private implicit val mockMaterialiser = mock[Materializer]
-
-  private val apiScope = "write:customs-inventory-linking-imports"
-  private val cspAuthPredicate = Enrolment(apiScope) and AuthProviders(PrivilegedApplication)
 
   private val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(body).
     withHeaders(
@@ -79,21 +76,20 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
   override protected def beforeEach() {
     reset(serviceConfigProvider, requestInfoGenerator, messageSender)
     when(requestInfoGenerator.newRequestInfo).thenReturn(requestInfo)
-    when(configuration.apiDefinitionConfig).thenReturn(ApiDefinitionConfig(apiScope, Seq.empty))
-    authoriseCsp()
   }
 
 
-  private val controllers = Table(("Message Type Name", "Imports Message Type", "controller post"),
-    ("Goods Arrival", GoodsArrival, goodsArrivalController.post()),
-    ("Validate Movement", ValidateMovement, validateMovementController.post())
+  private val controllers = Table(("Message Type Name", "Imports Message Type", "Auth Predicate", "controller post"),
+    ("Goods Arrival", GoodsArrival, GoodsArrivalAuthPredicate, goodsArrivalController.post()),
+    ("Validate Movement", ValidateMovement, ValidateMovementAuthPredicate, validateMovementController.post())
   )
 
-  forAll(controllers) { case (messageTypeName, importsMessageType,  controller) =>
+  forAll(controllers) { case (messageTypeName, importsMessageType,  authPredicate, controller) =>
 
     "POST valid declaration" when {
       "message is sent successfully" should {
         s"return 202 ACCEPTED for $messageTypeName" in {
+          authoriseCsp(authPredicate)
           when(messageSender.validateAndSend(ameq(importsMessageType), ameq(body), ameq(requestInfo), ameq(request.headers.toSimpleMap))(any[HeaderCarrier])).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
@@ -103,6 +99,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
 
         s"return X-Conversation-Id header for $messageTypeName" in {
+          authoriseCsp(authPredicate)
           when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
@@ -114,7 +111,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
       "called by unauthorised CSP" should {
         s"return result 401 UNAUTHORISED for $messageTypeName" in {
-          unauthoriseCsp()
+          unauthoriseCsp(authPredicate)
           val result = await(controller.apply(request))
 
           result shouldBe errorResultUnauthorised
@@ -125,6 +122,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
       s"message fails due to backend service error for $messageTypeName" should {
         "return 500 Internal Server Error" in {
+          authoriseCsp(authPredicate)
           when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
@@ -134,6 +132,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
 
         s"return X-Conversation-Id header for $messageTypeName" in {
+          authoriseCsp(authPredicate)
           when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
@@ -146,6 +145,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
     s"POST invalid declaration for $messageTypeName" should {
       "return bad request" in {
+        authoriseCsp(authPredicate)
         when(messageSender.validateAndSend(ameq(importsMessageType), ameq(body), ameq(requestInfo), ameq(request.headers.toSimpleMap))(any[HeaderCarrier])).
           thenReturn(Future.failed(new SAXException()))
 
@@ -156,13 +156,13 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     }
   }
 
-  private def authoriseCsp(): Unit = {
-    when(mockAuthConnector.authorise(ameq(cspAuthPredicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+  private def authoriseCsp(predicate: Predicate): Unit = {
+    when(mockAuthConnector.authorise(ameq(predicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(())
   }
 
-  private def unauthoriseCsp(authException: AuthorisationException = new InsufficientEnrolments): Unit = {
-    when(mockAuthConnector.authorise(ameq(cspAuthPredicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+  private def unauthoriseCsp(predicate: Predicate, authException: AuthorisationException = new InsufficientEnrolments): Unit = {
+    when(mockAuthConnector.authorise(ameq(predicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.failed(authException))
   }
 }

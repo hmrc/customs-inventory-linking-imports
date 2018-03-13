@@ -27,10 +27,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 @Singleton
 class ApiDocumentationController @Inject()(httpErrorHandler: HttpErrorHandler, importsConfigService: ImportsConfigService) extends DocumentationController(httpErrorHandler) {
 
-  private lazy val apiScopeKey = importsConfigService.apiDefinitionConfig.apiScope
-  private lazy val whitelistedApplicationIds = importsConfigService.apiDefinitionConfig.whiteListedCsps
-
   def definition(): Action[AnyContent] = Action {
-    Ok(txt.definition(apiScopeKey, whitelistedApplicationIds)).withHeaders(CONTENT_TYPE -> JSON)
+    Ok(txt.definition(importsConfigService.whiteListedCspApplicationIds)).withHeaders(CONTENT_TYPE -> JSON)
   }
 }

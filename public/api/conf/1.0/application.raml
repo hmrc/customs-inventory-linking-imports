@@ -44,8 +44,8 @@ documentation:
           required: true
           example: DHL123
 
-      (annotations.scope): "write:customs-inventory-linking-imports"
-      securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-inventory-linking-imports" ] } ]
+      (annotations.scope): "write:customs-il-imports-movement-validation"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-il-imports-movement-validation" ] } ]
       responses:
         202:
         400:
@@ -80,7 +80,7 @@ documentation:
   /arrival-notifications:
     post:
       displayName: Inventory Linking Imports Goods Arrival
-      description: Send validated movement response messages provided by the CSP as a result of a previous validate movement request.
+      description: CSPs requesting to present their goods to Customs.
       headers:
         Accept:
           description: Specifies the version of the API that you want to call. See [versioning](/api-documentation/docs/reference-guide#versioning).
@@ -98,8 +98,8 @@ documentation:
           required: true
           example: DHL123
 
-      (annotations.scope): "write:customs-inventory-linking-imports"
-      securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-inventory-linking-imports" ] } ]
+      (annotations.scope): "write:customs-il-imports-arrival-notifications"
+      securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-il-imports-arrival-notifications" ] } ]
       responses:
         202:
         400:
