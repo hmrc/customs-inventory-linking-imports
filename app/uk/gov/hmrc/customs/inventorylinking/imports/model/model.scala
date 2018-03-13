@@ -18,10 +18,6 @@ package uk.gov.hmrc.customs.inventorylinking.imports
 
 package object model {
 
-  type MaybeIds = Option[Ids]
-
-  type SeqOfHeader = Seq[(String, String)]
-
   case class RequestedVersion(versionNumber: String, configPrefix: Option[String])
 
 }

@@ -16,47 +16,46 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{Ids, MaybeIds}
+import play.api.http.HeaderNames.AUTHORIZATION
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 
 object LoggingHelper {
 
-  def formatError(msg: String, maybeIds: Option[Ids]): String = {
-    formatInfo(msg, maybeIds)
+
+  private val headerOverwriteValue = "value-not-logged"
+  private val headersToOverwrite = Set(AUTHORIZATION)
+
+  def formatError(msg: String, rdWrapper: RequestDataWrapper): String = {
+    formatMessage(msg, rdWrapper)
   }
 
-  def formatWarn(msg: String, maybeIds: MaybeIds = None): String = {
-    formatInfo(msg, None)
+  def formatWarn(msg: String, rdWrapper: RequestDataWrapper): String = {
+    formatMessage(msg, rdWrapper)
   }
 
-  def formatInfo(msg: String, maybeIds: MaybeIds = None): String = {
-    s"${format(maybeIds)} $msg".trim
+  def formatInfo(msg: String, rdWrapper: RequestDataWrapper): String = {
+    formatMessage(msg, rdWrapper)
   }
 
-  def formatDebug(msg: String, ids: Ids): String = {
-    s"${format(maybeIds = None)} $msg\nrequest headers=here be headers".trim
+  def formatDebug(msg: String, rdWrapper: RequestDataWrapper): String = {
+    s"${format(rdWrapper, Some(getFilteredHeaders))} $msg".trim
   }
 
-  private def format(maybeIds: MaybeIds = None): String = {
-//    lazy val maybeClientId: Option[String] = findHeaderValue("X-Client-ID", headers)
-//    lazy val maybeSubscriptionIdFromHeader: Option[String] = findHeaderValue("api-subscription-fields-id", headers)
-//    lazy val maybeSubscriptionIdFromHeaderOrIds = maybeSubscriptionIdFromHeader.orElse(maybeIds.flatMap(ids => ids.maybeClientSubscriptionId.map(_.value)))
-//
-//    maybeClientId.fold("")(appId => s"[clientId=$appId]") +
-//      maybeSubscriptionIdFromHeaderOrIds.fold("")(fieldsId => s"[fieldsId=$fieldsId]") +
-//      maybeIds.fold("") { ids =>
-//        lazy val maybeRequestedVersion = ids.maybeRequestedVersion
-//        s"[conversationId=${ids.conversationId.value}]" +
-//          maybeRequestedVersion.fold("")(ver => s"[requestedApiVersion=${ver.versionNumber}]")
-//      }
-    //TODO MC
-    "dummy"
+
+  private def formatMessage(msg: String, rdWrapper: RequestDataWrapper, headersGetter: Option[Map[String, String] => Map[String, String]] = None): String = {
+    s"${format(rdWrapper, headersGetter)} $msg".trim
   }
 
-//  private def findHeaderValue(headerName: String, headers: SeqOfHeader): Option[String] = {
-//    headers.collectFirst{
-//      case (`headerName`, headerValue) => headerValue
-//    }
-//  }
+
+  private def format(rdWrapper: RequestDataWrapper, headersGetter: Option[Map[String, String] => Map[String, String]]): String = {
+    s"[conversationId=${rdWrapper.getConversationId}]\n[headers=${headersGetter.fold(rdWrapper.getHeaders) { f => f(rdWrapper.getHeaders) }}]"
+  }
+
+
+  def getFilteredHeaders(headers: Map[String, String]): Map[String, String] = headers map {
+    case (rewriteHeader, _) if headersToOverwrite.contains(rewriteHeader) => rewriteHeader -> headerOverwriteValue
+    case header => header
+  }
 
 
 }

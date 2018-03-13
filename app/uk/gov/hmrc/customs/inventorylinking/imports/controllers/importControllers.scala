@@ -17,6 +17,7 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
+
 import play.api.mvc.{Action, AnyContent, Result, _}
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core.{AuthProviders, AuthorisationException, AuthorisedFunctions, Enrolment}
@@ -33,7 +34,7 @@ import uk.gov.hmrc.play.microservice.controller.BaseController
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-import scala.xml.{NodeSeq, SAXException}
+import scala.xml.SAXException
 
 abstract class ImportController(importsConfigService: ImportsConfigService,
                                 override val authConnector: MicroserviceAuthConnector,
@@ -47,12 +48,10 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
   def process(): Action[AnyContent] = Action.async(bodyParser = xmlOrEmptyBody) { implicit request =>
     val requestInfo = requestInfoGenerator.newRequestInfo
-    implicit val ids: Ids = Ids.fromDataFromRequestInfo(requestInfo, request, hc).addDataFromHeaders(request.headers)
-
+    implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(requestInfo, request, hc)
     validate match {
-      case None => {
+      case None =>
         authoriseAndSend
-      }
       case Some(errorResponse) => {
         Future.successful(errorResponse.XmlResult)
       }
@@ -68,7 +67,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     r.withHeaders(XConversationId -> conversationId)
   }
 
-  private def recover(implicit ids: Ids): PartialFunction[Throwable, Future[Result]] = {
+  private def recover(implicit rdWrapper: RequestDataWrapper): PartialFunction[Throwable, Future[Result]] = {
     case NonFatal(saxe: SAXException) =>
       logger.debug("XML processing error" + saxe.getMessage)
       Future.successful(
@@ -76,7 +75,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
           XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
 
     case NonFatal(_: AuthorisationException) =>
-      Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, ids.getConversationId))
+      Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, rdWrapper.getConversationId))
 
     case NonFatal(e) =>
       logger.debug("Something went wrong" + e.getMessage)
@@ -84,14 +83,14 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
   }
 
-  private def authoriseAndSend(implicit ids: Ids): Future[Result] = {
-    implicit val hc = ids.getHeaderCarrier
+  private def authoriseAndSend(implicit rdWrapper: RequestDataWrapper): Future[Result] = {
+    implicit val hc: HeaderCarrier = rdWrapper.getHeaderCarrier
     authorised(Enrolment(importsConfigService.apiDefinitionConfig.apiScope) and AuthProviders(PrivilegedApplication)) {
 
       messageSender.validateAndSend(importsMessageType).
         map(_ => Accepted)
     }.recoverWith(recover).
-      map(r => addConversationIdHeader(r, ids.getConversationId)) //TODO MC revisit
+      map(r => addConversationIdHeader(r, rdWrapper.getConversationId)) //TODO MC revisit
   }
 }
 
@@ -116,6 +115,6 @@ class ValidateMovementController @Inject()(importsConfigService: ImportsConfigSe
   extends ImportController(importsConfigService, authConnector, requestInfoGenerator, messageSender, ValidateMovement, logger) {
 
   def post(): Action[AnyContent] = {
-     super.process()
+    super.process()
   }
 }

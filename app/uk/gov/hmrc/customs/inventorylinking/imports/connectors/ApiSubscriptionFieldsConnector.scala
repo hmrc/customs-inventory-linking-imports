@@ -19,7 +19,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ApiSubscriptionKey, Ids}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ApiSubscriptionKey, RequestDataWrapper}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, WSHttp}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
 
@@ -31,9 +31,9 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
                                                logger: CdsLogger,
                                                servicesConfig: ImportsConfigService) {
 
-  def getSubscriptionFields(apiSubsKey: ApiSubscriptionKey)(implicit ids: Ids): Future[ApiSubscriptionFieldsResponse] = {
+  def getSubscriptionFields(apiSubsKey: ApiSubscriptionKey)(implicit rdWrapper: RequestDataWrapper): Future[ApiSubscriptionFieldsResponse] = {
     val url = ApiSubscriptionFieldsPath.url(s"${servicesConfig.apiSubscriptionFieldsBaseUrl}", apiSubsKey)
-    get(url)(ids.getHeaderCarrier)
+    get(url)(rdWrapper.getHeaderCarrier)
   }
 
   private def get(url: String)(implicit hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {

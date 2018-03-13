@@ -39,7 +39,7 @@ import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, GoodsArrival, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, GoodsArrival, RequestDataWrapper, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -76,6 +76,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     message = "Unauthorised request").XmlResult.withHeaders("X-Conversation-ID" -> conversationId.toString)
 
   private implicit val headerCarrier: HeaderCarrier = mock[HeaderCarrier]
+  private implicit val data: RequestDataWrapper = RequestDataWrapper(requestInfo, request, headerCarrier)
 
   override protected def beforeEach() {
     reset(serviceConfigProvider, requestInfoGenerator, messageSender)
@@ -95,7 +96,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     "POST valid declaration" when {
       "message is sent successfully" should {
         s"return 202 ACCEPTED for $messageTypeName" in {
-          when(messageSender.validateAndSend(ameq(importsMessageType), ameq(body), ameq(requestInfo), ameq(request.headers.toSimpleMap))(any[HeaderCarrier])).
+          when(messageSender.validateAndSend(ameq(importsMessageType))(ameq(data))).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -104,7 +105,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
 
         s"return X-Conversation-Id header for $messageTypeName" in {
-          when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
+          when(messageSender.validateAndSend(importsMessageType)(data)).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -126,7 +127,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
       s"message fails due to backend service error for $messageTypeName" should {
         "return 500 Internal Server Error" in {
-          when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
+          when(messageSender.validateAndSend(importsMessageType)(data)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
           val result = await(controller.apply(request))
@@ -135,7 +136,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
 
         s"return X-Conversation-Id header for $messageTypeName" in {
-          when(messageSender.validateAndSend(importsMessageType, body, requestInfo, request.headers.toSimpleMap)(headerCarrier)).
+          when(messageSender.validateAndSend(importsMessageType)(data)).
             thenReturn(Future.failed(emulatedServiceFailure))
 
           val result = await(controller.apply(request))
@@ -147,7 +148,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
     s"POST invalid declaration for $messageTypeName" should {
       "return bad request" in {
-        when(messageSender.validateAndSend(ameq(importsMessageType), ameq(body), ameq(requestInfo), ameq(request.headers.toSimpleMap))(any[HeaderCarrier])).
+        when(messageSender.validateAndSend(ameq(importsMessageType))(any[RequestDataWrapper])).
           thenReturn(Future.failed(new SAXException()))
 
         val result = await(controller.apply(request))

@@ -21,11 +21,11 @@ import play.api.http.MimeTypes
 import play.api.mvc.{Headers, Request}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderNames, Ids, RequestInfo}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderNames, RequestDataWrapper, RequestInfo}
 
 trait HeaderValidator {
 
-  def validate[A](implicit ids: Ids, request: Request[A]): Option[ErrorResponse] = {
+  def validate[A](implicit rdWrapper: RequestDataWrapper, request: Request[A]): Option[ErrorResponse] = {
     implicit val headers = request.headers
     if (!hasAccept) {
       Some(ErrorAcceptHeaderInvalid)

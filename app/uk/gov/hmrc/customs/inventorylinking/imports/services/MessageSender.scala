@@ -36,11 +36,11 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
 
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
 
-  def validateAndSend(messageType: ImportsMessageType)(implicit ids: Ids): Future[HttpResponse] = {
+  def validateAndSend(messageType: ImportsMessageType)(implicit rdWrapper: RequestDataWrapper): Future[HttpResponse] = {
 
-    val body: NodeSeq = ids.getBody
-    val requestInfo: RequestInfo = ids.getRequestInfo
-    val headers: Map[String, String] = ids.getHeaders
+    val body: NodeSeq = rdWrapper.getBody
+    val requestInfo: RequestInfo = rdWrapper.getRequestInfo
+    val headers: Map[String, String] = rdWrapper.getHeaders
 
     def service = messageType match {
       case GoodsArrival => goodsArrivalXmlValidationService
@@ -52,7 +52,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
       apiSubscriptionFieldsConnector.getSubscriptionFields(key).map(r => FieldsId(r.fieldsId.toString))
     }
 
-    def idsFromHeaders: Future[(XClientId, XBadgeIdentifier)] = {
+    def rdWrapperFromHeaders: Future[(XClientId, XBadgeIdentifier)] = {
       (for {
         xClientId <- headers.get(HeaderNames.XClientId)
         xBadgeIdentifier <- headers.get(HeaderNames.XBadgeIdentifier)
@@ -66,9 +66,9 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
 
     for {
       _ <- service.validate(body)
-      idsTuple <- idsFromHeaders
-      xClientId = idsTuple._1
-      xBadgeIdentifier = idsTuple._2
+      rdWrapperTuple <- rdWrapperFromHeaders
+      xClientId = rdWrapperTuple._1
+      xBadgeIdentifier = rdWrapperTuple._2
       fieldsId <- subsFieldsId(xClientId)
       outgoingRequest = outgoingRequestBuilder.build(messageType, requestInfo, fieldsId, xBadgeIdentifier, body)
       result <- connector.post(outgoingRequest)

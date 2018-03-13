@@ -21,15 +21,15 @@ import javax.inject.Singleton
 import com.google.inject.Inject
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.Ids
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 
 @Singleton
 class DeclarationsLogger @Inject()(logger: CdsLogger) {
 
-  def debug(s: => String)(implicit ids: Ids): Unit = logger.debug(formatDebug(s, ids))
-  def info(s: => String)(implicit ids: Ids): Unit = logger.info(formatInfo(s, Some(ids)))
-  def warn(s: => String)(implicit ids: Ids): Unit = logger.warn(formatWarn(s, Some(ids)))
-  def error(s: => String)(implicit ids: Ids): Unit = logger.error(formatError(s, Some(ids)))
+  def debug(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.debug(formatDebug(s, rdWrapper))
+  def info(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.info(formatInfo(s, rdWrapper))
+  def warn(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.warn(formatWarn(s, rdWrapper))
+  def error(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.error(formatError(s, rdWrapper))
   def errorWithoutHeaderCarrier(s: => String): Unit = logger.error(s)
 
 }

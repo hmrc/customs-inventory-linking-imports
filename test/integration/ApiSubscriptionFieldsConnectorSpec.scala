@@ -21,9 +21,10 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.AnyContent
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionFieldsResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper, RequestInfo}
 import uk.gov.hmrc.http._
 import util.ApiSubscriptionFieldsTestData._
 import util.ExternalServicesConfig.{Host, Port}
@@ -37,6 +38,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
   private lazy val connector = app.injector.instanceOf[ApiSubscriptionFieldsConnector]
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private implicit val data: RequestDataWrapper = RequestDataWrapper(mock[RequestInfo], mock[play.api.mvc.Request[AnyContent]], hc)
 
   override protected def beforeAll() {
     startMockServer()
@@ -97,7 +99,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   }
 
-  private def getApiSubscriptionFields: Future[ApiSubscriptionFieldsResponse] = {
+  private def getApiSubscriptionFields(implicit data: RequestDataWrapper): Future[ApiSubscriptionFieldsResponse] = {
     connector.getSubscriptionFields(TestApiSubscriptionKey)
   }
 }
