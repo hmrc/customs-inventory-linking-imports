@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.customs.api.common.config.ConfigValidationNelAdaptor
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiDefinitionConfig, ImportsConfig}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsConfig
 
 import scalaz.ValidationNel
 import scalaz.syntax.apply._
@@ -30,15 +30,10 @@ import scalaz.syntax.traverse._
 class ImportsConfigService @Inject() (configValidationNel: ConfigValidationNelAdaptor, logger: CdsLogger) extends ImportsConfig {
   private val root = configValidationNel.root
 
-  private case class ImportsConfigImpl(apiDefinitionConfig: ApiDefinitionConfig, apiSubscriptionFieldsBaseUrl: String) extends ImportsConfig
-
-  private val validatedApiDefinitionConfig: ValidationNel[String, ApiDefinitionConfig] = (
-    root.string("customs.definition.api-scope") |@|
-    root.stringSeq("api.access.version-1.0.whitelistedApplicationIds")
-  )(ApiDefinitionConfig.apply)
+  private case class ImportsConfigImpl(whiteListedCspApplicationIds: Seq[String], apiSubscriptionFieldsBaseUrl: String) extends ImportsConfig
 
   private val validatedImportsConfig: ValidationNel[String, ImportsConfig] = (
-    validatedApiDefinitionConfig |@|
+    root.stringSeq("api.access.version-1.0.whitelistedApplicationIds") |@|
     configValidationNel.service("api-subscription-fields").serviceUrl
   )(ImportsConfigImpl.apply)
 
@@ -51,6 +46,6 @@ class ImportsConfigService @Inject() (configValidationNel: ConfigValidationNelAd
     config => config // success case exposes the value class
   )
 
-  override val apiDefinitionConfig: ApiDefinitionConfig = importsConfig.apiDefinitionConfig
+  override val whiteListedCspApplicationIds: Seq[String] = importsConfig.whiteListedCspApplicationIds
   override val apiSubscriptionFieldsBaseUrl: String = importsConfig.apiSubscriptionFieldsBaseUrl
 }

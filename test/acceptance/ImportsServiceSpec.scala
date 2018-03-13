@@ -20,6 +20,7 @@ import org.scalatest._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.mvc.Result
 import play.api.test.Helpers._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
 import util.TestData._
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 import util.externalservices.{ApiSubscriptionFieldsService, AuthService, InventoryLinkingImportsService}
@@ -53,27 +54,27 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
     stopMockServer()
   }
 
-  private val controllers = Table(("Message Type", "request", "url"),
-    ("Goods Arrival", ValidGoodsArrivalRequest.fromCsp, GoodsArrivalConnectorContext),
-    ("Validate Movement", ValidValidateMovementRequest.fromCsp, ValidateMovementConnectorContext)
+  private val controllers = Table(("Message Type Description", "Imports Message Type", "request", "url"),
+    ("Goods Arrival", GoodsArrival, ValidGoodsArrivalRequest.fromCsp, GoodsArrivalConnectorContext),
+    ("Validate Movement", ValidateMovement, ValidValidateMovementRequest.fromCsp, ValidateMovementConnectorContext)
   )
 
-  forAll(controllers) { case (messageType, request, url) =>
+  forAll(controllers) { case (messageTypeDesc, messageType, request, url) =>
 
-    feature(s"CSP Submits $messageType Message") {
+    feature(s"CSP Submits $messageTypeDesc Message") {
       info("As a CSP")
-      info(s"I want to submit an import inventory linking $messageType message")
+      info(s"I want to submit an import inventory linking $messageTypeDesc message")
       info("So that my consignment can continue on its journey")
 
-      scenario(s"A valid $messageType message submitted and successfully forwarded to the backend") {
+      scenario(s"A valid $messageTypeDesc message submitted and successfully forwarded to the backend") {
         Given("a CSP is authorised to use the API endpoint")
-        authServiceAuthorisesCSP()
+        authServiceAuthorisesCSP(messageType)
 
         And("the Back End Service will return a successful response")
         startApiSubscriptionFieldsService(apiSubscriptionKeyWithRealContextAndVersion)
         setupBackendServiceToReturn(url, ACCEPTED)
 
-        When(s"a valid $messageType message is submitted with valid headers")
+        When(s"a valid $messageTypeDesc message is submitted with valid headers")
         val result: Future[Result] = route(app, request).get
 
         And("an Accepted (202) response is returned")
@@ -81,15 +82,15 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
         header(XConversationIdHeaderName, result).get shouldNot be("")
       }
 
-      scenario(s"A valid $messageType submitted and the Back End service fails") {
+      scenario(s"A valid $messageTypeDesc submitted and the Back End service fails") {
         Given("a CSP is authorised to use the API endpoint")
-        authServiceAuthorisesCSP()
+        authServiceAuthorisesCSP(messageType)
 
         And("the Back End Service will return an error response")
         startApiSubscriptionFieldsService(apiSubscriptionKeyWithRealContextAndVersion)
         setupBackendServiceToReturn(url, NOT_FOUND)
 
-        When(s"a valid $messageType message request is submitted")
+        When(s"a valid $messageTypeDesc message request is submitted")
         val result = route(app, request).get
 
         Then("an 500 Internal Server Error response is returned")

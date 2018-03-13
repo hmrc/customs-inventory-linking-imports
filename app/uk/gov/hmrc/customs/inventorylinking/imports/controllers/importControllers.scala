@@ -77,7 +77,12 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
   }
 
   private def authoriseAndSend(requestInfo: RequestInfo)(implicit request: Request[AnyContent]): Future[Result] = {
-    authorised(Enrolment(importsConfigService.apiDefinitionConfig.apiScope) and AuthProviders(PrivilegedApplication)) {
+    def enrolmentForMessageType = importsMessageType match {
+      case ValidateMovement => Enrolment("write:customs-il-imports-movement-validation")
+      case GoodsArrival => Enrolment("write:customs-il-imports-arrival-notifications")
+    }
+
+    authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
       val body = request.body.asXml.getOrElse(NodeSeq.Empty)
       val requestInfo = requestInfoGenerator.newRequestInfo
       val headers = request.headers.toSimpleMap

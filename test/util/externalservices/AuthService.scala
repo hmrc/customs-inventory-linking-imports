@@ -20,11 +20,13 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.http.Status
 import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
+import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import util.TestData
+import util.TestData.{GoodsArrivalAuthPredicate, ValidateMovementAuthPredicate}
 
 trait AuthService {
 
@@ -50,9 +52,9 @@ trait AuthService {
     js
   }
 
-  def authServiceAuthorisesCSP(bearerToken: String = TestData.cspBearerToken): Unit = {
+  def authServiceAuthorisesCSP(messageType: ImportsMessageType, bearerToken: String = TestData.cspBearerToken): Unit = {
     stubFor(post(authUrlMatcher)
-      .withRequestBody(equalToJson(authRequestJson(cspAuthorisationPredicate)))
+      .withRequestBody(equalToJson(authRequestJson(predicateForMessageType(messageType))))
       .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
       .willReturn(
         aResponse()
@@ -62,9 +64,9 @@ trait AuthService {
     )
   }
 
-  def authServiceUnAuthorisesScopeForCSP(bearerToken: String = TestData.cspBearerToken): Unit = {
+  def authServiceUnAuthorisesScopeForCSP(messageType: ImportsMessageType, bearerToken: String = TestData.cspBearerToken): Unit = {
     stubFor(post(authUrlMatcher)
-      .withRequestBody(equalToJson(authRequestJson(cspAuthorisationPredicate)))
+      .withRequestBody(equalToJson(authRequestJson(predicateForMessageType(messageType))))
       .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
       .willReturn(
         aResponse()
@@ -79,6 +81,11 @@ trait AuthService {
       .withRequestBody(equalToJson(authRequestJson(cspAuthorisationPredicate)))
       .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
     )
+  }
+
+  private def predicateForMessageType(messageType: ImportsMessageType) = messageType match {
+    case GoodsArrival => GoodsArrivalAuthPredicate
+    case ValidateMovement => ValidateMovementAuthPredicate
   }
 
 }
