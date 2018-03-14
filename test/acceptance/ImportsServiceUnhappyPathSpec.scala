@@ -44,14 +44,14 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
   private val invalidRequests =
     InvalidRequests(
       goodsArrival = InvalidRequest(
-        invalidRequest = ValidValidateMovementRequest.withXmlBody(InvalidInventoryLinkingGoodsArrivalRequestXML),
-        invalidRequestWithMalformedXml = ValidValidateMovementRequest.withBody("<xm> malformed xml <xm>"),
-        invalidRequestWithNonXml = ValidValidateMovementRequest.withBody("""  {"valid": "json payload" }  """)
-      ),
-      validateMovement = InvalidRequest(
-        invalidRequest = ValidGoodsArrivalRequest.withXmlBody(InvalidInventoryLinkingMovementRequestXML),
+        invalidRequest = ValidGoodsArrivalRequest.withXmlBody(InvalidInventoryLinkingGoodsArrivalRequestXML),
         invalidRequestWithMalformedXml = ValidGoodsArrivalRequest.withBody("<xm> malformed xml <xm>"),
         invalidRequestWithNonXml = ValidGoodsArrivalRequest.withBody("""  {"valid": "json payload" }  """)
+      ),
+      validateMovement = InvalidRequest(
+        invalidRequest = ValidValidateMovementRequest.withXmlBody(InvalidInventoryLinkingMovementRequestXML),
+        invalidRequestWithMalformedXml = ValidValidateMovementRequest.withBody("<xm> malformed xml <xm>"),
+        invalidRequestWithNonXml = ValidValidateMovementRequest.withBody("""  {"valid": "json payload" }  """)
       )
     )
 
@@ -69,16 +69,19 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
 
   private def badRequestError(messageType: ImportsMessageType) =
     s"""<?xml version="1.0" encoding="UTF-8"?>
-      |<errorResponse>
-      | <code>BAD_REQUEST</code>
-      | <message>Bad Request</message>
-      | <errors>
-      |   <error>
-      |     <code>xml_validation_error</code>
-      |     <message>cvc-elt.1.a: Cannot find the declaration of element '${elementName(messageType)}'.</message>
-      |   </error>
-      | </errors>
-      |</errorResponse>""".stripMargin
+       |<errorResponse>
+       |    <code>BAD_REQUEST</code>
+       |    <message>Bad Request</message>
+       |    <errors>
+       |        <error>
+       |            <code>xml_validation_error</code>
+       |            <message>cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element
+       |                '${elementName(messageType)}'.
+       |            </message>
+       |        </error>
+       |    </errors>
+       |</errorResponse>
+     """.stripMargin
 
   private val malformedXmlError =
     """<?xml version="1.0" encoding="UTF-8"?>
@@ -121,13 +124,13 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
         "non XML"),
       ("Goods Arrival",
         GoodsArrival,
-        ValidValidateMovementRequest,
+        ValidGoodsArrivalRequest,
         invalidRequests.goodsArrival.invalidRequest,
         invalidRequests.goodsArrival.invalidRequestWithMalformedXml,
         invalidRequests.goodsArrival.invalidRequestWithNonXml),
       ("Validate Movement",
         ValidateMovement,
-        ValidGoodsArrivalRequest,
+        ValidValidateMovementRequest,
         invalidRequests.validateMovement.invalidRequest,
         invalidRequests.validateMovement.invalidRequestWithMalformedXml,
         invalidRequests.validateMovement.invalidRequestWithNonXml)
@@ -140,7 +143,7 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
       scenario(s"Response status 401 when non authorised user submits a valid $messageTypeDesc message") {
 
         Given(s"an un-authorised CSP wants to submit a customs $messageTypeDesc message with an invalid XML payload")
-        authServiceUnAuthorisesScopeForCSP()
+        authServiceUnAuthorisesScopeForCSP(messageType)
         When("a POST request with data is sent to the API")
         val result = route(app, validRequest.fromCsp)
 
@@ -159,7 +162,7 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
       scenario(s"Response status 400 when user submits a $messageTypeDesc message with an XML payload that does not adhere to schema") {
 
         Given(s"an authorised CSP wants to submit a customs $messageTypeDesc message with an invalid XML payload")
-        authServiceAuthorisesCSP()
+        authServiceAuthorisesCSP(messageType)
         When("a POST request with data is sent to the API")
         val result = route(app, invalidRequest.fromCsp)
 
@@ -178,7 +181,7 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
       scenario(s"Response status 400 when user submits a $messageTypeDesc message with a malformed XML payload") {
 
         Given(s"an authorised CSP wants to submit a customs $messageTypeDesc message with a malformed XML payload")
-        authServiceAuthorisesCSP()
+        authServiceAuthorisesCSP(messageType)
         When("a POST request with data is sent to the API")
         val result = route(app, invalidRequestWithMalformedXml.fromCsp)
 
@@ -197,7 +200,7 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
       scenario(s"Response status 400 when user submits a $messageTypeDesc message with a non-xml payload") {
 
         Given(s"an authorised CSP wants to submit a customs $messageTypeDesc message with a non-XML payload")
-        authServiceAuthorisesCSP()
+        authServiceAuthorisesCSP(messageType)
         When("a POST request with data is sent to the API")
         val result = route(app, invalidRequestWithNonXml.fromCsp)
 

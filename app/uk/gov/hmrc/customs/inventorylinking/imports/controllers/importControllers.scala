@@ -82,14 +82,20 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
   }
 
+
   private def authoriseAndSend(implicit rdWrapper: RequestDataWrapper): Future[Result] = {
     implicit val hc: HeaderCarrier = rdWrapper.headerCarrier
-    authorised(Enrolment(importsConfigService.apiDefinitionConfig.apiScope) and AuthProviders(PrivilegedApplication)) {
+    def enrolmentForMessageType = importsMessageType match {
+      case ValidateMovement => Enrolment("write:customs-il-imports-movement-validation")
+      case GoodsArrival => Enrolment("write:customs-il-imports-arrival-notifications")
+    }
+
+    authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
 
       messageSender.validateAndSend(importsMessageType).
         map(_ => Accepted)
     }.recoverWith(recover).
-      map(r => addConversationIdHeader(r, rdWrapper.conversationId)) //TODO MC revisit
+      map(r => addConversationIdHeader(r, rdWrapper.conversationId))
   }
 }
 

@@ -23,6 +23,9 @@ import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.http.MimeTypes.{JSON, XML}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE, POST}
+import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
+import uk.gov.hmrc.auth.core.{AuthProviders, Enrolment}
+import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import util.ApiSubscriptionFieldsTestData.TestXClientId
@@ -105,6 +108,9 @@ object TestData {
   val ValidGoodsArrivalRequest = FakeRequest("POST", "/arrival-notifications")
     .withXmlBody(ValidInventoryLinkingGoodsArrivalRequestXML)
     .withHeaders(ValidHeaders.toSeq: _*)
+
+  val GoodsArrivalAuthPredicate: Predicate = Enrolment("write:customs-il-imports-arrival-notifications") and AuthProviders(PrivilegedApplication)
+  val ValidateMovementAuthPredicate: Predicate = Enrolment("write:customs-il-imports-movement-validation") and AuthProviders(PrivilegedApplication)
 
   implicit class FakeRequestOps[R](val fakeRequest: FakeRequest[R]) extends AnyVal {
     def fromCsp: FakeRequest[R] = fakeRequest.withHeaders(AUTHORIZATION -> s"Bearer $cspBearerToken")

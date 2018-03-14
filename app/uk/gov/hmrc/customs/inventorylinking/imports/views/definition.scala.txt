@@ -1,11 +1,16 @@
 @import play.api.libs.json.Json
-@(apiScopeKey: String, whitelistedApplicationIds: Seq[String])
+@(whitelistedApplicationIds: Seq[String])
 {
   "scopes": [
     {
-      "key": "@apiScopeKey",
-      "name": "Customs Inventory Linking Imports",
-      "description": "Submit a Customs Inventory Linking Import Declaration"
+      "key": "write:customs-il-imports-movement-validation",
+      "name": "Customs Inventory Linking Imports - Movement Validation",
+      "description": "Send validated movement response messages provided by the CSP as a result of a previous validate movement request"
+    },
+    {
+      "key": "write:customs-il-imports-arrival-notifications",
+      "name": "Customs Inventory Linking Imports - Arrival Notifications",
+      "description": "CSPs requesting to present their goods to Customs"
     }
   ],
   "api": {
