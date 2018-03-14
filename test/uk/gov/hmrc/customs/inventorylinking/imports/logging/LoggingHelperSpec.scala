@@ -40,7 +40,7 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
       LoggingHelper.formatInfo("Info message", rdWrapper) shouldBe "[conversationId=conversation-id]" +
         "[clientId=some-client-id]" +
         "[requestedApiVersion=1.0]\n" +
-        "[headers=Map(ACCEPT -> Blah, Authorization -> Bearer super-secret-token)] Info message"
+        "[headers=Map(ACCEPT -> Blah, Authorization -> value-not-logged)] Info message"
     }
 
     "testFormatError" in {

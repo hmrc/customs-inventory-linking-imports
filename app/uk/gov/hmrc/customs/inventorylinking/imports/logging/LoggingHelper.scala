@@ -23,22 +23,22 @@ object LoggingHelper {
 
 
   private val headerOverwriteValue = "value-not-logged"
-  private val headersToOverwrite = Set(AUTHORIZATION)
+  private val headersToOverwrite = Set(AUTHORIZATION.toLowerCase)
 
   def formatError(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper)
+    formatMessage(msg, rdWrapper, Some(getFilteredHeaders))
   }
 
   def formatWarn(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper)
+    formatMessage(msg, rdWrapper, Some(getFilteredHeaders))
   }
 
   def formatInfo(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper)
+    formatMessage(msg, rdWrapper, Some(getFilteredHeaders))
   }
 
   def formatDebug(msg: String, rdWrapper: RequestDataWrapper): String = {
-    s"${format(rdWrapper, Some(getFilteredHeaders))} $msg".trim
+    formatMessage(msg, rdWrapper)
   }
 
 
@@ -53,9 +53,9 @@ object LoggingHelper {
 
 
   def getFilteredHeaders(headers: Map[String, String]): Map[String, String] = headers map {
-    case (rewriteHeader, _) if headersToOverwrite.contains(rewriteHeader) => rewriteHeader -> headerOverwriteValue
+    case (rewriteHeader, _)
+      if headersToOverwrite.contains(rewriteHeader.toLowerCase) => rewriteHeader -> headerOverwriteValue
     case header => header
   }
-
 
 }
