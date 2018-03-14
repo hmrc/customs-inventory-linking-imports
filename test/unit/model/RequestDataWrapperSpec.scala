@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package model
+package unit.model
 
 import org.mockito.Mockito.when
-import org.scalatest.Matchers
+import org.scalatest.{BeforeAndAfterEach, Matchers}
 import org.scalatest.mockito.MockitoSugar
 import play.api.mvc.{AnyContent, Headers, Request}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestDataWrapper, RequestInfo}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 
-class RequestDataWrapperSpec extends UnitSpec with Matchers with MockitoSugar {
+class RequestDataWrapperSpec extends UnitSpec with Matchers with MockitoSugar with BeforeAndAfterEach{
 
   private val requestMock: Request[AnyContent] = mock[Request[AnyContent]]
 
@@ -40,5 +40,19 @@ class RequestDataWrapperSpec extends UnitSpec with Matchers with MockitoSugar {
       when(requestMock.headers).thenReturn(Headers("ACCEPT" -> "application/vnd.hmrc.1xx07.0+xml"))
       data.requestedApiVersion equals "NOT_FOUND"
     }
+
+    "return NOT_FOUND when no ACCEPT header provided" in {
+      when(requestMock.headers).thenReturn(Headers("ACCEPTXXX" -> "application/vnd.hmrc.1xx07.0+xml"))
+      data.requestedApiVersion equals "NOT_FOUND"
+    }
+
+    "return NOT_FOUND when invalid X-Client-ID provided" in {
+      when(requestMock.headers).thenReturn(Headers("X-Client-IDXXX" -> "ABC123"))
+      data.clientId equals "NOT_FOUND"
+    }
+  }
+
+  override protected def beforeEach(): Unit = {
+    org.mockito.Mockito.reset(requestMock)
   }
 }

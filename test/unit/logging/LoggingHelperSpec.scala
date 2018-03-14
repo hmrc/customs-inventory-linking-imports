@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.logging
+package unit.logging
 
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
-import play.api.mvc.{AnyContent, Request}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestDataWrapper, RequestInfo}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.play.test.UnitSpec
 
 class LoggingHelperSpec extends UnitSpec with MockitoSugar {
 
-  "LoggingHelperSpec" should {
+  private def expectedMessage(message: String, auth: String) = "[conversationId=conversation-id]" +
+    "[clientId=some-client-id]" +
+    "[requestedApiVersion=1.0]\n" +
+    s"[headers=Map(ACCEPT -> Blah, Authorization -> $auth)] $message"
 
-    val requestInfo = mock[RequestInfo]
-    val request = mock[Request[AnyContent]]
-    val headerCarrier = mock[HeaderCarrier]
+  "LoggingHelper" should {
+
     val rdWrapper = mock[RequestDataWrapper]
     when(rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
     when(rdWrapper.conversationId).thenReturn("conversation-id")
@@ -37,27 +38,21 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
     when(rdWrapper.requestedApiVersion).thenReturn("1.0")
 
     "testFormatInfo" in {
-      LoggingHelper.formatInfo("Info message", rdWrapper) shouldBe "[conversationId=conversation-id]" +
-        "[clientId=some-client-id]" +
-        "[requestedApiVersion=1.0]\n" +
-        "[headers=Map(ACCEPT -> Blah, Authorization -> value-not-logged)] Info message"
+      LoggingHelper.formatInfo("Info message", rdWrapper) shouldBe expectedMessage("Info message", "value-not-logged")
     }
 
     "testFormatError" in {
-
+      LoggingHelper.formatError("Error message", rdWrapper) shouldBe expectedMessage("Error message", "value-not-logged")
     }
 
     "testFormatWarn" in {
-
+      LoggingHelper.formatWarn("Warn message", rdWrapper) shouldBe expectedMessage("Warn message", "value-not-logged")
     }
 
     "testFormatDebug" in {
-
+      LoggingHelper.formatDebug("Debug message", rdWrapper) shouldBe expectedMessage("Debug message", "Bearer super-secret-token")
     }
 
-    "testGetFilteredHeaders" in {
-
-    }
   }
 
 }
