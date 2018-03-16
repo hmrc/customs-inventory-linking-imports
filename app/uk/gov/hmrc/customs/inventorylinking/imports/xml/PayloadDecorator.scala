@@ -16,22 +16,24 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.xml
 
+import java.util.UUID
+
 import org.joda.time.format.ISODateTimeFormat.dateTimeNoMillis
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 
 import scala.xml.NodeSeq
 
 class PayloadDecorator {
-  def wrap(rdWrapper: RequestDataWrapper, clientId: String, wrapperRootElementLabel: String): NodeSeq =
+  def wrap(rdWrapper: RequestDataWrapper, clientSubscriptionId: UUID, wrapperRootElementLabel: String): NodeSeq =
     <n1:rootElementToBeRenamed
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:n1="http://gov.uk/customs/inventoryLinkingImport/v1"
     xsi:schemaLocation="http://gov.uk/customs/inventoryLinkingImport/v1request_schema.xsd">
       <n1:requestCommon>
-        <n1:clientID>{ clientId }</n1:clientID>
+        <n1:clientID>{ clientSubscriptionId.toString }</n1:clientID>
         <n1:conversationID>{ rdWrapper.conversationId }</n1:conversationID>
         <n1:correlationID>{ rdWrapper.correlationId }</n1:correlationID>
-        <n1:badgeIdentifier>{ rdWrapper.badgeIdentifier }</n1:badgeIdentifier>
+        <n1:badgeIdentifier>{ rdWrapper.badgeIdentifier.get }</n1:badgeIdentifier>
         <n1:dateTimeStamp>{ dateTimeNoMillis.print(rdWrapper.dateTime)}</n1:dateTimeStamp>
       </n1:requestCommon>
       <n1:requestDetail>

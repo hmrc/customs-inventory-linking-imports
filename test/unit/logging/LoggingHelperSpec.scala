@@ -26,15 +26,14 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
 
   private def expectedMessage(message: String, auth: String) = "[conversationId=conversation-id]" +
     "[clientId=some-client-id]" +
-    "[requestedApiVersion=1.0]\n" +
-    s"[headers=Map(ACCEPT -> Blah, Authorization -> $auth)] $message"
+    s"[requestedApiVersion=1.0] $message"
 
   "LoggingHelper" should {
 
     val rdWrapper = mock[RequestDataWrapper]
     when(rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
     when(rdWrapper.conversationId).thenReturn("conversation-id")
-    when(rdWrapper.clientId).thenReturn("some-client-id")
+    when(rdWrapper.clientId).thenReturn(Some("some-client-id"))
     when(rdWrapper.requestedApiVersion).thenReturn("1.0")
 
     "testFormatInfo" in {
@@ -52,7 +51,5 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
     "testFormatDebug" in {
       LoggingHelper.formatDebug("Debug message", rdWrapper) shouldBe expectedMessage("Debug message", "Bearer super-secret-token")
     }
-
   }
-
 }

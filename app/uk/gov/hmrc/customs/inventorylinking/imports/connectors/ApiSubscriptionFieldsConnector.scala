@@ -17,6 +17,7 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import java.net.URLEncoder
+import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
@@ -35,9 +36,9 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
   private val version = "1.0"
 
-  def getSubscriptionFields()(implicit rdWrapper: RequestDataWrapper): Future[ApiSubscriptionFieldsResponse] = {
-    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.clientId}/context/$apiContextEncoded/version/$version"
-    get(url)(rdWrapper.headerCarrier)
+  def getClientSubscriptionId()(implicit rdWrapper: RequestDataWrapper): Future[UUID] = {
+    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.clientId.getOrElse("")}/context/$apiContextEncoded/version/$version"
+    get(url)(rdWrapper.headerCarrier).map(r => r.fieldsId)
   }
 
   private def get(url: String)(implicit hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {

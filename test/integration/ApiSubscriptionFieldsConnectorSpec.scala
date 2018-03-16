@@ -16,6 +16,8 @@
 
 package integration
 
+import java.util.UUID
+
 import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mockito.MockitoSugar
@@ -70,8 +72,8 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
       val response = await(getApiSubscriptionFields)
 
-      response shouldBe TestApiSubscriptionFieldsResponse
-      verifyGetSubscriptionFieldsCalled(rdWrapper.clientId)
+      response shouldBe FieldsId
+      verifyGetSubscriptionFieldsCalled(rdWrapper.clientId.get)
     }
 
     "return a failed future when external service returns 404" in {
@@ -103,7 +105,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   }
 
-  private def getApiSubscriptionFields(): Future[ApiSubscriptionFieldsResponse] = {
-    connector.getSubscriptionFields()
+  private def getApiSubscriptionFields(): Future[UUID] = {
+    connector.getClientSubscriptionId()
   }
 }

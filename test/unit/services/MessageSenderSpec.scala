@@ -17,6 +17,7 @@
 package unit.services
 
 import java.net.URLEncoder
+import java.util.UUID
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.Mockito.when
@@ -52,7 +53,6 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     val headers: HeaderMap = Map(HeaderConstants.XClientId -> TestXClientId, HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
     val sender: MessageSender = new MessageSender(apiSubscriptionFieldsConnector, outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, importsConnector)
     lazy val outgoingRequest = OutgoingRequest(serviceConfig, outgoingBody, rdWrapperMock)
-    private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
 
     implicit val mockHeaderCarrier: HeaderCarrier = mock[HeaderCarrier]
     val request: Request[AnyContent] = mock[Request[AnyContent]]
@@ -62,7 +62,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       case ValidateMovement => validateMovementXmlValidationService
     }
 
-    when(apiSubscriptionFieldsConnector.getSubscriptionFields()(any[RequestDataWrapper])).thenReturn(Future.successful(TestApiSubscriptionFieldsResponse))
+    when(apiSubscriptionFieldsConnector.getClientSubscriptionId()(any[RequestDataWrapper])).thenReturn(Future.successful(FieldsId))
     when(rdWrapperMock.body).thenReturn(outgoingBody)
   }
 
@@ -76,26 +76,28 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     s"$messageType send" when {
       "message is valid" should {
         "return the result from the connector" in new SetUp {
-          val importsMessageType: ImportsMessageType = messageType
 
-          when(outgoingRequestBuilder.build(messageType, rdWrapperMock, FieldsIdAsString)).thenReturn(outgoingRequest)
+          val importsMessageType: ImportsMessageType = messageType
+          when(outgoingRequestBuilder.build(messageType, rdWrapperMock, FieldsId)).thenReturn(outgoingRequest)
           when(service.validate(outgoingBody)).thenReturn(Future.successful(()))
           when(importsConnector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
           when(rdWrapperMock.headers).thenReturn(headers)
 
           val actualResponse = await(sender.validateAndSend(messageType))
+
           actualResponse shouldBe httpResponse
         }
       }
 
       "message is invalid" should {
         "return failed future when validation service throws an exception" in new SetUp {
-          val importsMessageType: ImportsMessageType = messageType
 
+          val importsMessageType: ImportsMessageType = messageType
           when(service.validate(outgoingBody)).thenReturn(Future.failed(emulatedServiceFailure))
           when(rdWrapperMock.headers).thenReturn(headers)
 
           val caught = intercept[EmulatedServiceFailure](await(sender.validateAndSend(messageType)))
+
           caught shouldBe emulatedServiceFailure
         }
       }

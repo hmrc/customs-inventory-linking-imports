@@ -47,7 +47,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
   def process(): Action[AnyContent] = Action.async(bodyParser = xmlOrEmptyBody) { implicit request =>
     implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
-    validateHeaders match {
+    validateHeaders(request.headers) match {
       case Right(_) =>
         authoriseAndSend
       case Left(errorResponse) =>
@@ -64,7 +64,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     r.withHeaders(XConversationId -> conversationId)
   }
 
-  private def recover(implicit rdWrapper: RequestDataWrapper): PartialFunction[Throwable, Future[Result]] = {
+  private def handleError(implicit rdWrapper: RequestDataWrapper): PartialFunction[Throwable, Future[Result]] = {
     case NonFatal(saxe: SAXException) =>
       logger.debug("XML processing error" + saxe.getMessage)
       Future.successful(
@@ -91,7 +91,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
       messageSender.validateAndSend(importsMessageType).
         map(_ => Accepted)
-    }.recoverWith(recover).
+    }.recoverWith(handleError).
       map(r => addConversationIdHeader(r, rdWrapper.conversationId))
   }
 }

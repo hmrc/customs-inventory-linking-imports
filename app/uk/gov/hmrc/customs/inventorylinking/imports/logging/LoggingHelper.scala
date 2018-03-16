@@ -16,46 +16,32 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
-import play.api.http.HeaderNames.AUTHORIZATION
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderMap
 
 object LoggingHelper {
 
-
-  private val headerOverwriteValue = "value-not-logged"
-  private val headersToOverwrite = Set(AUTHORIZATION.toLowerCase)
-
   def formatError(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper, Some(getFilteredHeaders))
+    formatMessage(msg, rdWrapper)
   }
 
   def formatWarn(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper, Some(getFilteredHeaders))
+    formatMessage(msg, rdWrapper)
   }
 
   def formatInfo(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper, Some(getFilteredHeaders))
+    formatMessage(msg, rdWrapper)
   }
 
   def formatDebug(msg: String, rdWrapper: RequestDataWrapper): String = {
     formatMessage(msg, rdWrapper)
   }
 
-  private def formatMessage(msg: String, rdWrapper: RequestDataWrapper, headersGetter: Option[HeaderMap => HeaderMap] = None): String = {
-    s"${format(rdWrapper, headersGetter)} $msg".trim
+  private def formatMessage(msg: String, rdWrapper: RequestDataWrapper): String = {
+    s"${format(rdWrapper)} $msg".trim
   }
-
-
-  private def format(rdWrapper: RequestDataWrapper, headersGetter: Option[HeaderMap => HeaderMap]): String = {
-    s"[conversationId=${rdWrapper.conversationId}][clientId=${rdWrapper.clientId}][requestedApiVersion=${rdWrapper.requestedApiVersion}]\n[headers=${headersGetter.fold(rdWrapper.headers) { f => f(rdWrapper.headers) }}]"
-  }
-
-
-  def getFilteredHeaders(headers: HeaderMap): HeaderMap = headers map {
-    case (rewriteHeader, _)
-      if headersToOverwrite.contains(rewriteHeader.toLowerCase) => rewriteHeader -> headerOverwriteValue
-    case header => header
+  
+  private def format(rdWrapper: RequestDataWrapper): String = {
+    s"[conversationId=${rdWrapper.conversationId}][clientId=${rdWrapper.clientId.getOrElse("")}][requestedApiVersion=${rdWrapper.requestedApiVersion}]"
   }
 
 }

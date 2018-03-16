@@ -29,7 +29,8 @@ object ApiSubscriptionFieldsTestData {
   val ApiContext = "some/api/context"
   val ApiContextEncoded = "some%2Fapi%2Fcontext"
   val TestApiVersion = "1.0"
-  val TestApiSubscriptionFieldsResponse = ApiSubscriptionFieldsResponse(UUID.fromString(FieldsIdAsString))
+  val FieldsId: UUID = UUID.fromString(FieldsIdAsString)
+  val TestApiSubscriptionFieldsResponse = ApiSubscriptionFieldsResponse(FieldsId)
   val ResponseJsonString: String =
     s"""{
        |  "clientId": "afsdknbw34ty4hebdv",

@@ -38,14 +38,10 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
       case ValidateMovement => validateMovementXmlValidationService
     }
 
-    def subsFieldsId(): Future[String] = {
-      apiSubscriptionFieldsConnector.getSubscriptionFields().map(r => r.fieldsId.toString)
-    }
-
     for {
       _ <- service.validate(rdWrapper.body)
-      fieldsId <- subsFieldsId()
-      outgoingRequest = outgoingRequestBuilder.build(messageType, rdWrapper, fieldsId)
+      clientSubscriptionId <- apiSubscriptionFieldsConnector.getClientSubscriptionId()
+      outgoingRequest = outgoingRequestBuilder.build(messageType, rdWrapper, clientSubscriptionId)
       result <- connector.post(outgoingRequest)
     } yield result
   }

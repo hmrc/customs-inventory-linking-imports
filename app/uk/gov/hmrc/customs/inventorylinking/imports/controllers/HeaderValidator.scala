@@ -18,16 +18,14 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
-import play.api.mvc.{Headers, Request}
+import play.api.mvc.Headers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderConstants, RequestDataWrapper}
-import HeaderConstants.Version1AcceptHeaderValue
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
 
 trait HeaderValidator {
 
-  def validateHeaders[A](implicit rdWrapper: RequestDataWrapper): Either[ErrorResponse, Unit] = {
-    implicit val headers = Headers(rdWrapper.headers.toSeq: _*)
+  def validateHeaders[A](implicit headers: Headers): Either[ErrorResponse, Unit] = {
     if (!hasAccept) {
       Left(ErrorAcceptHeaderInvalid)
     } else if (!hasContentType) {
@@ -50,8 +48,8 @@ trait HeaderValidator {
 
   private def hasContentType(implicit h: Headers) = h.get(CONTENT_TYPE).fold(false)(h => validContentTypeHeaders.contains(h.toLowerCase()))
 
-  private def hasXClientId(implicit h: Headers) = h.get(HeaderConstants.XClientId).fold(false)(xClientIdRegex.findFirstIn(_).nonEmpty)
+  private def hasXClientId(implicit h: Headers) = h.get(XClientId).fold(false)(xClientIdRegex.findFirstIn(_).nonEmpty)
 
-  private def hasXBadgeIdentifier(implicit h: Headers) = h.get(HeaderConstants.XBadgeIdentifier).fold(false)(xBadgeIdentifierRegex.findFirstIn(_).nonEmpty)
+  private def hasXBadgeIdentifier(implicit h: Headers) = h.get(XBadgeIdentifier).fold(false)(xBadgeIdentifierRegex.findFirstIn(_).nonEmpty)
 
 }

@@ -23,7 +23,7 @@ import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderMap, RequestDataWrapper, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
-import util.ApiSubscriptionFieldsTestData.FieldsIdAsString
+import util.ApiSubscriptionFieldsTestData.FieldsId
 import util.TestData._
 
 class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with MockitoSugar {
@@ -35,11 +35,11 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
     val builder: OutgoingRequestBuilder = new OutgoingRequestBuilder(serviceConfigProvider, decorator)
     val rdWrapperMock = mock[RequestDataWrapper]
     when(rdWrapperMock.body).thenReturn(outgoingBody)
-    when(rdWrapperMock.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
-    when(decorator.wrap(rdWrapperMock, FieldsIdAsString, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
+    when(rdWrapperMock.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
+    when(decorator.wrap(rdWrapperMock, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
     when(serviceConfigProvider.getConfig("validatemovement")).thenReturn(serviceConfig)
 
-    val result: OutgoingRequest = builder.build(ValidateMovement, rdWrapperMock, FieldsIdAsString)
+    val result: OutgoingRequest = builder.build(ValidateMovement, rdWrapperMock, FieldsId)
   }
 
   "build" should {

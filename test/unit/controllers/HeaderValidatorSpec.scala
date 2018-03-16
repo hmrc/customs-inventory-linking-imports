@@ -54,8 +54,7 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
   "HeaderValidatorAction" should {
     forAll(headersTable) { (description, headers, response) =>
       s"$description" in {
-        when(rdWrapper.headers).thenReturn(headers)
-        validator.validateHeaders shouldBe response
+        validator.validateHeaders(new Headers(headers.toSeq)) shouldBe response
       }
     }
   }

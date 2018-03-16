@@ -127,7 +127,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
           val result = await(controller.apply(request))
 
-          result.header.headers shouldNot be(defaultUuid)
+          result.header.headers.getOrElse("X-Conversation-ID", defaultUuid) shouldNot be(defaultUuid)
         }
       }
 

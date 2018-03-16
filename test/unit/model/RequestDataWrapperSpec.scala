@@ -77,5 +77,16 @@ class RequestDataWrapperSpec extends UnitSpec with Matchers with MockitoSugar wi
     "dateTime is created in utc" in {
       rdWrapper.dateTime.getZone shouldBe DateTimeZone.UTC
     }
+
+    "return None when badge identifier isn't present" in {
+      when(requestMock.headers).thenReturn(Headers("X-Badge-IdentifierXXX" -> "some-badge-id"))
+      rdWrapper.badgeIdentifier shouldBe None
+    }
+
+    "return Some when badge identifier is present" in {
+      when(requestMock.headers).thenReturn(Headers("X-Badge-Identifier" -> "some-badge-id"))
+      //val identifier: Option[String] = rdWrapper.badgeIdentifier
+      RequestDataWrapper(requestMock, mock[HeaderCarrier]).badgeIdentifier shouldBe Some("some-badge-id")
+    }
   }
 }

@@ -29,16 +29,14 @@ class DeclarationsLoggerSpec extends UnitSpec with MockitoSugar {
   implicit val rdWrapper = mock[RequestDataWrapper]
   when(rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
   when(rdWrapper.conversationId).thenReturn("conversation-id")
-  when(rdWrapper.clientId).thenReturn("some-client-id")
+  when(rdWrapper.clientId).thenReturn(Some("some-client-id"))
   when(rdWrapper.requestedApiVersion).thenReturn("1.0")
   val cdsLoggerMock: CdsLogger = mock[CdsLogger]
   val declarationsLogger = new DeclarationsLogger(cdsLoggerMock)
 
 
-  private def expectedMessage(message: String, auth: String) = "[conversationId=conversation-id]" +
-    "[clientId=some-client-id]" +
-    "[requestedApiVersion=1.0]\n" +
-    s"[headers=Map(ACCEPT -> Blah, Authorization -> $auth)] $message"
+  private def expectedMessage(message: String, auth: String) =
+    s"[conversationId=conversation-id][clientId=some-client-id][requestedApiVersion=1.0] $message"
 
   "DeclarationsLogger" should {
 

@@ -33,12 +33,12 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val payloadWrapper = new PayloadDecorator
   private val rdWrapperMock = mock[RequestDataWrapper]
 
-  private def wrapPayload() = payloadWrapper.wrap(rdWrapperMock, TestXClientId, "InventoryLinkingImportsInboundValidateMovementResponse")
+  private def wrapPayload() = payloadWrapper.wrap(rdWrapperMock, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")
 
   "PayloadWrapper" should {
 
     when(rdWrapperMock.body).thenReturn(xml)
-    when(rdWrapperMock.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
+    when(rdWrapperMock.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
     when(rdWrapperMock.conversationId).thenReturn(conversationId.toString)
     when(rdWrapperMock.correlationId).thenReturn(correlationId.toString)
     when(rdWrapperMock.dateTime).thenReturn(requestDateTime)
@@ -77,7 +77,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "clientID"
 
-      rd.head.text shouldBe TestXClientId
+      rd.head.text shouldBe FieldsIdAsString
     }
 
     "set the correlationID" in {
