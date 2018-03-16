@@ -16,25 +16,33 @@
 
 package util.externalservices
 
+import java.net.URLEncoder
+
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.test.Helpers.OK
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsPath._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionKey
 import util.ApiSubscriptionFieldsTestData._
 import util.WireMockRunner
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig.ApiSubscriptionFieldsContext
 
 trait ApiSubscriptionFieldsService extends WireMockRunner {
-  private def apiSubsUrl(apiSubsKey: ApiSubscriptionKey) = url(ApiSubscriptionFieldsContext, apiSubsKey)
-  private def urlMatchingRequestPath(apiSubs: ApiSubscriptionKey) = {
-    urlEqualTo(apiSubsUrl(apiSubs))
+
+  private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
+  private val version = "1.0"
+
+  def getSubscriptionFields(clientId: String): String = {
+    s"$ApiSubscriptionFieldsContext/application/$clientId/context/$apiContextEncoded/version/$version"
   }
 
-  def startApiSubscriptionFieldsService(apiSubsKey: ApiSubscriptionKey): Unit =
-    setupGetSubscriptionFieldsToReturn(OK, apiSubsKey)
+  private def apiSubsUrl(clientId: String): String = getSubscriptionFields(clientId)
 
-  def setupGetSubscriptionFieldsToReturn(status: Int = OK, apiSubsKey: ApiSubscriptionKey = TestApiSubscriptionKey): Unit = {
-    stubFor(get(urlMatchingRequestPath(apiSubsKey: ApiSubscriptionKey)).
+  private def urlMatchingRequestPath(clientId: String) = {
+    urlEqualTo(apiSubsUrl(clientId))
+  }
+
+  def startApiSubscriptionFieldsService(clientId: String): Unit = setupGetSubscriptionFieldsToReturn(OK, clientId)
+
+  def setupGetSubscriptionFieldsToReturn(status: Int = OK, clientId: String = TestXClientId): Unit = {
+    stubFor(get(urlMatchingRequestPath(clientId)).
       willReturn(
         aResponse()
           .withBody(ResponseJsonString)
@@ -42,11 +50,11 @@ trait ApiSubscriptionFieldsService extends WireMockRunner {
     )
   }
 
-  def verifyGetSubscriptionFieldsCalled(apiSubsKey: ApiSubscriptionKey = TestApiSubscriptionKey): Unit = {
-    verify(1, getRequestedFor(urlMatchingRequestPath(apiSubsKey: ApiSubscriptionKey)))
+  def verifyGetSubscriptionFieldsCalled(clientId: String): Unit = {
+    verify(1, getRequestedFor(urlMatchingRequestPath(clientId)))
   }
 
-  def verifyGetSubscriptionFieldsNotCalled(apiSubsKey: ApiSubscriptionKey = TestApiSubscriptionKey): Unit = {
-    verify(0, getRequestedFor(urlMatchingRequestPath(apiSubsKey: ApiSubscriptionKey)))
+  def verifyGetSubscriptionFieldsNotCalled(clientId: String): Unit = {
+    verify(0, getRequestedFor(urlMatchingRequestPath(clientId)))
   }
 }

@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.model
 
+import java.util.UUID
+
+import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.ACCEPT
 import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.Version1AcceptHeaderValue
@@ -24,22 +27,27 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.xml.NodeSeq
 
 
-case class RequestDataWrapper(requestInfo: RequestInfo, request: Request[AnyContent], headerCarrier: HeaderCarrier) {
-
+case class RequestDataWrapper(request: Request[AnyContent], headerCarrier: HeaderCarrier) {
 
   private val NotFound = "NOT_FOUND"
 
-  lazy val conversationId: String = requestInfo.conversationId.toString
+  lazy val badgeIdentifier = Some("").getOrElse("") // TODO RM
+
+  lazy val conversationId: String = UUID.randomUUID().toString
+
+  lazy val correlationId: String = UUID.randomUUID().toString
+
+  lazy val dateTime = DateTime.now(DateTimeZone.UTC)
 
   lazy val body: NodeSeq = request.body.asXml.getOrElse(NodeSeq.Empty)
 
-  lazy val headers: Map[String, String] = request.headers.toSimpleMap
+  lazy val headers: HeaderMap = request.headers.toSimpleMap
 
   lazy val requestedApiVersion: String = getVersionByAcceptHeader(request.headers.get(ACCEPT))
 
   lazy val clientId: String = request.headers.get(HeaderConstants.XClientId).getOrElse(NotFound)
 
-  private val versionsByAcceptHeader: Map[String, String] = Map(
+  private val versionsByAcceptHeader: HeaderMap = Map(
     Version1AcceptHeaderValue -> "1.0")
 
   private def getVersionByAcceptHeader(maybeAcceptHeader: Option[String]) = {

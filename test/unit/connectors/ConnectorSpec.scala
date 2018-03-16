@@ -25,12 +25,13 @@ import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, ImportsConnector}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestInfo
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData
+import util.TestData.requestDateTime
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.Elem
@@ -41,13 +42,15 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
     private val serviceConfig = ServiceConfig("the-url", Some("bearerToken"), "default")
     private val wsHttp: WSHttp = mock[WSHttp]
     private val connector = new ImportsConnector(wsHttp)
+    private val validOutgoingMessage: Elem = <message></message>
 
-    private val validMessage: Elem = <message></message>
+    private val rdWrapper = mock[RequestDataWrapper]
 
-    private val request = OutgoingRequest(serviceConfig, validMessage, RequestInfo(UUID.randomUUID(), UUID.randomUUID(), DateTime.now))
+    private val request = OutgoingRequest(serviceConfig, validOutgoingMessage, rdWrapper)
 
     def stubHttpClientReturnsResponseForValidMessage(response: Future[HttpResponse]): OngoingStubbing[Future[HttpResponse]] = {
-      when(wsHttp.POSTString(meq(serviceConfig.url), meq(validMessage.toString()), any[Seq[(String, String)]])
+      when(rdWrapper.dateTime).thenReturn(requestDateTime)
+      when(wsHttp.POSTString(meq(serviceConfig.url), meq(validOutgoingMessage.toString()), any[Seq[(String, String)]])
       (any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])).
         thenReturn(response)
     }
@@ -58,7 +61,9 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
   }
 
   "sendInventoryLinkingMessage" when {
+
     "service returns an HTTP error" should {
+
       "return failed future with exception wrapped" in new SetupConnector {
         private val notFound = new NotFoundException("not found")
 

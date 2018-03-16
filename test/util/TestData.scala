@@ -44,7 +44,6 @@ object TestData {
   val conversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
   val correlationId: UUID = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
   val XBadgeIdentifierHeaderValueAsString = "ABC123"
-  val XBadgeIdentifierHeaderValue = XBadgeIdentifier("ABC123")
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
@@ -91,14 +90,13 @@ object TestData {
 
   val requestDateTime: DateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)
   val requestDateTimeHttp: String = "2017-06-08T13:55:00Z"
-  val requestInfo: RequestInfo = RequestInfo(conversationId, correlationId, requestDateTime)
   val bearerToken: String = "token"
   val serviceConfig: ServiceConfig = ServiceConfig("url", Some(bearerToken), "env")
 
   type EmulatedServiceFailure = UnsupportedOperationException
   val emulatedServiceFailure = new EmulatedServiceFailure("Emulated service failure.")
 
-  val body: Elem = <payload>payload</payload>
+  val outgoingBody: Elem = <payload>payload</payload>
   val decoratedBody = <wrapped><payload>payload</payload></wrapped>
 
   val ValidValidateMovementRequest = FakeRequest("POST", "/movement-validation")

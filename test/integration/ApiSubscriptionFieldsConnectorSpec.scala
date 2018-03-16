@@ -16,15 +16,16 @@
 
 package integration
 
+import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
+import play.api.{Application, mvc}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.AnyContent
+import play.api.mvc.{AnyContent, Headers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper, RequestInfo}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper}
 import uk.gov.hmrc.http._
 import util.ApiSubscriptionFieldsTestData._
 import util.ExternalServicesConfig.{Host, Port}
@@ -37,8 +38,9 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   private lazy val connector = app.injector.instanceOf[ApiSubscriptionFieldsConnector]
 
+  private val request: mvc.Request[AnyContent] = mock[mvc.Request[AnyContent]]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private implicit val data: RequestDataWrapper = RequestDataWrapper(mock[RequestInfo], mock[play.api.mvc.Request[AnyContent]], hc)
+  private implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
 
   override protected def beforeAll() {
     startMockServer()
@@ -61,13 +63,15 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   "ApiSubscriptionFieldsConnector" should {
 
+    when(request.headers).thenReturn(Headers("X-Client-ID" -> TestXClientId))
+
     "make a correct request" in {
       setupGetSubscriptionFieldsToReturn()
 
       val response = await(getApiSubscriptionFields)
 
       response shouldBe TestApiSubscriptionFieldsResponse
-      verifyGetSubscriptionFieldsCalled()
+      verifyGetSubscriptionFieldsCalled(rdWrapper.clientId)
     }
 
     "return a failed future when external service returns 404" in {
@@ -99,7 +103,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   }
 
-  private def getApiSubscriptionFields(implicit data: RequestDataWrapper): Future[ApiSubscriptionFieldsResponse] = {
-    connector.getSubscriptionFields(TestApiSubscriptionKey)
+  private def getApiSubscriptionFields(): Future[ApiSubscriptionFieldsResponse] = {
+    connector.getSubscriptionFields()
   }
 }

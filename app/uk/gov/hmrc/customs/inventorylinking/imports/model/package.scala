@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.connectors
+package uk.gov.hmrc.customs.inventorylinking.imports
 
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionKey
+package object model {
 
-object ApiSubscriptionFieldsPath {
-  def url(baseUrlAndContext: String, apiSubscriptionKey: ApiSubscriptionKey): String =
-    s"$baseUrlAndContext/application/${apiSubscriptionKey.clientId}/context/${apiSubscriptionKey.context}/version/${apiSubscriptionKey.version}"
+  type HeaderMap = Map[String, String]
 }

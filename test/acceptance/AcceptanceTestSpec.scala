@@ -20,8 +20,6 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FeatureSpec, GivenW
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionKey
-import util.ApiSubscriptionFieldsTestData._
 import util.ExternalServicesConfig
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig
 
@@ -29,9 +27,6 @@ import scala.xml.{Node, Utility, XML}
 
 trait AcceptanceTestSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with BeforeAndAfterAll with BeforeAndAfterEach {
-
-  protected val apiSubscriptionKeyWithRealContextAndVersion =
-    ApiSubscriptionKey(clientId = TestXClientId, context = "customs%2Finventory-linking-imports", version = "1.0")
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
     "microservice.services.auth.host" -> ExternalServicesConfig.Host,
@@ -49,9 +44,7 @@ trait AcceptanceTestSpec extends FeatureSpec with GivenWhenThen with GuiceOneApp
     "microservice.services.goodsarrival.bearer-token" -> ExternalServicesConfig.AuthToken
   )).build()
 
-
   def stringToXml(str: String): Node = {
     Utility.trim(XML.loadString(str))
   }
-
 }

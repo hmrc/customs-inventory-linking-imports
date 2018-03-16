@@ -18,11 +18,11 @@ package unit.services
 
 import java.net.URLEncoder
 
-import org.mockito.ArgumentMatchers.{eq => ameq, any}
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.Mockito.when
+import org.scalatest.Matchers
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
-import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.Status.ACCEPTED
 import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector, OutgoingRequest, OutgoingRequestBuilder}
@@ -47,23 +47,23 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     lazy val validateMovementXmlValidationService: ValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
     val importsConnector: ImportsConnector = mock[ImportsConnector]
     val apiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
-    val headers: Map[String, String] = Map(HeaderConstants.XClientId -> TestXClientId, HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
+
+    implicit val rdWrapperMock: RequestDataWrapper = mock[RequestDataWrapper]
+    val headers: HeaderMap = Map(HeaderConstants.XClientId -> TestXClientId, HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
     val sender: MessageSender = new MessageSender(apiSubscriptionFieldsConnector, outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, importsConnector)
-    lazy val outgoingRequest = OutgoingRequest(serviceConfig, body, requestInfo)
+    lazy val outgoingRequest = OutgoingRequest(serviceConfig, outgoingBody, rdWrapperMock)
     private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
 
     implicit val mockHeaderCarrier: HeaderCarrier = mock[HeaderCarrier]
     val request: Request[AnyContent] = mock[Request[AnyContent]]
-    implicit val data: RequestDataWrapper = mock[RequestDataWrapper]
 
     protected def service: XmlValidationService = importsMessageType match {
       case GoodsArrival => goodsArrivalXmlValidationService
       case ValidateMovement => validateMovementXmlValidationService
     }
 
-    when(apiSubscriptionFieldsConnector.getSubscriptionFields(ameq(ApiSubscriptionKey(TestXClientId, apiContextEncoded, "1.0")))(any[RequestDataWrapper])).thenReturn(Future.successful(TestApiSubscriptionFieldsResponse))
-    when(data.body).thenReturn(body)
-    when(data.requestInfo).thenReturn(requestInfo)
+    when(apiSubscriptionFieldsConnector.getSubscriptionFields()(any[RequestDataWrapper])).thenReturn(Future.successful(TestApiSubscriptionFieldsResponse))
+    when(rdWrapperMock.body).thenReturn(outgoingBody)
   }
 
   val messageTypes = Table(
@@ -77,12 +77,13 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       "message is valid" should {
         "return the result from the connector" in new SetUp {
           val importsMessageType: ImportsMessageType = messageType
-          when(outgoingRequestBuilder.build(messageType, requestInfo, TestFieldsId, XBadgeIdentifierHeaderValue, body)).thenReturn(outgoingRequest)
-          when(service.validate(body)).thenReturn(Future.successful(()))
-          when(importsConnector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
-          when(data.headers).thenReturn(headers)
-          val actualResponse = await(sender.validateAndSend(messageType))
 
+          when(outgoingRequestBuilder.build(messageType, rdWrapperMock, FieldsIdAsString)).thenReturn(outgoingRequest)
+          when(service.validate(outgoingBody)).thenReturn(Future.successful(()))
+          when(importsConnector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
+          when(rdWrapperMock.headers).thenReturn(headers)
+
+          val actualResponse = await(sender.validateAndSend(messageType))
           actualResponse shouldBe httpResponse
         }
       }
@@ -90,34 +91,14 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       "message is invalid" should {
         "return failed future when validation service throws an exception" in new SetUp {
           val importsMessageType: ImportsMessageType = messageType
-          when(service.validate(body)).thenReturn(Future.failed(emulatedServiceFailure))
-          when(data.headers).thenReturn(headers)
-          val caught = intercept[EmulatedServiceFailure](await(sender.validateAndSend(messageType)))
 
+          when(service.validate(outgoingBody)).thenReturn(Future.failed(emulatedServiceFailure))
+          when(rdWrapperMock.headers).thenReturn(headers)
+
+          val caught = intercept[EmulatedServiceFailure](await(sender.validateAndSend(messageType)))
           caught shouldBe emulatedServiceFailure
         }
-
-        "return failed future when expected header X-Client-ID is not present" in new SetUp {
-          val importsMessageType: ImportsMessageType = messageType
-          when(service.validate(body)).thenReturn(Future.successful(()))
-          val headersWithOnlyXBadgeIdentifier = Map(HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
-          when(data.headers).thenReturn(headersWithOnlyXBadgeIdentifier)
-          val caught = intercept[IllegalStateException](await(sender.validateAndSend(messageType)))
-
-          caught.getMessage shouldBe "Invalid request"
-        }
-
-        "return failed future when expected header X-Badge-ID is not present" in new SetUp {
-          val importsMessageType: ImportsMessageType = messageType
-          when(service.validate(body)).thenReturn(Future.successful(()))
-          val headersWithOnlyXClientId = Map(HeaderConstants.XClientId -> TestXClientId)
-          when(data.headers).thenReturn(headersWithOnlyXClientId)
-          val caught = intercept[IllegalStateException](await(sender.validateAndSend(messageType)))
-
-          caught.getMessage shouldBe "Invalid request"
-        }
       }
-
     }
   }
 }

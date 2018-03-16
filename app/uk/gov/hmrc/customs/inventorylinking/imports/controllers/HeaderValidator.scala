@@ -26,21 +26,20 @@ import HeaderConstants.Version1AcceptHeaderValue
 
 trait HeaderValidator {
 
-  def validate[A](implicit rdWrapper: RequestDataWrapper, request: Request[A]): Option[ErrorResponse] = {
-    implicit val headers = request.headers
+  def validateHeaders[A](implicit rdWrapper: RequestDataWrapper): Either[ErrorResponse, Unit] = {
+    implicit val headers = Headers(rdWrapper.headers.toSeq: _*)
     if (!hasAccept) {
-      Some(ErrorAcceptHeaderInvalid)
+      Left(ErrorAcceptHeaderInvalid)
     } else if (!hasContentType) {
-      Some(ErrorContentTypeHeaderInvalid)
+      Left(ErrorContentTypeHeaderInvalid)
     } else if (!hasXClientId) {
-      Some(ErrorInternalServerError)
+      Left(ErrorInternalServerError)
     } else if (!hasXBadgeIdentifier) {
-      Some(ErrorGenericBadRequest)
+      Left(ErrorGenericBadRequest)
     } else {
-      None
+      Right()
     }
   }
-
 
   private lazy val validAcceptHeaders = Seq(Version1AcceptHeaderValue)
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")

@@ -38,24 +38,24 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
   val headersTable =
     Table(
       ("description", "Headers", "Expected response"),
-      ("Valid Headers", ValidHeaders, None),
-      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), None),
-      ("Missing accept header", ValidHeaders - ACCEPT, Some(ErrorAcceptHeaderInvalid)),
-      ("Missing content type header", ValidHeaders - CONTENT_TYPE, Some(ErrorContentTypeHeaderInvalid)),
-      ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, Some(ErrorInternalServerError)),
-      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, Some(ErrorGenericBadRequest)),
-      ("Invalid accept header", ValidHeaders + InvalidAcceptHeader, Some(ErrorAcceptHeaderInvalid)),
-      ("Invalid content type header JSON header", ValidHeaders + InvalidContentTypeJsonHeader, Some(ErrorContentTypeHeaderInvalid)),
-      ("Invalid content type XML without UTF-8 header", ValidHeaders + (CONTENT_TYPE -> "application/xml"), Some(ErrorContentTypeHeaderInvalid)),
-      ("Invalid X-Client-ID header", ValidHeaders + InvalidXClientIdHeader, Some(ErrorInternalServerError)),
-      ("Invalid X-Badge-Identifier header", ValidHeaders + InvalidXBadgeIdentifier, Some(ErrorGenericBadRequest))
+      ("Valid Headers", ValidHeaders, Right()),
+      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), Right()),
+      ("Missing accept header", ValidHeaders - ACCEPT, Left(ErrorAcceptHeaderInvalid)),
+      ("Missing content type header", ValidHeaders - CONTENT_TYPE, Left(ErrorContentTypeHeaderInvalid)),
+      ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, Left(ErrorInternalServerError)),
+      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, Left(ErrorGenericBadRequest)),
+      ("Invalid accept header", ValidHeaders + InvalidAcceptHeader, Left(ErrorAcceptHeaderInvalid)),
+      ("Invalid content type header JSON header", ValidHeaders + InvalidContentTypeJsonHeader, Left(ErrorContentTypeHeaderInvalid)),
+      ("Invalid content type XML without UTF-8 header", ValidHeaders + (CONTENT_TYPE -> "application/xml"), Left(ErrorContentTypeHeaderInvalid)),
+      ("Invalid X-Client-ID header", ValidHeaders + InvalidXClientIdHeader, Left(ErrorInternalServerError)),
+      ("Invalid X-Badge-Identifier header", ValidHeaders + InvalidXBadgeIdentifier, Left(ErrorGenericBadRequest))
     )
 
   "HeaderValidatorAction" should {
     forAll(headersTable) { (description, headers, response) =>
       s"$description" in {
-        when(request.headers).thenReturn(Headers(headers.toSeq: _*))
-        validator.validate shouldBe response
+        when(rdWrapper.headers).thenReturn(headers)
+        validator.validateHeaders shouldBe response
       }
     }
   }

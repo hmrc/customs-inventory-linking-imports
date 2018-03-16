@@ -16,16 +16,13 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import java.net.URLEncoder
 import javax.inject.{Inject, Singleton}
-
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector, OutgoingRequestBuilder}
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.xml.NodeSeq
+import scala.concurrent.{Future}
 
 @Singleton
 class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector,
@@ -34,45 +31,22 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               validateMovementXmlValidationService: ValidateMovementXmlValidationService,
                               connector: ImportsConnector) {
 
-  private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
-
   def validateAndSend(messageType: ImportsMessageType)(implicit rdWrapper: RequestDataWrapper): Future[HttpResponse] = {
-
-    val body: NodeSeq = rdWrapper.body
-    val requestInfo: RequestInfo = rdWrapper.requestInfo
-    val headers: Map[String, String] = rdWrapper.headers
 
     def service = messageType match {
       case GoodsArrival => goodsArrivalXmlValidationService
       case ValidateMovement => validateMovementXmlValidationService
     }
 
-    def subsFieldsId(xClientId: XClientId): Future[FieldsId] = {
-      val key = ApiSubscriptionKey(xClientId.value, apiContextEncoded, version = "1.0")
-      apiSubscriptionFieldsConnector.getSubscriptionFields(key).map(r => FieldsId(r.fieldsId.toString))
-    }
-
-    def rdWrapperFromHeaders: Future[(XClientId, XBadgeIdentifier)] = {
-      (for {
-        xClientId <- headers.get(HeaderConstants.XClientId)
-        xBadgeIdentifier <- headers.get(HeaderConstants.XBadgeIdentifier)
-      } yield (XClientId(xClientId), XBadgeIdentifier(xBadgeIdentifier))) match {
-        case Some(idsTuple) =>
-          Future.successful(idsTuple)
-        case _ =>
-          Future.failed(new IllegalStateException("Invalid request")) // should never happen as headers are validated
-      }
+    def subsFieldsId(): Future[String] = {
+      apiSubscriptionFieldsConnector.getSubscriptionFields().map(r => r.fieldsId.toString)
     }
 
     for {
-      _ <- service.validate(body)
-      rdWrapperTuple <- rdWrapperFromHeaders
-      xClientId = rdWrapperTuple._1
-      xBadgeIdentifier = rdWrapperTuple._2
-      fieldsId <- subsFieldsId(xClientId)
-      outgoingRequest = outgoingRequestBuilder.build(messageType, requestInfo, fieldsId, xBadgeIdentifier, body)
+      _ <- service.validate(rdWrapper.body)
+      fieldsId <- subsFieldsId()
+      outgoingRequest = outgoingRequestBuilder.build(messageType, rdWrapper, fieldsId)
       result <- connector.post(outgoingRequest)
     } yield result
   }
-
 }

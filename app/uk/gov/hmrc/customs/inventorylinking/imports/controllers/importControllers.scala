@@ -27,7 +27,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthC
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, RequestInfoGenerator, XmlValidationErrorsMapper}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, XmlValidationErrorsMapper}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
@@ -38,7 +38,6 @@ import scala.xml.SAXException
 
 abstract class ImportController(importsConfigService: ImportsConfigService,
                                 override val authConnector: MicroserviceAuthConnector,
-                                requestInfoGenerator: RequestInfoGenerator,
                                 messageSender: MessageSender,
                                 importsMessageType: ImportsMessageType,
                                 logger: DeclarationsLogger) extends BaseController with HeaderValidator with AuthorisedFunctions {
@@ -47,12 +46,11 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
 
   def process(): Action[AnyContent] = Action.async(bodyParser = xmlOrEmptyBody) { implicit request =>
-    val requestInfo = requestInfoGenerator.newRequestInfo
-    implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(requestInfo, request, hc)
-    validate match {
-      case None =>
+    implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
+    validateHeaders match {
+      case Right(_) =>
         authoriseAndSend
-      case Some(errorResponse) =>
+      case Left(errorResponse) =>
         Future.successful(errorResponse.XmlResult)
     }
   }
@@ -91,7 +89,6 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     }
 
     authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
-
       messageSender.validateAndSend(importsMessageType).
         map(_ => Accepted)
     }.recoverWith(recover).
@@ -102,9 +99,8 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 @Singleton
 class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigService,
                                        authConnector: MicroserviceAuthConnector,
-                                       requestInfoGenerator: RequestInfoGenerator,
                                        messageSender: MessageSender, logger: DeclarationsLogger)
-  extends ImportController(importsConfigService, authConnector, requestInfoGenerator, messageSender, GoodsArrival, logger) {
+  extends ImportController(importsConfigService, authConnector, messageSender, GoodsArrival, logger) {
 
   def post(): Action[AnyContent] = {
     super.process()
@@ -114,10 +110,9 @@ class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigServic
 @Singleton
 class ValidateMovementController @Inject()(importsConfigService: ImportsConfigService,
                                            authConnector: MicroserviceAuthConnector,
-                                           requestInfoGenerator: RequestInfoGenerator,
                                            messageSender: MessageSender,
                                            logger: DeclarationsLogger)
-  extends ImportController(importsConfigService, authConnector, requestInfoGenerator, messageSender, ValidateMovement, logger) {
+  extends ImportController(importsConfigService, authConnector, messageSender, ValidateMovement, logger) {
 
   def post(): Action[AnyContent] = {
     super.process()
