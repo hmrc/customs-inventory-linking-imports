@@ -47,7 +47,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
   def process(): Action[AnyContent] = Action.async(bodyParser = xmlOrEmptyBody) { implicit request =>
     implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
-    validateHeaders(request.headers) match {
+    validateHeaders(rdWrapper, logger) match {
       case Right(_) =>
         authoriseAndSend
       case Left(errorResponse) =>
