@@ -16,7 +16,9 @@
 
 package unit.xml
 
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
 import util.ApiSubscriptionFieldsTestData._
@@ -29,10 +31,17 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val xml: NodeSeq = <node1></node1>
 
   private val payloadWrapper = new PayloadDecorator
+  private val rdWrapperMock = mock[RequestDataWrapper]
 
-  private def wrapPayload() = payloadWrapper.wrap(xml, requestInfo, TestXClientId, XBadgeIdentifierHeaderValueAsString, "InventoryLinkingImportsInboundValidateMovementResponse")
+  private def wrapPayload() = payloadWrapper.wrap(rdWrapperMock, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")
 
   "PayloadWrapper" should {
+
+    when(rdWrapperMock.body).thenReturn(xml)
+    when(rdWrapperMock.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
+    when(rdWrapperMock.conversationId).thenReturn(conversationId.toString)
+    when(rdWrapperMock.correlationId).thenReturn(correlationId.toString)
+    when(rdWrapperMock.dateTime).thenReturn(requestDateTime)
 
     "set the root element label" in {
       val result = wrapPayload()
@@ -68,7 +77,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "clientID"
 
-      rd.head.text shouldBe TestXClientId
+      rd.head.text shouldBe FieldsIdAsString
     }
 
     "set the correlationID" in {

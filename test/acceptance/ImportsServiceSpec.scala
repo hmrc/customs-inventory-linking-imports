@@ -21,6 +21,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
+import util.ApiSubscriptionFieldsTestData.TestXClientId
 import util.TestData._
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 import util.externalservices.{ApiSubscriptionFieldsService, AuthService, InventoryLinkingImportsService}
@@ -71,7 +72,7 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
         authServiceAuthorisesCSP(messageType)
 
         And("the Back End Service will return a successful response")
-        startApiSubscriptionFieldsService(apiSubscriptionKeyWithRealContextAndVersion)
+        startApiSubscriptionFieldsService(TestXClientId)
         setupBackendServiceToReturn(url, ACCEPTED)
 
         When(s"a valid $messageTypeDesc message is submitted with valid headers")
@@ -87,7 +88,7 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
         authServiceAuthorisesCSP(messageType)
 
         And("the Back End Service will return an error response")
-        startApiSubscriptionFieldsService(apiSubscriptionKeyWithRealContextAndVersion)
+        startApiSubscriptionFieldsService(TestXClientId)
         setupBackendServiceToReturn(url, NOT_FOUND)
 
         When(s"a valid $messageTypeDesc message request is submitted")

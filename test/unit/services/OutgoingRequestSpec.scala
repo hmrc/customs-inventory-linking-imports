@@ -16,11 +16,14 @@
 
 package unit.services
 
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.OutgoingRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import util.TestData
 import util.TestData._
 
 class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
@@ -28,7 +31,11 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
   trait validRequest {
     val MDTP: String = "MDTP"
 
-    val request = OutgoingRequest(serviceConfig, body, requestInfo)
+    private val rdWrapper: RequestDataWrapper = mock[RequestDataWrapper]
+    val request = OutgoingRequest(serviceConfig, outgoingBody, rdWrapper)
+    when(rdWrapper.dateTime).thenReturn(TestData.requestDateTime)
+    when(rdWrapper.conversationId).thenReturn(TestData.conversationId.toString)
+    when(rdWrapper.correlationId).thenReturn(TestData.correlationId.toString)
   }
 
   "headers" should {
@@ -40,7 +47,7 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
       request.headers should contain (CONTENT_TYPE -> s"$XML; charset=UTF-8")
     }
 
-    "include X-Forwared-Host" in new validRequest {
+    "include X-Forwarded-Host" in new validRequest {
       request.headers should contain ("X-Forwarded-Host" -> MDTP)
     }
 
@@ -49,11 +56,15 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     }
 
     "include X-Conversation-ID" in new validRequest {
-      request.headers should contain ("X-Conversation-ID" -> conversationId.toString)
+      private val headers: Seq[(String, String)] = request.headers
+
+      headers should contain ("X-Conversation-ID" -> conversationId.toString)
     }
 
     "include X-Correlation-ID" in new validRequest {
-      request.headers should contain ("X-Correlation-ID" -> correlationId.toString)
+      private val headers: Seq[(String, String)] = request.headers
+
+      headers should contain ("X-Correlation-ID" -> correlationId.toString)
     }
 
     "include Authorization" in new validRequest {

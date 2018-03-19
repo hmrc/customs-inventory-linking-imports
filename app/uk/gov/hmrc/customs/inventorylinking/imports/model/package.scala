@@ -14,16 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.model
+package uk.gov.hmrc.customs.inventorylinking.imports
 
-import java.util.UUID
+package object model {
 
-import org.joda.time.DateTime
-
-case class RequestInfo(conversationId: UUID, correlationId: UUID, dateTime: DateTime)
-
-case class XClientId(value: String) extends AnyVal
-
-case class FieldsId(value: String) extends AnyVal
-
-case class XBadgeIdentifier(value: String) extends AnyVal
+  type HeaderMap = Map[String, String]
+}

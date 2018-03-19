@@ -16,48 +16,45 @@
 
 package unit.controllers
 
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.http.HeaderNames._
-import play.api.mvc.Results._
-import play.api.mvc.{Action, AnyContent}
-import play.api.test.FakeRequest
+import play.api.mvc.{AnyContent, Headers, Request}
 import play.api.test.Helpers.CONTENT_TYPE
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData._
 
-class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks {
+class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with MockitoSugar {
 
   val validator = new HeaderValidator {}
 
-  val action: Action[AnyContent] = validator.validateHeaders async {
-    Ok
-  }
+  implicit val rdWrapper = mock[RequestDataWrapper]
+  implicit val request = mock[Request[AnyContent]]
 
   val headersTable =
     Table(
       ("description", "Headers", "Expected response"),
-      ("Valid Headers", ValidHeaders, Ok),
-      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), Ok),
-      ("Missing accept header", ValidHeaders - ACCEPT, ErrorAcceptHeaderInvalid.XmlResult),
-      ("Missing content type header", ValidHeaders - CONTENT_TYPE, ErrorContentTypeHeaderInvalid.XmlResult),
-      ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, ErrorInternalServerError.XmlResult),
-      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, ErrorGenericBadRequest.XmlResult),
-      ("Invalid accept header", ValidHeaders + InvalidAcceptHeader, ErrorAcceptHeaderInvalid.XmlResult),
-      ("Invalid content type JSON header", ValidHeaders + InvalidContentTypeJsonHeader, ErrorContentTypeHeaderInvalid.XmlResult),
-      ("Invalid content type XML without UTF-8 header", ValidHeaders + (CONTENT_TYPE -> "application/xml"), ErrorContentTypeHeaderInvalid.XmlResult),
-      ("Invalid X-Client-ID header", ValidHeaders + InvalidXClientIdHeader, ErrorInternalServerError.XmlResult),
-      ("Invalid X-Badge-Identifier header", ValidHeaders + InvalidXBadgeIdentifier, ErrorGenericBadRequest.XmlResult)
+      ("Valid Headers", ValidHeaders, Right()),
+      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), Right()),
+      ("Missing accept header", ValidHeaders - ACCEPT, Left(ErrorAcceptHeaderInvalid)),
+      ("Missing content type header", ValidHeaders - CONTENT_TYPE, Left(ErrorContentTypeHeaderInvalid)),
+      ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, Left(ErrorInternalServerError)),
+      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, Left(ErrorGenericBadRequest)),
+      ("Invalid accept header", ValidHeaders + InvalidAcceptHeader, Left(ErrorAcceptHeaderInvalid)),
+      ("Invalid content type header JSON header", ValidHeaders + InvalidContentTypeJsonHeader, Left(ErrorContentTypeHeaderInvalid)),
+      ("Invalid content type XML without UTF-8 header", ValidHeaders + (CONTENT_TYPE -> "application/xml"), Left(ErrorContentTypeHeaderInvalid)),
+      ("Invalid X-Client-ID header", ValidHeaders + InvalidXClientIdHeader, Left(ErrorInternalServerError)),
+      ("Invalid X-Badge-Identifier header", ValidHeaders + InvalidXBadgeIdentifier, Left(ErrorGenericBadRequest))
     )
-
-  private def requestWithHeaders(headers: Map[String, String]) =
-    FakeRequest().withHeaders(headers.toSeq: _*)
 
   "HeaderValidatorAction" should {
     forAll(headersTable) { (description, headers, response) =>
       s"$description" in {
-        await(action.apply(requestWithHeaders(headers))) shouldBe response
+        validator.validateHeaders(new Headers(headers.toSeq)) shouldBe response
       }
     }
   }

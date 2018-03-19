@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.connectors
+package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionKey
+object HeaderConstants {
 
-object ApiSubscriptionFieldsPath {
-  def url(baseUrlAndContext: String, apiSubscriptionKey: ApiSubscriptionKey): String =
-    s"$baseUrlAndContext/application/${apiSubscriptionKey.clientId}/context/${apiSubscriptionKey.context}/version/${apiSubscriptionKey.version}"
+  val XClientId: String = "X-Client-ID"
+  val XConversationId: String = "X-Conversation-ID"
+  val XForwardedHost: String = "X-Forwarded-Host"
+  val XCorrelationId: String = "X-Correlation-ID"
+  val XBadgeIdentifier: String = "X-Badge-Identifier"
+
+  val Version1AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
 }

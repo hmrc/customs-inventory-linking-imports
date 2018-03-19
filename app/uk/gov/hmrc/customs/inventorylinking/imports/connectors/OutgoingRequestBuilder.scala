@@ -16,24 +16,22 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import javax.inject.{Inject, Singleton}
+import java.util.UUID
 
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{FieldsId, ImportsMessageType, RequestInfo, XBadgeIdentifier}
+import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 
-import scala.xml.NodeSeq
-
 @Singleton
-class OutgoingRequestBuilder @Inject()(configProvider: ServiceConfigProvider,
-                                       payloadDecorator: PayloadDecorator) {
+class OutgoingRequestBuilder @Inject()(configProvider: ServiceConfigProvider, payloadDecorator: PayloadDecorator) {
 
-  def build(importsMessageType: ImportsMessageType, requestInfo: RequestInfo, fieldsId: FieldsId, xBadgeIdentifier: XBadgeIdentifier, body: NodeSeq): OutgoingRequest = {
-    val clientId = fieldsId.value
+  def build(importsMessageType: ImportsMessageType, rdWrapper: RequestDataWrapper, clientSubscriptionId: UUID): OutgoingRequest = {
+    val outgoingBody = payloadDecorator.wrap(rdWrapper, clientSubscriptionId, importsMessageType.wrapperRootElementLabel)
 
     OutgoingRequest(
       configProvider.getConfig(importsMessageType.name),
-      payloadDecorator.wrap(body, requestInfo, clientId, xBadgeIdentifier.value, importsMessageType.wrapperRootElementLabel),
-      requestInfo)
+      outgoingBody,
+      rdWrapper)
   }
 }

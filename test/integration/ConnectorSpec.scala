@@ -16,6 +16,8 @@
 
 package integration
 
+import org.joda.time.{DateTime, DateTimeZone}
+import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -24,9 +26,11 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.http.{BadGatewayException, BadRequestException, NotFoundException, Upstream5xxResponse}
 import util.ExternalServicesConfig.{AuthToken, Host, Port}
-import util.TestData.{body, requestInfo}
+import util.TestData
+import util.TestData.outgoingBody
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig.{GoodsArrivalConnectorContext, ValidateMovementConnectorContext}
 import util.externalservices.InventoryLinkingImportsService
 
@@ -46,10 +50,11 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
       "microservice.services.goodsarrival.bearer-token" -> AuthToken
     )).build()
 
+  private lazy val rdWrapper = mock[RequestDataWrapper]
   private lazy val connector = app.injector.instanceOf[ImportsConnector]
   private lazy val serviceConfigProvider = app.injector.instanceOf[ServiceConfigProvider]
-  private val validateMovementRequest = OutgoingRequest(serviceConfigProvider.getConfig("validatemovement"), body, requestInfo)
-  private val goodsArrivalRequest = OutgoingRequest(serviceConfigProvider.getConfig("goodsarrival"), body, requestInfo)
+  private val validateMovementRequest = OutgoingRequest(serviceConfigProvider.getConfig("validatemovement"), outgoingBody, rdWrapper)
+  private val goodsArrivalRequest = OutgoingRequest(serviceConfigProvider.getConfig("goodsarrival"), outgoingBody, rdWrapper)
 
   override protected def beforeAll() {
     startMockServer()
@@ -71,6 +76,10 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
   forAll(messageTypes) { case (messageType, request, url) =>
 
     "ImportsConnector" should {
+
+      when(rdWrapper.dateTime).thenReturn(DateTime.now(DateTimeZone.UTC))
+      when(rdWrapper.conversationId).thenReturn(TestData.conversationId.toString)
+      when(rdWrapper.correlationId).thenReturn(TestData.correlationId.toString)
 
       s"make a correct request for $messageType" in {
         setupBackendServiceToReturn(url, ACCEPTED)
@@ -105,7 +114,6 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
 
         startMockServer()
       }
-
     }
   }
 }

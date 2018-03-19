@@ -30,8 +30,7 @@ class ImportsConnector @Inject()(wsHttp: WSHttp) {
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   def post(request: OutgoingRequest): Future[HttpResponse] = {
-
-    wsHttp.POSTString(request.url, request.body.toString, request.headers).
+    wsHttp.POSTString(request.url, request.outgoingBody.toString, request.headers).
       recoverWith {
         case httpError: HttpException => Future.failed(new RuntimeException(httpError))
       }

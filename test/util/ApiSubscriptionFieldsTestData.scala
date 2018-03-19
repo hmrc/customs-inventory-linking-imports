@@ -19,20 +19,18 @@ package util
 import java.util.UUID
 
 import com.typesafe.config.{Config, ConfigFactory}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ApiSubscriptionKey, FieldsId}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse}
 import util.ExternalServicesConfig.{Host, Port}
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 
 object ApiSubscriptionFieldsTestData {
   val FieldsIdAsString = "327d9145-4965-4d28-a2c5-39dedee50334"
-  val TestFieldsId = FieldsId(FieldsIdAsString)
   val TestXClientId = "SOME_X_CLIENT_ID"
   val ApiContext = "some/api/context"
   val ApiContextEncoded = "some%2Fapi%2Fcontext"
   val TestApiVersion = "1.0"
-  val TestApiSubscriptionKey = ApiSubscriptionKey(TestXClientId, ApiContext, TestApiVersion)
-  val TestApiSubscriptionKeyWithEncodedContext: ApiSubscriptionKey = TestApiSubscriptionKey.copy(context = ApiContextEncoded)
-  val TestApiSubscriptionFieldsResponse = ApiSubscriptionFieldsResponse(UUID.fromString(FieldsIdAsString))
+  val FieldsId: UUID = UUID.fromString(FieldsIdAsString)
+  val TestApiSubscriptionFieldsResponse = ApiSubscriptionFieldsResponse(FieldsId)
   val ResponseJsonString: String =
     s"""{
        |  "clientId": "afsdknbw34ty4hebdv",

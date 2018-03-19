@@ -16,10 +16,12 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import javax.inject.{Inject, Singleton}
+import java.net.URLEncoder
+import java.util.UUID
 
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ApiSubscriptionKey}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, WSHttp}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
 
@@ -31,9 +33,12 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
                                                logger: CdsLogger,
                                                servicesConfig: ImportsConfigService) {
 
-  def getSubscriptionFields(apiSubsKey: ApiSubscriptionKey)(implicit hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
-    val url = ApiSubscriptionFieldsPath.url(s"${servicesConfig.apiSubscriptionFieldsBaseUrl}", apiSubsKey)
-    get(url)
+  private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
+  private val version = "1.0"
+  //TODO: pass in clientId explicitly
+  def getClientSubscriptionId()(implicit rdWrapper: RequestDataWrapper): Future[UUID] = {
+    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.clientId.getOrElse(throw new IllegalStateException("clientId not present"))}/context/$apiContextEncoded/version/$version"
+    get(url)(rdWrapper.headerCarrier).map(r => r.fieldsId)
   }
 
   private def get(url: String)(implicit hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
@@ -49,5 +54,4 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
           Future.failed(e)
       }
   }
-
 }
