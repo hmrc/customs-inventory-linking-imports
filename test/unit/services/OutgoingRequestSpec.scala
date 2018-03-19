@@ -47,7 +47,7 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
       request.headers should contain (CONTENT_TYPE -> s"$XML; charset=UTF-8")
     }
 
-    "include X-Forwared-Host" in new validRequest {
+    "include X-Forwarded-Host" in new validRequest {
       request.headers should contain ("X-Forwarded-Host" -> MDTP)
     }
 
@@ -57,11 +57,13 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
 
     "include X-Conversation-ID" in new validRequest {
       private val headers: Seq[(String, String)] = request.headers
+
       headers should contain ("X-Conversation-ID" -> conversationId.toString)
     }
 
     "include X-Correlation-ID" in new validRequest {
       private val headers: Seq[(String, String)] = request.headers
+
       headers should contain ("X-Correlation-ID" -> correlationId.toString)
     }
 

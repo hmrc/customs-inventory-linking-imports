@@ -85,7 +85,6 @@ class RequestDataWrapperSpec extends UnitSpec with Matchers with MockitoSugar wi
 
     "return Some when badge identifier is present" in {
       when(requestMock.headers).thenReturn(Headers("X-Badge-Identifier" -> "some-badge-id"))
-      //val identifier: Option[String] = rdWrapper.badgeIdentifier
       RequestDataWrapper(requestMock, mock[HeaderCarrier]).badgeIdentifier shouldBe Some("some-badge-id")
     }
   }

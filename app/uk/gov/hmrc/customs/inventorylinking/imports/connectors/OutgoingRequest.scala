@@ -29,7 +29,7 @@ case class OutgoingRequest(service: ServiceConfig,
                            outgoingBody: NodeSeq,
                            rdWrapper: RequestDataWrapper) {
 
-  lazy val bearerToken: String = service.bearerToken.getOrElse("")
+  lazy val bearerToken: String = service.bearerToken.getOrElse(throw new IllegalStateException("Bearer token not present"))
   lazy val url: String = service.url
 
   lazy val headers: Seq[(String, String)] = Seq(
