@@ -24,6 +24,7 @@ import play.api.mvc.{AnyContent, Headers, Request}
 import play.api.test.Helpers.CONTENT_TYPE
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData._
@@ -34,6 +35,7 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
 
   implicit val rdWrapper = mock[RequestDataWrapper]
   implicit val request = mock[Request[AnyContent]]
+  implicit val loggerMock = mock[DeclarationsLogger]
 
   val headersTable =
     Table(
@@ -54,7 +56,10 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
   "HeaderValidatorAction" should {
     forAll(headersTable) { (description, headers, response) =>
       s"$description" in {
-        validator.validateHeaders(new Headers(headers.toSeq)) shouldBe response
+        when(rdWrapper.request).thenReturn(request)
+        when(request.headers).thenReturn(new Headers(headers.toSeq))
+
+        validator.validateHeaders(rdWrapper, loggerMock) shouldBe response
       }
     }
   }

@@ -21,20 +21,39 @@ import play.api.http.MimeTypes
 import play.api.mvc.Headers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 
 trait HeaderValidator {
 
-  def validateHeaders[A](implicit headers: Headers): Either[ErrorResponse, Unit] = {
-    if (!hasAccept) {
+  def validateHeaders[A](implicit rdWrapper: RequestDataWrapper, logger: DeclarationsLogger): Either[ErrorResponse, Unit] = {
+    implicit val headers = rdWrapper.request.headers
+
+    lazy val maybeAccept = headers.get(ACCEPT)
+    lazy val maybeContentType = headers.get(CONTENT_TYPE)
+    lazy val maybeXClientId = headers.get(XClientId)
+    lazy val maybeXBadgeIdentifier = headers.get(XBadgeIdentifier)
+
+    if (!hasAccept(headers)) {
+      logger.error(s"$ACCEPT header was invalid: ${maybeAccept.getOrElse("")}")
       Left(ErrorAcceptHeaderInvalid)
-    } else if (!hasContentType) {
+    } else if (!hasContentType(headers)) {
+      logger.error(s"$CONTENT_TYPE header was invalid: ${maybeContentType.getOrElse("")}")
       Left(ErrorContentTypeHeaderInvalid)
-    } else if (!hasXClientId) {
+    } else if (!hasXClientId(headers)) {
+      logger.error(s"$XClientId header was invalid: ${maybeXClientId.getOrElse("")}")
       Left(ErrorInternalServerError)
-    } else if (!hasXBadgeIdentifier) {
-      Left(ErrorGenericBadRequest)
+    } else if (!hasXBadgeIdentifier(headers)) {
+        logger.error(s"$XBadgeIdentifier header was invalid: ${maybeXBadgeIdentifier.getOrElse("")}")
+        Left(ErrorGenericBadRequest)
     } else {
+      logger.debug(
+        s"$ACCEPT header passed validation: ${maybeAccept}\n"
+      + s"$CONTENT_TYPE header passed validation: ${maybeContentType}\n"
+      + s"$XClientId header passed validation: ${maybeXClientId}\n"
+      + s"$XBadgeIdentifier header passed validation: ${maybeXBadgeIdentifier}")
+
       Right()
     }
   }
