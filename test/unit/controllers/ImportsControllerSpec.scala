@@ -56,7 +56,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
   private val mockAuthConnector: MicroserviceAuthConnector = mock[MicroserviceAuthConnector]
   private val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
-  private val badgeIdentifier = "badge"
+  private val badgeIdentifier = "BADGE1"
   private val messageSender: MessageSender = mock[MessageSender]
   private val configuration = mock[ImportsConfigService]
   private implicit val mockMaterialiser = mock[Materializer]

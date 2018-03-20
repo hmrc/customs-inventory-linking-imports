@@ -61,7 +61,7 @@ trait HeaderValidator {
   private lazy val validAcceptHeaders = Seq(Version1AcceptHeaderValue)
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
-  private lazy val xBadgeIdentifierRegex = "^[0-9A-Za-z]{1,12}$".r
+  private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
 
   private def hasAccept(implicit h: Headers) = h.get(ACCEPT).fold(false)(validAcceptHeaders.contains(_))
 
