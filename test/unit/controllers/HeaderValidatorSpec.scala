@@ -45,7 +45,7 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
       ("Missing accept header", ValidHeaders - ACCEPT, Left(ErrorAcceptHeaderInvalid)),
       ("Missing content type header", ValidHeaders - CONTENT_TYPE, Left(ErrorContentTypeHeaderInvalid)),
       ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, Left(ErrorInternalServerError)),
-      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, Right()),
+      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, Left(ErrorGenericBadRequest)),
       ("Invalid accept header", ValidHeaders + InvalidAcceptHeader, Left(ErrorAcceptHeaderInvalid)),
       ("Invalid content type header JSON header", ValidHeaders + InvalidContentTypeJsonHeader, Left(ErrorContentTypeHeaderInvalid)),
       ("Invalid content type XML without UTF-8 header", ValidHeaders + (CONTENT_TYPE -> "application/xml"), Left(ErrorContentTypeHeaderInvalid)),
@@ -58,6 +58,7 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
       s"$description" in {
         when(rdWrapper.request).thenReturn(request)
         when(request.headers).thenReturn(new Headers(headers.toSeq))
+
         validator.validateHeaders(rdWrapper, loggerMock) shouldBe response
       }
     }

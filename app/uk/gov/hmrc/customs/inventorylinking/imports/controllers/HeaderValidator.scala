@@ -29,15 +29,31 @@ trait HeaderValidator {
 
   def validateHeaders[A](implicit rdWrapper: RequestDataWrapper, logger: DeclarationsLogger): Either[ErrorResponse, Unit] = {
     implicit val headers = rdWrapper.request.headers
-    if (!hasAccept(headers, logger, rdWrapper)) {
+
+    lazy val maybeAccept = headers.get(ACCEPT)
+    lazy val maybeContentType = headers.get(CONTENT_TYPE)
+    lazy val maybeXClientId = headers.get(XClientId)
+    lazy val maybeXBadgeIdentifier = headers.get(XBadgeIdentifier)
+
+    if (!hasAccept(headers)) {
+      logger.error(s"$ACCEPT header was invalid: ${maybeAccept.getOrElse("")}")
       Left(ErrorAcceptHeaderInvalid)
-    } else if (!hasContentType(headers, logger, rdWrapper)) {
+    } else if (!hasContentType(headers)) {
+      logger.error(s"$CONTENT_TYPE header was invalid: ${maybeContentType.getOrElse("")}")
       Left(ErrorContentTypeHeaderInvalid)
-    } else if (!hasXClientId(headers, logger, rdWrapper)) {
+    } else if (!hasXClientId(headers)) {
+      logger.error(s"$XClientId header was invalid: ${maybeXClientId.getOrElse("")}")
       Left(ErrorInternalServerError)
-    } else if (!hasXBadgeIdentifier(headers, logger, rdWrapper)) {
-      Left(ErrorGenericBadRequest)
+    } else if (!hasXBadgeIdentifier(headers)) {
+        logger.error(s"$XBadgeIdentifier header was invalid: ${maybeXBadgeIdentifier.getOrElse("")}")
+        Left(ErrorGenericBadRequest)
     } else {
+      logger.debug(
+        s"$ACCEPT header passed validation: ${maybeAccept}\n"
+      + s"$CONTENT_TYPE header passed validation: ${maybeContentType}\n"
+      + s"$XClientId header passed validation: ${maybeXClientId}\n"
+      + s"$XBadgeIdentifier header passed validation: ${maybeXBadgeIdentifier}")
+
       Right()
     }
   }
@@ -47,38 +63,12 @@ trait HeaderValidator {
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Za-z]{1,12}$".r
 
-  private def hasAccept(implicit h: Headers, logger: DeclarationsLogger, rdWrapper: RequestDataWrapper): Boolean = {
-    val maybeHeader = h.get(ACCEPT)
-    val hasValidHeader = maybeHeader.fold(false)(validAcceptHeaders.contains(_))
-    log(logger, hasValidHeader, ACCEPT, maybeHeader)
-    hasValidHeader
-  }
+  private def hasAccept(implicit h: Headers) = h.get(ACCEPT).fold(false)(validAcceptHeaders.contains(_))
 
-  private def hasContentType(implicit h: Headers, logger: DeclarationsLogger, rdWrapper: RequestDataWrapper): Boolean = {
-    val maybeHeader = h.get(CONTENT_TYPE)
-    val hasValidHeader = maybeHeader.fold(false)(h => validContentTypeHeaders.contains(h.toLowerCase()))
-    log(logger, hasValidHeader, CONTENT_TYPE, maybeHeader)
-    hasValidHeader
-  }
+  private def hasContentType(implicit h: Headers) = h.get(CONTENT_TYPE).fold(false)(h => validContentTypeHeaders.contains(h.toLowerCase()))
 
-  private def hasXClientId(implicit h: Headers, logger: DeclarationsLogger, rdWrapper: RequestDataWrapper) = {
-    val maybeHeader = h.get(XClientId)
-    val hasValidHeader = maybeHeader.fold(false)(xClientIdRegex.findFirstIn(_).nonEmpty)
-    log(logger, hasValidHeader, XClientId, maybeHeader)
-    hasValidHeader
-  }
+  private def hasXClientId(implicit h: Headers) = h.get(XClientId).fold(false)(xClientIdRegex.findFirstIn(_).nonEmpty)
 
-  private def hasXBadgeIdentifier(implicit h: Headers, logger: DeclarationsLogger, rdWrapper: RequestDataWrapper) = {
-    val maybeHeader = h.get(XBadgeIdentifier)
-    val hasValidHeader = maybeHeader.fold(true)(xBadgeIdentifierRegex.findFirstIn(_).nonEmpty)
-    log(logger, hasValidHeader, XBadgeIdentifier, maybeHeader)
-    hasValidHeader
-  }
+  private def hasXBadgeIdentifier(implicit h: Headers) = h.get(XBadgeIdentifier).fold(false)(xBadgeIdentifierRegex.findFirstIn(_).nonEmpty)
 
-  private def log(logger: DeclarationsLogger, validHeader: Boolean, headerName: String, maybeHeaderValue: Option[String])(implicit rdWrapper: RequestDataWrapper): Unit = {
-    validHeader match {
-      case true => logger.debug(s"$headerName header passed validation: $maybeHeaderValue")
-      case false => logger.error(s"$headerName was invalid: $maybeHeaderValue")
-    }
-  }
 }
