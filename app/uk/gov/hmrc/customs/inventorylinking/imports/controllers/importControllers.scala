@@ -17,14 +17,13 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.mvc.{Action, AnyContent, Result, _}
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core.{AuthProviders, AuthorisationException, AuthorisedFunctions, Enrolment}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, XmlValidationErrorsMapper}
@@ -40,7 +39,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
                                 override val authConnector: MicroserviceAuthConnector,
                                 messageSender: MessageSender,
                                 importsMessageType: ImportsMessageType,
-                                logger: DeclarationsLogger) extends BaseController with HeaderValidator with AuthorisedFunctions {
+                                logger: ImportsLogger) extends BaseController with HeaderValidator with AuthorisedFunctions {
 
   private lazy val ErrorResponseUnauthorisedGeneral =
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
@@ -49,7 +48,10 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
     validateHeaders(rdWrapper, logger) match {
       case Right(_) =>
-        authoriseAndSend
+        val eventualResult = authoriseAndSend
+        logger.info("Request processed successfully")
+        eventualResult
+
       case Left(errorResponse) =>
         Future.successful(errorResponse.XmlResult)
     }
@@ -65,19 +67,23 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
   }
 
   private def handleError(implicit rdWrapper: RequestDataWrapper): PartialFunction[Throwable, Future[Result]] = {
+
     case NonFatal(saxe: SAXException) =>
-      logger.debug("XML processing error" + saxe.getMessage)
+      logger.error(s"XML processing error.")
+      logger.debug(s"XML processing error.", saxe)
       Future.successful(
         ErrorResponse.ErrorGenericBadRequest.withErrors(
           XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
 
-    case NonFatal(_: AuthorisationException) =>
+    case NonFatal(authEx: AuthorisationException) =>
+      logger.error(s"User is not authorised for this service.")
+      logger.debug(s"User is not authorised for this service", authEx)
       Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, rdWrapper.conversationId))
 
     case NonFatal(e) =>
-      logger.debug("Something went wrong" + e.getMessage)
+      logger.error(s"An error occurred while processing request.")
+      logger.debug(s"An error occurred while processing request ", e)
       Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
-
   }
 
 
@@ -99,7 +105,7 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 @Singleton
 class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigService,
                                        authConnector: MicroserviceAuthConnector,
-                                       messageSender: MessageSender, logger: DeclarationsLogger)
+                                       messageSender: MessageSender, logger: ImportsLogger)
   extends ImportController(importsConfigService, authConnector, messageSender, GoodsArrival, logger) {
 
   def post(): Action[AnyContent] = {
@@ -111,7 +117,7 @@ class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigServic
 class ValidateMovementController @Inject()(importsConfigService: ImportsConfigService,
                                            authConnector: MicroserviceAuthConnector,
                                            messageSender: MessageSender,
-                                           logger: DeclarationsLogger)
+                                           logger: ImportsLogger)
   extends ImportController(importsConfigService, authConnector, messageSender, ValidateMovement, logger) {
 
   def post(): Action[AnyContent] = {

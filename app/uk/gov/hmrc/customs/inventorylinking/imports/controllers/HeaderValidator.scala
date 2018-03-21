@@ -21,13 +21,13 @@ import play.api.http.MimeTypes
 import play.api.mvc.Headers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 
 trait HeaderValidator {
 
-  def validateHeaders[A](implicit rdWrapper: RequestDataWrapper, logger: DeclarationsLogger): Either[ErrorResponse, Unit] = {
+  def validateHeaders[A](implicit rdWrapper: RequestDataWrapper, logger: ImportsLogger): Either[ErrorResponse, Unit] = {
     implicit val headers = rdWrapper.request.headers
 
     lazy val maybeAccept = headers.get(ACCEPT)

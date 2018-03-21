@@ -24,9 +24,10 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 
 @Singleton
-class DeclarationsLogger @Inject()(logger: CdsLogger) {
+class ImportsLogger @Inject()(logger: CdsLogger) {
 
   def debug(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.debug(formatDebug(s, rdWrapper))
+  def debug(s: => String, e: => Throwable)(implicit rdWrapper: RequestDataWrapper): Unit = logger.debug(formatDebug(s, rdWrapper), e)
   def info(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.info(formatInfo(s, rdWrapper))
   def warn(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.warn(formatWarn(s, rdWrapper))
   def error(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.error(formatError(s, rdWrapper))

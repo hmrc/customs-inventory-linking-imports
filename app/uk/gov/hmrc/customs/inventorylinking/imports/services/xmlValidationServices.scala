@@ -18,22 +18,23 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import java.io.{FileNotFoundException, StringReader}
 import java.net.URL
+
 import javax.inject.Inject
 import javax.xml.XMLConstants
 import javax.xml.transform.Source
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory}
-
 import com.google.inject.Singleton
 import org.xml.sax.{ErrorHandler, SAXParseException}
 import play.api.Configuration
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, RequestDataWrapper, ValidateMovement}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{NodeSeq, SAXException}
 
-abstract class XmlValidationService(configuration: Configuration, messageType: ImportsMessageType) {
+abstract class XmlValidationService(configuration: Configuration, messageType: ImportsMessageType, logger: ImportsLogger) {
 
   private lazy val schema: Schema = {
     def resourceUrl(resourcePath: String): URL = Option(getClass.getResource(resourcePath))
@@ -50,7 +51,8 @@ abstract class XmlValidationService(configuration: Configuration, messageType: I
 
   private lazy val maxSAXErrors = configuration.getInt("xml.max-errors").getOrElse(Int.MaxValue)
 
-  def validate(xml: NodeSeq)(implicit ec: ExecutionContext): Future[Unit] = {
+  def validate(xml: NodeSeq)(implicit ec: ExecutionContext, rd: RequestDataWrapper): Future[Unit] = {
+    logger.debug(s"Validating payload $xml")
     Future(doValidate(xml))
   }
 
@@ -69,7 +71,7 @@ abstract class XmlValidationService(configuration: Configuration, messageType: I
 
     private lazy val errors: mutable.Buffer[SAXParseException] = mutable.Buffer.empty
 
-    private def accumulateError(e: SAXParseException) = self.synchronized {
+    private def accumulateError(e: SAXParseException): Unit = self.synchronized {
       errors += e
       if (errors.length >= maxErrors) throwIfErrorsEncountered()
     }
@@ -93,9 +95,9 @@ abstract class XmlValidationService(configuration: Configuration, messageType: I
 }
 
 @Singleton
-class GoodsArrivalXmlValidationService @Inject()(configuration: Configuration)
-  extends XmlValidationService(configuration, GoodsArrival)
+class GoodsArrivalXmlValidationService @Inject()(configuration: Configuration, logger: ImportsLogger)
+  extends XmlValidationService(configuration, GoodsArrival, logger)
 
 @Singleton
-class ValidateMovementXmlValidationService @Inject()(configuration: Configuration)
-  extends XmlValidationService(configuration, ValidateMovement)
+class ValidateMovementXmlValidationService @Inject()(configuration: Configuration, logger: ImportsLogger)
+  extends XmlValidationService(configuration, ValidateMovement, logger)

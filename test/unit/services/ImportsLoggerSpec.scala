@@ -19,12 +19,12 @@ package unit.services
 import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.{DeclarationsLogger, LoggingHelper}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.{ImportsLogger, LoggingHelper}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.play.test.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
 
-class DeclarationsLoggerSpec extends UnitSpec with MockitoSugar {
+class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
   implicit val rdWrapper = mock[RequestDataWrapper]
   when(rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
@@ -32,39 +32,53 @@ class DeclarationsLoggerSpec extends UnitSpec with MockitoSugar {
   when(rdWrapper.clientId).thenReturn(Some("some-client-id"))
   when(rdWrapper.requestedApiVersion).thenReturn("1.0")
   val cdsLoggerMock: CdsLogger = mock[CdsLogger]
-  val declarationsLogger = new DeclarationsLogger(cdsLoggerMock)
+  val logger = new ImportsLogger(cdsLoggerMock)
 
 
   private def expectedMessage(message: String, auth: String) =
     s"[conversationId=conversation-id][clientId=some-client-id][requestedApiVersion=1.0] $message"
 
-  "DeclarationsLogger" should {
+  "ImportsLogger" should {
 
     "testFormatInfo" in {
-      declarationsLogger.info("Info message")
+      logger.info("Info message")
+
       PassByNameVerifier(cdsLoggerMock, "info")
         .withByNameParam[String](expectedMessage("Info message", "value-not-logged"))
         .verify()
     }
 
     "testFormatError" in {
-      declarationsLogger.error("Error message")
+      logger.error("Error message")
+
       PassByNameVerifier(cdsLoggerMock, "error")
         .withByNameParam[String](expectedMessage("Error message", "value-not-logged"))
         .verify()
     }
 
     "testFormatWarn" in {
-      declarationsLogger.warn("Warn message")
+      logger.warn("Warn message")
+
       PassByNameVerifier(cdsLoggerMock, "warn")
         .withByNameParam[String](expectedMessage("Warn message", "value-not-logged"))
         .verify()
     }
 
     "testFormatDebug" in {
-      declarationsLogger.debug("Debug message")
+      logger.debug("Debug message")
+
       PassByNameVerifier(cdsLoggerMock, "debug")
         .withByNameParam[String](expectedMessage("Debug message", "Bearer super-secret-token"))
+        .verify()
+    }
+
+    "testFormatDebug with Throwable" in {
+      val e = new Exception()
+      logger.debug("Debug message", e)
+
+      PassByNameVerifier(cdsLoggerMock, "debug")
+        .withByNameParam[String](expectedMessage("Debug message", "Bearer super-secret-token"))
+        .withByNameParam[Throwable](e)
         .verify()
     }
   }

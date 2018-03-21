@@ -18,18 +18,20 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector, OutgoingRequestBuilder}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.http.HttpResponse
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future}
+import scala.concurrent.Future
 
 @Singleton
 class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector,
                               outgoingRequestBuilder: OutgoingRequestBuilder,
                               goodsArrivalXmlValidationService: GoodsArrivalXmlValidationService,
                               validateMovementXmlValidationService: ValidateMovementXmlValidationService,
-                              connector: ImportsConnector) {
+                              connector: ImportsConnector,
+                              logger: ImportsLogger) {
 
   def validateAndSend(messageType: ImportsMessageType)(implicit rdWrapper: RequestDataWrapper): Future[HttpResponse] = {
 

@@ -50,7 +50,7 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
       "microservice.services.goodsarrival.bearer-token" -> AuthToken
     )).build()
 
-  private lazy val rdWrapper = mock[RequestDataWrapper]
+  private implicit val rdWrapper = mock[RequestDataWrapper]
   private lazy val connector = app.injector.instanceOf[ImportsConnector]
   private lazy val serviceConfigProvider = app.injector.instanceOf[ServiceConfigProvider]
   private val validateMovementRequest = OutgoingRequest(serviceConfigProvider.getConfig("validatemovement"), outgoingBody, rdWrapper)
@@ -62,6 +62,12 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
 
   override protected def afterEach(): Unit = {
     resetMockServer()
+  }
+
+  override protected def beforeEach(): Unit = {
+    when(rdWrapper.conversationId).thenReturn("conv-id")
+    when(rdWrapper.clientId).thenReturn(None)
+    when(rdWrapper.requestedApiVersion).thenReturn("1.23")
   }
 
   override protected def afterAll() {
