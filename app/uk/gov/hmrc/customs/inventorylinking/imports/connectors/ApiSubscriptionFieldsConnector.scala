@@ -20,7 +20,7 @@ import java.net.URLEncoder
 import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, WSHttp}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
@@ -30,19 +30,20 @@ import scala.concurrent.Future
 
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
-                                               logger: CdsLogger,
-                                               servicesConfig: ImportsConfigService) {
+                                               servicesConfig: ImportsConfigService,
+                                               logger: DeclarationsLogger) {
 
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
   private val version = "1.0"
   //TODO: pass in clientId explicitly
   def getClientSubscriptionId()(implicit rdWrapper: RequestDataWrapper): Future[UUID] = {
     val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.clientId.getOrElse(throw new IllegalStateException("clientId not present"))}/context/$apiContextEncoded/version/$version"
-    get(url)(rdWrapper.headerCarrier).map(r => r.fieldsId)
+    get(url).map(r => r.fieldsId)
   }
 
-  private def get(url: String)(implicit hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
+  private def get(url: String)(implicit rd: RequestDataWrapper): Future[ApiSubscriptionFieldsResponse] = {
     logger.debug(s"Getting fields id from api-subscription-fields service. url = $url")
+    implicit val hc: HeaderCarrier = rd.headerCarrier
 
     http.GET[ApiSubscriptionFieldsResponse](url)
       .recoverWith {
@@ -50,7 +51,7 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
       }
       .recoverWith {
         case e: Throwable =>
-          logger.error(s"Call to get api subscription fields failed. url = $url", e)
+          logger.error(s"Call to get api subscription fields failed. url = $url")
           Future.failed(e)
       }
   }

@@ -27,6 +27,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.http.Status.ACCEPTED
 import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector, OutgoingRequest, OutgoingRequestBuilder}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.services._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -51,7 +52,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
 
     implicit val rdWrapperMock: RequestDataWrapper = mock[RequestDataWrapper]
     val headers: HeaderMap = Map(HeaderConstants.XClientId -> TestXClientId, HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
-    val sender: MessageSender = new MessageSender(apiSubscriptionFieldsConnector, outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, importsConnector)
+    val sender: MessageSender = new MessageSender(apiSubscriptionFieldsConnector, outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, importsConnector, mock[DeclarationsLogger])
     lazy val outgoingRequest = OutgoingRequest(serviceConfig, outgoingBody, rdWrapperMock)
 
     implicit val mockHeaderCarrier: HeaderCarrier = mock[HeaderCarrier]

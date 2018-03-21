@@ -17,7 +17,9 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import javax.inject.{Inject, Singleton}
-
+import play.api.Logger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 
@@ -25,11 +27,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class ImportsConnector @Inject()(wsHttp: WSHttp) {
+class ImportsConnector @Inject()(wsHttp: WSHttp, logger: DeclarationsLogger) {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def post(request: OutgoingRequest): Future[HttpResponse] = {
+  def post(request: OutgoingRequest)(implicit rdw: RequestDataWrapper): Future[HttpResponse] = {
+    logger.debug(s"Outgoing request body: ${request.outgoingBody.toString} headers: ${request.headers}")
     wsHttp.POSTString(request.url, request.outgoingBody.toString, request.headers).
       recoverWith {
         case httpError: HttpException => Future.failed(new RuntimeException(httpError))

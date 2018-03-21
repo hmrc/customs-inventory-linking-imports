@@ -174,7 +174,7 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
         status(resultFuture) shouldBe BAD_REQUEST
         headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
-        And("the response body is a \"Unauthorised request\" XML")
+        And("the response body is a \"Bad request\" XML")
         stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(badRequestError(messageType))
       }
 

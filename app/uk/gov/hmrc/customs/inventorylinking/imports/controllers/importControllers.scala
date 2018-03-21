@@ -17,7 +17,7 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
-
+import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.mvc.{Action, AnyContent, Result, _}
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core.{AuthProviders, AuthorisationException, AuthorisedFunctions, Enrolment}
@@ -49,7 +49,10 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
     implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
     validateHeaders(rdWrapper, logger) match {
       case Right(_) =>
-        authoriseAndSend
+        val eventualResult = authoriseAndSend
+        logger.info("Request processed successfully")
+        eventualResult
+
       case Left(errorResponse) =>
         Future.successful(errorResponse.XmlResult)
     }
@@ -65,19 +68,23 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
   }
 
   private def handleError(implicit rdWrapper: RequestDataWrapper): PartialFunction[Throwable, Future[Result]] = {
+
     case NonFatal(saxe: SAXException) =>
-      logger.debug("XML processing error" + saxe.getMessage)
+      logger.error(s"XML processing error.")
+      logger.debug(s"XML processing error ${saxe.getStackTrace}")
       Future.successful(
         ErrorResponse.ErrorGenericBadRequest.withErrors(
           XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
 
-    case NonFatal(_: AuthorisationException) =>
+    case NonFatal(authEx: AuthorisationException) =>
+      logger.error(s"User is not authorised for this service.")
+      logger.debug(s"User is not authorised for this service ${authEx.getStackTrace}")
       Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, rdWrapper.conversationId))
 
     case NonFatal(e) =>
-      logger.debug("Something went wrong" + e.getMessage)
+      logger.error(s"An error occurred while processing request.")
+      logger.debug(s"An error occurred while processing request ${ExceptionUtils.getStackTrace(e)}")
       Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
-
   }
 
 
