@@ -38,10 +38,11 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
   private def expectedMessage(message: String, auth: String) =
     s"[conversationId=conversation-id][clientId=some-client-id][requestedApiVersion=1.0] $message"
 
-  "DeclarationsLogger" should {
+  "ImportsLogger" should {
 
     "testFormatInfo" in {
       logger.info("Info message")
+
       PassByNameVerifier(cdsLoggerMock, "info")
         .withByNameParam[String](expectedMessage("Info message", "value-not-logged"))
         .verify()
@@ -49,6 +50,7 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
     "testFormatError" in {
       logger.error("Error message")
+
       PassByNameVerifier(cdsLoggerMock, "error")
         .withByNameParam[String](expectedMessage("Error message", "value-not-logged"))
         .verify()
@@ -56,6 +58,7 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
     "testFormatWarn" in {
       logger.warn("Warn message")
+
       PassByNameVerifier(cdsLoggerMock, "warn")
         .withByNameParam[String](expectedMessage("Warn message", "value-not-logged"))
         .verify()
@@ -63,6 +66,7 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
     "testFormatDebug" in {
       logger.debug("Debug message")
+
       PassByNameVerifier(cdsLoggerMock, "debug")
         .withByNameParam[String](expectedMessage("Debug message", "Bearer super-secret-token"))
         .verify()
@@ -71,6 +75,7 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
     "testFormatDebug with Throwable" in {
       val e = new Exception()
       logger.debug("Debug message", e)
+
       PassByNameVerifier(cdsLoggerMock, "debug")
         .withByNameParam[String](expectedMessage("Debug message", "Bearer super-secret-token"))
         .withByNameParam[Throwable](e)
