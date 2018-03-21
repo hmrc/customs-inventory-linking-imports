@@ -26,7 +26,7 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status.ACCEPTED
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
@@ -42,7 +42,7 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
   trait SetupConnector {
     private val serviceConfig = ServiceConfig("the-url", Some("bearerToken"), "default")
     private val wsHttp: WSHttp = mock[WSHttp]
-    private val connector = new ImportsConnector(wsHttp, mock[DeclarationsLogger])
+    private val connector = new ImportsConnector(wsHttp, mock[ImportsLogger])
     private val validOutgoingMessage: Elem = <message></message>
 
     private implicit val rdWrapper = mock[RequestDataWrapper]

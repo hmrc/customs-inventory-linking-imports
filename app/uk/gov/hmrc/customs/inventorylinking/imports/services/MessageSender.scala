@@ -18,7 +18,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector, OutgoingRequestBuilder}
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.http.HttpResponse
 
@@ -31,7 +31,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               goodsArrivalXmlValidationService: GoodsArrivalXmlValidationService,
                               validateMovementXmlValidationService: ValidateMovementXmlValidationService,
                               connector: ImportsConnector,
-                              logger: DeclarationsLogger) {
+                              logger: ImportsLogger) {
 
   def validateAndSend(messageType: ImportsMessageType)(implicit rdWrapper: RequestDataWrapper): Future[HttpResponse] = {
 

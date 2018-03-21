@@ -27,14 +27,14 @@ import javax.xml.validation.{Schema, SchemaFactory}
 import com.google.inject.Singleton
 import org.xml.sax.{ErrorHandler, SAXParseException}
 import play.api.Configuration
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, RequestDataWrapper, ValidateMovement}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{NodeSeq, SAXException}
 
-abstract class XmlValidationService(configuration: Configuration, messageType: ImportsMessageType, logger: DeclarationsLogger) {
+abstract class XmlValidationService(configuration: Configuration, messageType: ImportsMessageType, logger: ImportsLogger) {
 
   private lazy val schema: Schema = {
     def resourceUrl(resourcePath: String): URL = Option(getClass.getResource(resourcePath))
@@ -95,9 +95,9 @@ abstract class XmlValidationService(configuration: Configuration, messageType: I
 }
 
 @Singleton
-class GoodsArrivalXmlValidationService @Inject()(configuration: Configuration, logger: DeclarationsLogger)
+class GoodsArrivalXmlValidationService @Inject()(configuration: Configuration, logger: ImportsLogger)
   extends XmlValidationService(configuration, GoodsArrival, logger)
 
 @Singleton
-class ValidateMovementXmlValidationService @Inject()(configuration: Configuration, logger: DeclarationsLogger)
+class ValidateMovementXmlValidationService @Inject()(configuration: Configuration, logger: ImportsLogger)
   extends XmlValidationService(configuration, ValidateMovement, logger)

@@ -41,7 +41,7 @@ import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, RequestDataWrapper, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -68,7 +68,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       XClientIdHeaderName -> ApiSubscriptionFieldsTestData.TestXClientId,
       XBadgeIdentifierHeaderName -> badgeIdentifier)
 
-  private val logger = mock[DeclarationsLogger]
+  private val logger = mock[ImportsLogger]
   private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockAuthConnector, messageSender, logger)
   private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockAuthConnector, messageSender, logger)
   private val UuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"

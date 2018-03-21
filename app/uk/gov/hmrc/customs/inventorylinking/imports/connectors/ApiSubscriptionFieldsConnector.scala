@@ -20,7 +20,7 @@ import java.net.URLEncoder
 import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, WSHttp}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
@@ -31,7 +31,7 @@ import scala.concurrent.Future
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
                                                servicesConfig: ImportsConfigService,
-                                               logger: DeclarationsLogger) {
+                                               logger: ImportsLogger) {
 
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
   private val version = "1.0"

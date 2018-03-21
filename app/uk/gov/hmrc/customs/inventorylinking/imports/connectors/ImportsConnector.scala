@@ -18,7 +18,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.DeclarationsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
@@ -27,7 +27,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class ImportsConnector @Inject()(wsHttp: WSHttp, logger: DeclarationsLogger) {
+class ImportsConnector @Inject()(wsHttp: WSHttp, logger: ImportsLogger) {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
