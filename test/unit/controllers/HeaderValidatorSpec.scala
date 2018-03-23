@@ -40,8 +40,8 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
   val headersTable =
     Table(
       ("description", "Headers", "Expected response"),
-      ("Valid Headers", ValidHeaders, Right()),
-      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), Right()),
+      ("Valid Headers", ValidHeaders, Right(())),
+      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), Right(())),
       ("Missing accept header", ValidHeaders - ACCEPT, Left(ErrorAcceptHeaderInvalid)),
       ("Missing content type header", ValidHeaders - CONTENT_TYPE, Left(ErrorContentTypeHeaderInvalid)),
       ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, Left(ErrorInternalServerError)),

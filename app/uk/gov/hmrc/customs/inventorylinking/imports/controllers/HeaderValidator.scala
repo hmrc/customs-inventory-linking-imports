@@ -54,7 +54,7 @@ trait HeaderValidator {
       + s"$XClientId header passed validation: ${maybeXClientId}\n"
       + s"$XBadgeIdentifier header passed validation: ${maybeXBadgeIdentifier}")
 
-      Right()
+      Right(())
     }
   }
 
