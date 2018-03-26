@@ -16,8 +16,9 @@ It is assumed that the underlying backend process is asynchronous, and that the 
 
 Make sure the `api-subscription-fields` service is running on port `9650`. Then run the below curl command.
  - Note that the UUID `6372609a-f550-11e7-8c3f-9a214cf093aa` is the application clientId.
-
-    curl -v -X PUT "http://localhost:9650/field/application/6372609a-f550-11e7-8c3f-9a214cf093aa/context/customs%2Finventory-linking%2Fexports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "https://postman-echo.com/post", "securityToken" : "securityToken" } }'
+```
+curl -v -X PUT "http://localhost:9650/field/application/6372609a-f550-11e7-8c3f-9a214cf093aa/context/customs%2Finventory-linking%2Fexports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "https://postman-echo.com/post", "securityToken" : "securityToken" } }'
+```
 
 # Switching service endpoints
 
