@@ -18,17 +18,18 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
-import play.api.mvc.Headers
+import play.api.mvc.{AnyContent, Headers, Request}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
+import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
 
 trait HeaderValidator {
 
-  def validateHeaders[A](implicit rdWrapper: RequestDataWrapper, logger: ImportsLogger): Either[ErrorResponse, Unit] = {
-    implicit val headers = rdWrapper.request.headers
+  def validateHeaders[A](implicit request: Request[A], logger: CdsLogger): Either[ErrorResponse, Unit] = {
+    implicit val headers = request.headers
 
     lazy val maybeAccept = headers.get(ACCEPT)
     lazy val maybeContentType = headers.get(CONTENT_TYPE)

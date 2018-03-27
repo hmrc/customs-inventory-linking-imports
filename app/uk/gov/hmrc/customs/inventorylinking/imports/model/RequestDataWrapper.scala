@@ -24,7 +24,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{XBadg
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.xml.NodeSeq
-
+//TODO Extract to simple value class (no header carrier or request)
 case class RequestDataWrapper(request: Request[AnyContent], headerCarrier: HeaderCarrier) {
 
   lazy val badgeIdentifier = request.headers.get(XBadgeIdentifier)
