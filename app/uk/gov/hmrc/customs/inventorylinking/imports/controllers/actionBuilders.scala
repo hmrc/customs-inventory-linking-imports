@@ -19,8 +19,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestDataWrapper, ValidatedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -37,11 +36,13 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
 
     implicit val headers = inputRequest.headers //TODO not needed
 
-    val rdWrapper = RequestDataWrapper(inputRequest.asInstanceOf[Request[AnyContent]], hc)
-
     validator.validateHeaders(inputRequest, logger) match { //TODO pass in logger on creation of headervalidator
       case Left(a) => Left(a.XmlResult)
-      case Right(_) => Right (ValidatedRequest(rdWrapper, r))
+      case Right(_) => {
+        val requestData = new RequestData(inputRequest.asInstanceOf[Request[AnyContent]], hc)
+        val validatedRequest = ValidatedRequest(requestData, inputRequest)
+        Right(validatedRequest)
+      }
     }
   }
 }

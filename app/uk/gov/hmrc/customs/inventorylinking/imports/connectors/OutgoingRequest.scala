@@ -19,15 +19,16 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 import org.joda.time.format.ISODateTimeFormat
 import play.api.http.HeaderNames.{ACCEPT, AUTHORIZATION, CONTENT_TYPE, DATE}
 import play.api.http.MimeTypes._
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 
 import scala.xml.NodeSeq
 
 case class OutgoingRequest(service: ServiceConfig,
                            outgoingBody: NodeSeq,
-                           rdWrapper: RequestDataWrapper) {
+                           rdWrapper: ValidatedRequest[AnyContent]) {
 
   lazy val bearerToken: String = service.bearerToken.getOrElse(throw new IllegalStateException("Bearer token not present"))
   lazy val url: String = service.url
@@ -36,10 +37,10 @@ case class OutgoingRequest(service: ServiceConfig,
       ACCEPT -> XML,
       CONTENT_TYPE -> s"$XML; charset=UTF-8",
       AUTHORIZATION -> s"Bearer $bearerToken",
-      DATE -> rdWrapper.dateTime.toString(ISODateTimeFormat.dateTimeNoMillis()),
+      DATE -> rdWrapper.rdWrapper.dateTime.toString(ISODateTimeFormat.dateTimeNoMillis()),
       XForwardedHost -> "MDTP",
-      XConversationId -> rdWrapper.conversationId,
-      XCorrelationId -> rdWrapper.correlationId
+      XConversationId -> rdWrapper.rdWrapper.conversationId,
+      XCorrelationId -> rdWrapper.rdWrapper.correlationId
     )
 }
 

@@ -16,6 +16,31 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-import play.api.mvc.{Request, WrappedRequest}
+import java.util.UUID
 
-case class ValidatedRequest[A](rdWrapper: RequestDataWrapper, request: Request[A]) extends WrappedRequest[A](request)
+import org.joda.time.{DateTime, DateTimeZone}
+import play.api.mvc.{AnyContent, Request}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{XBadgeIdentifier, XClientId}
+import uk.gov.hmrc.http.HeaderCarrier
+
+import scala.xml.NodeSeq
+//TODO Extract to simple value class (no header carrier or request)
+case class RequestData(request: Request[AnyContent], headerCarrier: HeaderCarrier) {
+
+  lazy val badgeIdentifier = request.headers.get(XBadgeIdentifier)
+
+  lazy val conversationId: String = UUID.randomUUID().toString
+
+  lazy val correlationId: String = UUID.randomUUID().toString
+
+  lazy val dateTime = DateTime.now(DateTimeZone.UTC)
+
+  lazy val body: NodeSeq = request.body.asXml.getOrElse(NodeSeq.Empty)
+
+  lazy val headers: HeaderMap = request.headers.toSimpleMap
+
+  lazy val requestedApiVersion: String = "1.0"
+
+  lazy val clientId = request.headers.get(XClientId)
+
+}

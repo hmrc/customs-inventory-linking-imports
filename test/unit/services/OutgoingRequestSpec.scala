@@ -21,8 +21,9 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes._
+import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.OutgoingRequest
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import util.TestData
 import util.TestData._
 
@@ -31,11 +32,14 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
   trait validRequest {
     val MDTP: String = "MDTP"
 
-    private val rdWrapper: RequestDataWrapper = mock[RequestDataWrapper]
+    private val requestData = mock[RequestData]
+    private val requestMock = mock[Request[AnyContent]]
+
+    private val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, requestMock)
     val request = OutgoingRequest(serviceConfig, outgoingBody, rdWrapper)
-    when(rdWrapper.dateTime).thenReturn(TestData.requestDateTime)
-    when(rdWrapper.conversationId).thenReturn(TestData.conversationId.toString)
-    when(rdWrapper.correlationId).thenReturn(TestData.correlationId.toString)
+    when(rdWrapper.rdWrapper.dateTime).thenReturn(TestData.requestDateTime)
+    when(rdWrapper.rdWrapper.conversationId).thenReturn(TestData.conversationId.toString)
+    when(rdWrapper.rdWrapper.correlationId).thenReturn(TestData.correlationId.toString)
   }
 
   "headers" should {

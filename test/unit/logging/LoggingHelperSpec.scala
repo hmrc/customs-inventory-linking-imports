@@ -18,8 +18,9 @@ package unit.logging
 
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class LoggingHelperSpec extends UnitSpec with MockitoSugar {
@@ -30,11 +31,15 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
 
   "LoggingHelper" should {
 
-    val rdWrapper = mock[RequestDataWrapper]
-    when(rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
-    when(rdWrapper.conversationId).thenReturn("conversation-id")
-    when(rdWrapper.clientId).thenReturn(Some("some-client-id"))
-    when(rdWrapper.requestedApiVersion).thenReturn("1.0")
+    val requestData = mock[RequestData]
+    val requestMock = mock[Request[AnyContent]]
+
+    val rdWrapper = ValidatedRequest[AnyContent](requestData, requestMock)
+
+    when(requestData.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
+    when(requestData.conversationId).thenReturn("conversation-id")
+    when(requestData.clientId).thenReturn(Some("some-client-id"))
+    when(requestData.requestedApiVersion).thenReturn("1.0")
 
     "testFormatInfo" in {
       LoggingHelper.formatInfo("Info message", rdWrapper) shouldBe expectedMessage("Info message", "value-not-logged")

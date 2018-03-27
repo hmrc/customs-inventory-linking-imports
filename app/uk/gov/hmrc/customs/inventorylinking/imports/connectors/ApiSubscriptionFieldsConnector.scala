@@ -20,8 +20,9 @@ import java.net.URLEncoder
 import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, WSHttp}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
 
@@ -36,14 +37,14 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
   private val version = "1.0"
   //TODO: pass in clientId explicitly
-  def getClientSubscriptionId()(implicit rdWrapper: RequestDataWrapper): Future[UUID] = {
-    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.clientId.getOrElse(throw new IllegalStateException("clientId not present"))}/context/$apiContextEncoded/version/$version"
+  def getClientSubscriptionId()(implicit rdWrapper: ValidatedRequest[AnyContent]): Future[UUID] = {
+    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.rdWrapper.clientId.getOrElse(throw new IllegalStateException("clientId not present"))}/context/$apiContextEncoded/version/$version"
     get(url).map(r => r.fieldsId)
   }
 
-  private def get(url: String)(implicit rd: RequestDataWrapper): Future[ApiSubscriptionFieldsResponse] = {
+  private def get(url: String)(implicit rd: ValidatedRequest[AnyContent]): Future[ApiSubscriptionFieldsResponse] = {
     logger.debug(s"Getting fields id from api-subscription-fields service. url = $url")
-    implicit val hc: HeaderCarrier = rd.headerCarrier
+    implicit val hc: HeaderCarrier = rd.rdWrapper.headerCarrier
 
     http.GET[ApiSubscriptionFieldsResponse](url)
       .recoverWith {

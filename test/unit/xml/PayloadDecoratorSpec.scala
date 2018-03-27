@@ -18,7 +18,8 @@ package unit.xml
 
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import play.api.mvc.{AnyContent, Request}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
 import util.ApiSubscriptionFieldsTestData._
@@ -31,17 +32,20 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val xml: NodeSeq = <node1></node1>
 
   private val payloadWrapper = new PayloadDecorator
-  private val rdWrapperMock = mock[RequestDataWrapper]
+  private val requestData = mock[RequestData]
+  private val requestMock = mock[Request[AnyContent]]
+
+  private val rdWrapperMock = ValidatedRequest[AnyContent](requestData, requestMock)
 
   private def wrapPayload() = payloadWrapper.wrap(rdWrapperMock, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")
 
   "PayloadWrapper" should {
 
-    when(rdWrapperMock.body).thenReturn(xml)
-    when(rdWrapperMock.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
-    when(rdWrapperMock.conversationId).thenReturn(conversationId.toString)
-    when(rdWrapperMock.correlationId).thenReturn(correlationId.toString)
-    when(rdWrapperMock.dateTime).thenReturn(requestDateTime)
+    when(requestData.body).thenReturn(xml)
+    when(requestData.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
+    when(requestData.conversationId).thenReturn(conversationId.toString)
+    when(requestData.correlationId).thenReturn(correlationId.toString)
+    when(requestData.dateTime).thenReturn(requestDateTime)
 
     "set the root element label" in {
       val result = wrapPayload()

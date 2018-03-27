@@ -27,7 +27,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{AnyContent, Headers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestData, ValidatedRequest}
 import uk.gov.hmrc.http._
 import util.ApiSubscriptionFieldsTestData._
 import util.ExternalServicesConfig.{Host, Port}
@@ -42,7 +42,8 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   private val request: mvc.Request[AnyContent] = mock[mvc.Request[AnyContent]]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
+  private val requestData: RequestData = new RequestData(request, hc)
+  private implicit val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
 
   override protected def beforeAll() {
     startMockServer()
@@ -73,7 +74,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
       val response = await(getApiSubscriptionFields)
 
       response shouldBe FieldsId
-      verifyGetSubscriptionFieldsCalled(rdWrapper.clientId.get)
+      verifyGetSubscriptionFieldsCalled(rdWrapper.rdWrapper.clientId.get)
     }
 
     "return a failed future when external service returns 404" in {

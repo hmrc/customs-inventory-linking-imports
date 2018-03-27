@@ -31,7 +31,7 @@ import org.xml.sax.SAXException
 import play.api.http.HeaderNames.{ACCEPT, CONTENT_TYPE}
 import play.api.http.MimeTypes
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import play.api.mvc.{AnyContentAsXml, Result}
+import play.api.mvc.{AnyContent, AnyContentAsXml, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{UNAUTHORIZED, contentAsString, header}
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -41,9 +41,9 @@ import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, HeaderValidator, ValidateAndExtractHeadersAction, ValidateMovementController}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, RequestDataWrapper, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, RequestData, ValidateMovement, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -71,14 +71,16 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
   private val logger = mock[ImportsLogger]
   private val cdsLogger = mock[CdsLogger]
-  private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockAuthConnector, messageSender, logger, cdsLogger)
-  private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockAuthConnector, messageSender, logger, cdsLogger)
+  private val validateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator {}, cdsLogger)
+  private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockAuthConnector, messageSender, validateAndExtractHeadersAction, logger, cdsLogger)
+  private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockAuthConnector, messageSender, validateAndExtractHeadersAction, logger, cdsLogger)
   private val UuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
   private val errorResultUnauthorised = ErrorResponse(UNAUTHORIZED, errorCode = "UNAUTHORIZED",
     message = "Unauthorised request").XmlResult.withHeaders("X-Conversation-ID" -> conversationId.toString)
 
   private implicit val headerCarrier: HeaderCarrier = mock[HeaderCarrier]
-  private implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, headerCarrier)
+  private val requestData: RequestData = new RequestData(request, headerCarrier)
+  private implicit val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
 
   private val defaultUuid: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
 
@@ -113,7 +115,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         s"return 202 ACCEPTED for $messageTypeName" in {
 
           authoriseCsp(authPredicate)
-          when(messageSender.validateAndSend(ameq(importsMessageType))(any[RequestDataWrapper])).
+          when(messageSender.validateAndSend(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).
             thenReturn(Future.successful(HttpResponse(ACCEPTED)))
 
           val result = await(controller.apply(request))
@@ -179,7 +181,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       "return bad request" in {
 
         authoriseCsp(authPredicate)
-        when(messageSender.validateAndSend(ameq(importsMessageType))(any[RequestDataWrapper])).
+        when(messageSender.validateAndSend(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).
           thenReturn(Future.failed(new SAXException()))
 
         val result = await(controller.apply(request))

@@ -18,19 +18,23 @@ package unit.services
 
 import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.{ImportsLogger, LoggingHelper}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
 
 class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
-  implicit val rdWrapper = mock[RequestDataWrapper]
-  when(rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
-  when(rdWrapper.conversationId).thenReturn("conversation-id")
-  when(rdWrapper.clientId).thenReturn(Some("some-client-id"))
-  when(rdWrapper.requestedApiVersion).thenReturn("1.0")
+  private val requestData = mock[RequestData]
+  private val requestMock = mock[Request[AnyContent]]
+
+  implicit val rdWrapper = ValidatedRequest[AnyContent](requestData, requestMock)
+  when(rdWrapper.rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
+  when(rdWrapper.rdWrapper.conversationId).thenReturn("conversation-id")
+  when(rdWrapper.rdWrapper.clientId).thenReturn(Some("some-client-id"))
+  when(rdWrapper.rdWrapper.requestedApiVersion).thenReturn("1.0")
   val cdsLoggerMock: CdsLogger = mock[CdsLogger]
   val logger = new ImportsLogger(cdsLoggerMock)
 

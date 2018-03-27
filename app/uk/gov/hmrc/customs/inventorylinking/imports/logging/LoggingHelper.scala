@@ -16,32 +16,33 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import play.api.mvc.AnyContent
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 
 object LoggingHelper {
 
-  def formatError(msg: String, rdWrapper: RequestDataWrapper): String = {
+  def formatError(msg: String, rdWrapper: ValidatedRequest[AnyContent]): String = {
     formatMessage(msg, rdWrapper)
   }
 
-  def formatWarn(msg: String, rdWrapper: RequestDataWrapper): String = {
+  def formatWarn(msg: String, rdWrapper: ValidatedRequest[AnyContent]): String = {
     formatMessage(msg, rdWrapper)
   }
 
-  def formatInfo(msg: String, rdWrapper: RequestDataWrapper): String = {
+  def formatInfo(msg: String, rdWrapper: ValidatedRequest[AnyContent]): String = {
     formatMessage(msg, rdWrapper)
   }
 
-  def formatDebug(msg: String, rdWrapper: RequestDataWrapper): String = {
+  def formatDebug(msg: String, rdWrapper: ValidatedRequest[AnyContent]): String = {
     formatMessage(msg, rdWrapper)
   }
 
-  private def formatMessage(msg: String, rdWrapper: RequestDataWrapper): String = {
+  private def formatMessage(msg: String, rdWrapper: ValidatedRequest[AnyContent]): String = {
     s"${format(rdWrapper)} $msg".trim
   }
   
-  private def format(rdWrapper: RequestDataWrapper): String = {
-    s"[conversationId=${rdWrapper.conversationId}][clientId=${rdWrapper.clientId.getOrElse("")}][requestedApiVersion=${rdWrapper.requestedApiVersion}]"
+  private def format(rdWrapper: ValidatedRequest[AnyContent]): String = {
+    s"[conversationId=${rdWrapper.rdWrapper.conversationId}][clientId=${rdWrapper.rdWrapper.clientId.getOrElse("")}][requestedApiVersion=${rdWrapper.rdWrapper.requestedApiVersion}]"
   }
 
 }

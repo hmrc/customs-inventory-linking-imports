@@ -25,8 +25,7 @@ import play.api.test.Helpers.CONTENT_TYPE
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData._
 
@@ -34,7 +33,7 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
 
   val validator = new HeaderValidator {}
 
-  implicit val rdWrapper = mock[RequestDataWrapper]
+  implicit val rdWrapper = mock[ValidatedRequest[AnyContent]]
   implicit val request = mock[Request[AnyContent]]
   implicit val loggerMock = mock[CdsLogger]
 

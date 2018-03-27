@@ -17,6 +17,7 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import javax.inject.{Inject, Singleton}
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector, OutgoingRequestBuilder}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -33,7 +34,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               connector: ImportsConnector,
                               logger: ImportsLogger) {
 
-  def validateAndSend(messageType: ImportsMessageType)(implicit rdWrapper: RequestDataWrapper): Future[HttpResponse] = {
+  def validateAndSend(messageType: ImportsMessageType)(implicit rdWrapper: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
 
     def service = messageType match {
       case GoodsArrival => goodsArrivalXmlValidationService
@@ -41,7 +42,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
 
     for {
-      _ <- service.validate(rdWrapper.body)
+      _ <- service.validate(rdWrapper.rdWrapper.body)
       clientSubscriptionId <- apiSubscriptionFieldsConnector.getClientSubscriptionId()
       outgoingRequest = outgoingRequestBuilder.build(messageType, rdWrapper, clientSubscriptionId)
       result <- connector.post(outgoingRequest)
