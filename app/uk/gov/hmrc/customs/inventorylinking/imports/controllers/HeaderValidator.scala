@@ -38,6 +38,7 @@ trait HeaderValidator {
     lazy val maybeXClientId = headers.get(XClientId)
     lazy val maybeXBadgeIdentifier = headers.get(XBadgeIdentifier)
 
+    //TODO: find out why logger.error string is not appearing red in scoverage report
     if (!hasAccept(headers)) {
       logger.error(s"$ACCEPT header was invalid: ${maybeAccept.getOrElse("")}")
       Left(ErrorAcceptHeaderInvalid)

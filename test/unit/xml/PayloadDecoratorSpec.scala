@@ -43,8 +43,8 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
     when(requestData.body).thenReturn(xml)
     when(requestData.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
-    when(requestData.conversationId).thenReturn(conversationId.toString)
-    when(requestData.correlationId).thenReturn(correlationId.toString)
+    when(requestData.conversationId).thenReturn(ConversationId.toString)
+    when(requestData.correlationId).thenReturn(CorrelationId.toString)
     when(requestData.dateTime).thenReturn(requestDateTime)
 
     "set the root element label" in {
@@ -73,7 +73,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "conversationID"
 
-      rd.head.text shouldBe conversationId.toString
+      rd.head.text shouldBe ConversationId.toString
     }
 
     "set the clientId" in {
@@ -89,7 +89,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "correlationID"
 
-      rd.head.text shouldBe correlationId.toString
+      rd.head.text shouldBe CorrelationId.toString
     }
 
     "set the badgeIdentifier" in {

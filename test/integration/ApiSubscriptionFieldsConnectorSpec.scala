@@ -22,15 +22,16 @@ import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{Application, mvc}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{AnyContent, Headers}
 import play.api.test.Helpers._
+import play.api.{Application, mvc}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestData, ValidatedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.http._
 import util.ApiSubscriptionFieldsTestData._
 import util.ExternalServicesConfig.{Host, Port}
+import util.TestData._
 import util.externalservices.{ApiSubscriptionFieldsService, InventoryLinkingImportsExternalServicesConfig}
 
 import scala.concurrent.Future
@@ -42,8 +43,8 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   private val request: mvc.Request[AnyContent] = mock[mvc.Request[AnyContent]]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private val requestData: RequestData = new RequestData(request, hc)
-  private implicit val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
+  private lazy val requestData: RequestData = createRequestData(request)
+  private implicit lazy val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
 
   override protected def beforeAll() {
     startMockServer()

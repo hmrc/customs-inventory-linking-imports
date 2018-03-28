@@ -18,13 +18,14 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import java.net.URLEncoder
 import java.util.UUID
-
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.AnyContent
+
+import play.api.mvc.{AnyContent, RequestHeader}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, WSHttp}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -43,8 +44,8 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
   }
 
   private def get(url: String)(implicit rd: ValidatedRequest[AnyContent]): Future[ApiSubscriptionFieldsResponse] = {
+    implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
     logger.debug(s"Getting fields id from api-subscription-fields service. url = $url")
-    implicit val hc: HeaderCarrier = rd.rdWrapper.headerCarrier
 
     http.GET[ApiSubscriptionFieldsResponse](url)
       .recoverWith {

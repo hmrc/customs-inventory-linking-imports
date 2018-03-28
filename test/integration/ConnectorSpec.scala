@@ -87,8 +87,8 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
     "ImportsConnector" should {
 
       when(requestData.dateTime).thenReturn(DateTime.now(DateTimeZone.UTC))
-      when(requestData.conversationId).thenReturn(TestData.conversationId.toString)
-      when(requestData.correlationId).thenReturn(TestData.correlationId.toString)
+      when(requestData.conversationId).thenReturn(TestData.ConversationId.toString)
+      when(requestData.correlationId).thenReturn(TestData.CorrelationId.toString)
 
       s"make a correct request for $messageType" in {
         setupBackendServiceToReturn(url, ACCEPTED)

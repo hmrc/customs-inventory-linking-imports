@@ -38,8 +38,8 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     private val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, requestMock)
     val request = OutgoingRequest(serviceConfig, outgoingBody, rdWrapper)
     when(rdWrapper.rdWrapper.dateTime).thenReturn(TestData.requestDateTime)
-    when(rdWrapper.rdWrapper.conversationId).thenReturn(TestData.conversationId.toString)
-    when(rdWrapper.rdWrapper.correlationId).thenReturn(TestData.correlationId.toString)
+    when(rdWrapper.rdWrapper.conversationId).thenReturn(TestData.ConversationId.toString)
+    when(rdWrapper.rdWrapper.correlationId).thenReturn(TestData.CorrelationId.toString)
   }
 
   "headers" should {
@@ -62,13 +62,13 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     "include X-Conversation-ID" in new validRequest {
       private val headers: Seq[(String, String)] = request.headers
 
-      headers should contain ("X-Conversation-ID" -> conversationId.toString)
+      headers should contain ("X-Conversation-ID" -> ConversationId.toString)
     }
 
     "include X-Correlation-ID" in new validRequest {
       private val headers: Seq[(String, String)] = request.headers
 
-      headers should contain ("X-Correlation-ID" -> correlationId.toString)
+      headers should contain ("X-Correlation-ID" -> CorrelationId.toString)
     }
 
     "include Authorization" in new validRequest {
