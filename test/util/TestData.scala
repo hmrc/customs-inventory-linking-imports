@@ -39,9 +39,9 @@ import scala.xml.{Elem, NodeSeq}
 object TestData {
 
   val XBadgeIdentifierHeaderName = "X-Badge-Identifier"
-  val XClientIdHeaderName = "X-Client-ID" //TODO replace
-  val XConversationIdHeaderName = "X-Conversation-ID" //TODO replace
-  val XCorrelationIdHeaderName = "X-Correlation-ID" //TODO replace
+  val XClientIdHeaderName = "X-Client-ID" //TODO replace with HeaderConstants value
+  val XConversationIdHeaderName = "X-Conversation-ID" //TODO replace with HeaderConstants value
+  val XCorrelationIdHeaderName = "X-Correlation-ID" //TODO replace with HeaderConstants value
 
   val ConversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
   val CorrelationId: UUID = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
@@ -129,7 +129,6 @@ object TestData {
     //body = request.body.asXml.getOrElse(NodeSeq.Empty),
     body = NodeSeq.Empty,
 
-    headers = request.headers.toSimpleMap,
     requestedApiVersion = "1.0",
     clientId = request.headers.get(XClientId).get
   )

@@ -85,7 +85,6 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
           when(outgoingRequestBuilder.build(messageType, rdWrapperMock, FieldsId)).thenReturn(outgoingRequest)
           when(service.validate(outgoingBody)).thenReturn(Future.successful(()))
           when(importsConnector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
-          when(requestData.headers).thenReturn(headers)
 
           val actualResponse = await(sender.validateAndSend(messageType))
 
@@ -98,7 +97,6 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
 
           val importsMessageType: ImportsMessageType = messageType
           when(service.validate(outgoingBody)).thenReturn(Future.failed(emulatedServiceFailure))
-          when(requestData.headers).thenReturn(headers)
 
           val caught = intercept[EmulatedServiceFailure](await(sender.validateAndSend(messageType)))
 

@@ -31,7 +31,6 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
   private val requestMock = mock[Request[AnyContent]]
 
   implicit val rdWrapper = ValidatedRequest[AnyContent](requestData, requestMock)
-  when(rdWrapper.rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
   when(rdWrapper.rdWrapper.conversationId).thenReturn("conversation-id")
   when(rdWrapper.rdWrapper.clientId).thenReturn("some-client-id")
   when(rdWrapper.rdWrapper.requestedApiVersion).thenReturn("1.0")

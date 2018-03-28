@@ -21,14 +21,14 @@ import org.joda.time.DateTime
 import scala.xml.NodeSeq
 
 case class RequestData(
-  //TODO: make Options simple values
   badgeIdentifier: String,
   conversationId: String,
   correlationId: String,
   dateTime: DateTime,
+
   //TODO: use body in Play2 WrappedRequest
   body: NodeSeq,
-  headers: HeaderMap,
+
   requestedApiVersion: String,
   clientId: String
 )

@@ -36,7 +36,6 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
 
     val rdWrapper = ValidatedRequest[AnyContent](requestData, requestMock)
 
-    when(requestData.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
     when(requestData.conversationId).thenReturn("conversation-id")
     when(requestData.clientId).thenReturn("some-client-id")
     when(requestData.requestedApiVersion).thenReturn("1.0")

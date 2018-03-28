@@ -61,7 +61,6 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
     //TODO: use body in Play2 WrappedRequest
     body = request.body.asXml.getOrElse(NodeSeq.Empty),
 
-    headers = request.headers.toSimpleMap,
     requestedApiVersion = "1.0",
     clientId = request.headers.get(XClientId).get
   )
