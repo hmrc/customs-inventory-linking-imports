@@ -42,7 +42,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   "PayloadWrapper" should {
 
     when(requestData.body).thenReturn(xml)
-    when(requestData.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
+    when(requestData.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
     when(requestData.conversationId).thenReturn(ConversationId.toString)
     when(requestData.correlationId).thenReturn(CorrelationId.toString)
     when(requestData.dateTime).thenReturn(requestDateTime)

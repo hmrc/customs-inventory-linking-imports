@@ -34,7 +34,7 @@ class PayloadDecorator {
         <n1:clientID>{ clientSubscriptionId.toString }</n1:clientID>
         <n1:conversationID>{ rdWrapper.rdWrapper.conversationId }</n1:conversationID>
         <n1:correlationID>{ rdWrapper.rdWrapper.correlationId }</n1:correlationID>
-        <n1:badgeIdentifier>{ rdWrapper.rdWrapper.badgeIdentifier.get }</n1:badgeIdentifier>
+        <n1:badgeIdentifier>{ rdWrapper.rdWrapper.badgeIdentifier }</n1:badgeIdentifier>
         <n1:dateTimeStamp>{ dateTimeNoMillis.print(rdWrapper.rdWrapper.dateTime)}</n1:dateTimeStamp>
       </n1:requestCommon>
       <n1:requestDetail>

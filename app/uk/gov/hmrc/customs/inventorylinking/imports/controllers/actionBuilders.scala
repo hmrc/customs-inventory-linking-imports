@@ -53,7 +53,7 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
   }
 
   private def createData(request: Request[AnyContent]) = RequestData(
-    badgeIdentifier = request.headers.get(XBadgeIdentifier),
+    badgeIdentifier = request.headers.get(XBadgeIdentifier).get,
     conversationId = UUID.randomUUID().toString,
     correlationId = UUID.randomUUID().toString,
     dateTime = DateTime.now(DateTimeZone.UTC),

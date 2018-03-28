@@ -120,7 +120,7 @@ object TestData {
 
   //TODO: simplify this to use hard coded values ie not derived from request
   def createRequestData(request: Request[AnyContent]): RequestData = RequestData(
-    badgeIdentifier = request.headers.get(XBadgeIdentifier).orElse(Some(XBadgeIdentifierHeaderValueAsString)),
+    badgeIdentifier = request.headers.get(XBadgeIdentifier).fold(XBadgeIdentifierHeaderValueAsString)(s => s),
     conversationId = UUID.randomUUID().toString,
     correlationId = UUID.randomUUID().toString,
     dateTime = DateTime.now(DateTimeZone.UTC),

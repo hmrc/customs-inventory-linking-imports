@@ -22,7 +22,7 @@ import scala.xml.NodeSeq
 
 case class RequestData(
   //TODO: make Options simple values
-  badgeIdentifier: Option[String],
+  badgeIdentifier: String,
   conversationId: String,
   correlationId: String,
   dateTime: DateTime,

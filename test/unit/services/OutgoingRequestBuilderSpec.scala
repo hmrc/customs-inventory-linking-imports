@@ -41,7 +41,7 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
     val rdWrapperMock = ValidatedRequest[AnyContent](requestData, requestMock)
 
     when(requestData.body).thenReturn(outgoingBody)
-    when(requestData.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
+    when(requestData.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
     when(decorator.wrap(rdWrapperMock, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
     when(serviceConfigProvider.getConfig("validatemovement")).thenReturn(serviceConfig)
 
