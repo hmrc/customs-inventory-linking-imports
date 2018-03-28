@@ -18,25 +18,22 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import com.google.inject.ImplementedBy
 import javax.inject.Singleton
+
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.mvc.{Headers, Request}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ExtractedHeaders
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
 
 @ImplementedBy(classOf[HeaderValidatorImpl])
 trait HeaderValidator {
 
   //TODO Move logger to constructor
-  def validateHeaders[A](implicit request: Request[A], logger: CdsLogger): Either[ErrorResponse, Unit] = {
+  def validateHeaders[A](implicit request: Request[A], logger: CdsLogger): Either[ErrorResponse, ExtractedHeaders] = {
     implicit val headers = request.headers
-
-    lazy val maybeAccept = headers.get(ACCEPT)
-    lazy val maybeContentType = headers.get(CONTENT_TYPE)
-    lazy val maybeXClientId = headers.get(XClientId)
-    lazy val maybeXBadgeIdentifier = headers.get(XBadgeIdentifier)
 
     //TODO: find out why logger.error string is not appearing red in scoverage report
 //    if (!hasAccept(headers)) {
@@ -61,12 +58,12 @@ trait HeaderValidator {
 //      Right(())
 //    }
 
-    val theResult: Either[ErrorResponse, Unit] = for {
-      accept <- hasAccept(headers).right
-      contentType <- hasContentType(headers).right
+    val theResult: Either[ErrorResponse, ExtractedHeaders] = for {
+      _ <- hasAccept(headers).right
+      _ <- hasContentType(headers).right
       xClientId <- hasXClientId(headers).right
       xbadgeIdentifier <- hasXBadgeIdentifier(headers).right
-    } yield {println("XXXXXXXXXXXXXXXXXXXXXXXXXXX" + (accept, contentType, xClientId, xbadgeIdentifier)) ;()}
+    } yield ExtractedHeaders(xbadgeIdentifier, xClientId)
     theResult
   }
 

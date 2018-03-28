@@ -48,7 +48,7 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
   val headersTable =
     Table(
       ("description", "ValidationResult", "Expected response"),
-      ("Valid Headers", Right(()), Ok),
+      ("Valid Headers", Right(TestExtractedHeaders), Ok),
       ("Invalid header", Left(ErrorContentTypeHeaderInvalid), ErrorContentTypeHeaderInvalid.XmlResult)
     )
 

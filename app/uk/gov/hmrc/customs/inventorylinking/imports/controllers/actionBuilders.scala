@@ -22,8 +22,7 @@ import javax.inject.{Inject, Singleton}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.mvc._
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ExtractedHeaders, RequestData, ValidatedRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
@@ -44,16 +43,16 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
 
     validator.validateHeaders(inputRequest, logger) match { //TODO pass in logger on creation of header validator
       case Left(result) => Left(result.XmlResult)
-      case Right(_) => {
-        val requestData = createData(inputRequest.asInstanceOf[Request[AnyContent]])
+      case Right(extractedHeaders) => {
+        val requestData = createData(extractedHeaders, inputRequest.asInstanceOf[Request[AnyContent]])
         val validatedRequest = ValidatedRequest(requestData, inputRequest)
         Right(validatedRequest)
       }
     }
   }
 
-  private def createData(request: Request[AnyContent]) = RequestData(
-    badgeIdentifier = request.headers.get(XBadgeIdentifier).get,
+  private def createData(extractedHeaders: ExtractedHeaders, request: Request[AnyContent]) = RequestData(
+    badgeIdentifier = extractedHeaders.badgeIdentifier,
     conversationId = UUID.randomUUID().toString,
     correlationId = UUID.randomUUID().toString,
     dateTime = DateTime.now(DateTimeZone.UTC),
@@ -62,7 +61,7 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
     body = request.body.asXml.getOrElse(NodeSeq.Empty),
 
     requestedApiVersion = "1.0",
-    clientId = request.headers.get(XClientId).get
+    clientId = extractedHeaders.xClientId
   )
 
 }

@@ -49,6 +49,8 @@ object TestData {
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
+  val TestExtractedHeaders = ExtractedHeaders(XBadgeIdentifierHeaderValueAsString, TestXClientId)
+
   lazy val InvalidAcceptHeader = ACCEPT -> JSON
   lazy val InvalidContentTypeJsonHeader = CONTENT_TYPE -> JSON
   lazy val InvalidXClientIdHeader = XClientIdHeaderName -> "This is not a UUID"
