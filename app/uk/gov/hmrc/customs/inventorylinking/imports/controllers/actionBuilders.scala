@@ -21,7 +21,7 @@ import javax.inject.{Inject, Singleton}
 
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.mvc._
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ExtractedHeaders, RequestData, ValidatedRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -29,9 +29,8 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 
-// TODO: use ImportsLogger
 @Singleton
-class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: CdsLogger) extends ActionRefiner[Request, ValidatedRequest] {
+class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: ImportsLogger) extends ActionRefiner[Request, ValidatedRequest] {
 
   //TODO: add logging
   private val actionName = this.getClass.getSimpleName
@@ -40,9 +39,7 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
     implicit val r: Request[A] = inputRequest
     implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 
-    implicit val headers = inputRequest.headers //TODO not needed
-
-    validator.validateHeaders(inputRequest) match { //TODO pass in logger on creation of header validator
+    validator.validateHeaders(inputRequest) match {
       case Left(result) => Left(result.XmlResult)
       case Right(extractedHeaders) => {
         val requestData = createData(extractedHeaders, inputRequest.asInstanceOf[Request[AnyContent]])

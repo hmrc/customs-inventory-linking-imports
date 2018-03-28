@@ -24,8 +24,8 @@ import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Request, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.ErrorContentTypeHeaderInvalid
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{HeaderValidator, ValidateAndExtractHeadersAction}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 import uk.gov.hmrc.play.test.UnitSpec
@@ -40,7 +40,7 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
   val blockReturningOk = (_: ValidatedRequest[_]) => Future.successful(Ok)
 
   trait SetUp {
-    val mockLogger = mock[CdsLogger]
+    val mockLogger = mock[ImportsLogger]
     val mockHeaderValidator = mock[HeaderValidator]
     val actionBuilderValidator = new ValidateAndExtractHeadersAction(mockHeaderValidator, mockLogger)
   }
