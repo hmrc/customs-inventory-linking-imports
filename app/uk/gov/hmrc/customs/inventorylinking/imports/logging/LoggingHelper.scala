@@ -42,7 +42,7 @@ object LoggingHelper {
   }
   
   private def format(rdWrapper: ValidatedRequest[AnyContent]): String = {
-    s"[conversationId=${rdWrapper.rdWrapper.conversationId}][clientId=${rdWrapper.rdWrapper.clientId.getOrElse("")}][requestedApiVersion=${rdWrapper.rdWrapper.requestedApiVersion}]"
+    s"[conversationId=${rdWrapper.rdWrapper.conversationId}][clientId=${rdWrapper.rdWrapper.clientId}][requestedApiVersion=${rdWrapper.rdWrapper.requestedApiVersion}]"
   }
 
 }

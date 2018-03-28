@@ -30,5 +30,5 @@ case class RequestData(
   body: NodeSeq,
   headers: HeaderMap,
   requestedApiVersion: String,
-  clientId: Option[String]
+  clientId: String
 )

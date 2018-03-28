@@ -39,7 +39,7 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
   private val version = "1.0"
   //TODO: pass in clientId explicitly
   def getClientSubscriptionId()(implicit rdWrapper: ValidatedRequest[AnyContent]): Future[UUID] = {
-    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.rdWrapper.clientId.getOrElse(throw new IllegalStateException("clientId not present"))}/context/$apiContextEncoded/version/$version"
+    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.rdWrapper.clientId}/context/$apiContextEncoded/version/$version"
     get(url).map(r => r.fieldsId)
   }
 

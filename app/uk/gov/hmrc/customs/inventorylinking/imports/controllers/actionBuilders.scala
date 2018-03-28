@@ -63,7 +63,7 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
 
     headers = request.headers.toSimpleMap,
     requestedApiVersion = "1.0",
-    clientId = request.headers.get(XClientId)
+    clientId = request.headers.get(XClientId).get
   )
 
 }

@@ -29,6 +29,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 import uk.gov.hmrc.play.test.UnitSpec
+import util.ApiSubscriptionFieldsTestData._
 import util.TestData._
 import util.XMLTestData
 
@@ -54,7 +55,10 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
   "HeaderValidatorAction" should  {
     forAll(headersTable) { (description, validationResult, expectedResult) =>
       s"$description" in new SetUp() {
-        val request = FakeRequest().withXmlBody(XMLTestData.ValidInventoryLinkingMovementRequestXML).withHeaders(XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
+        val request = FakeRequest().withXmlBody(XMLTestData.ValidInventoryLinkingMovementRequestXML).withHeaders(
+          XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString,
+          XClientId -> TestXClientId
+        )
         when(mockHeaderValidator.validateHeaders(any[Request[AnyContent]], ameq(mockLogger))).thenReturn(validationResult)
 
         val actualResult: Result = await(actionBuilderValidator.invokeBlock(request, blockReturningOk))

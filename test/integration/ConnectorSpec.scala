@@ -69,7 +69,7 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
 
   override protected def beforeEach(): Unit = {
     when(requestData.conversationId).thenReturn("conv-id")
-    when(requestData.clientId).thenReturn(None)
+    when(requestData.clientId).thenReturn("")
     when(requestData.requestedApiVersion).thenReturn("1.23")
   }
 
