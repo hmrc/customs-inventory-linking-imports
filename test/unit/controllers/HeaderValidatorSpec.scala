@@ -31,11 +31,11 @@ import util.TestData._
 
 class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with MockitoSugar {
 
-  val validator = new HeaderValidator {}
-
   implicit val rdWrapper = mock[ValidatedRequest[AnyContent]]
   implicit val request = mock[Request[AnyContent]]
   implicit val loggerMock = mock[CdsLogger]
+
+  val validator = new HeaderValidator(loggerMock)
 
   val headersTable =
     Table(
@@ -59,7 +59,7 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
         when(rdWrapper.request).thenReturn(request)
         when(request.headers).thenReturn(new Headers(headers.toSeq))
 
-        validator.validateHeaders(request, loggerMock) shouldBe response
+        validator.validateHeaders(request) shouldBe response
       }
     }
   }

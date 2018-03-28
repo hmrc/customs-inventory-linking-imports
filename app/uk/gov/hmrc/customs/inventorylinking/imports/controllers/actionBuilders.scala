@@ -29,6 +29,7 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 import scala.concurrent.Future
 import scala.xml.NodeSeq
 
+// TODO: use ImportsLogger
 @Singleton
 class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: CdsLogger) extends ActionRefiner[Request, ValidatedRequest] {
 
@@ -41,7 +42,7 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
 
     implicit val headers = inputRequest.headers //TODO not needed
 
-    validator.validateHeaders(inputRequest, logger) match { //TODO pass in logger on creation of header validator
+    validator.validateHeaders(inputRequest) match { //TODO pass in logger on creation of header validator
       case Left(result) => Left(result.XmlResult)
       case Right(extractedHeaders) => {
         val requestData = createData(extractedHeaders, inputRequest.asInstanceOf[Request[AnyContent]])

@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
-import com.google.inject.ImplementedBy
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
@@ -28,11 +27,10 @@ import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ExtractedHeaders
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
 
-@ImplementedBy(classOf[HeaderValidatorImpl])
-trait HeaderValidator {
+@Singleton
+class HeaderValidator @Inject() (logger: CdsLogger) {
 
-  //TODO Move logger to constructor
-  def validateHeaders[A](implicit request: Request[A], logger: CdsLogger): Either[ErrorResponse, ExtractedHeaders] = {
+  def validateHeaders[A](implicit request: Request[A]): Either[ErrorResponse, ExtractedHeaders] = {
     implicit val headers = request.headers
 
     lazy val validAcceptHeaders = Seq(Version1AcceptHeaderValue)
@@ -50,7 +48,7 @@ trait HeaderValidator {
 
     def validateHeader(headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)(implicit h: Headers): Either[ErrorResponse, String] = {
       val left = Left(errorResponse)
-      def leftWithLog = {
+      val leftWithLog = {
         logger.error(s"$errorResponse ")
         left
       }
@@ -84,5 +82,3 @@ trait HeaderValidator {
 
 }
 
-@Singleton
-class HeaderValidatorImpl extends HeaderValidator

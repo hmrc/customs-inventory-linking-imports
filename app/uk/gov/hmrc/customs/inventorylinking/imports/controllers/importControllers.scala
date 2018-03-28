@@ -42,8 +42,8 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
                                 importsMessageType: ImportsMessageType,
                                 validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                                 logger: ImportsLogger,
-                                cdsLogger: CdsLogger
-                               ) extends BaseController with HeaderValidator with AuthorisedFunctions {
+                                cdsLogger: CdsLogger //TODO: Change to ImportsLogger
+                               ) extends BaseController with AuthorisedFunctions {
 
   private lazy val ErrorResponseUnauthorisedGeneral =
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")

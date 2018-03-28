@@ -71,7 +71,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
 
   private val logger = mock[ImportsLogger]
   private val cdsLogger = mock[CdsLogger]
-  private val validateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator {}, cdsLogger)
+  private val validateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(cdsLogger), cdsLogger)
   private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockAuthConnector, messageSender, validateAndExtractHeadersAction, logger, cdsLogger)
   private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockAuthConnector, messageSender, validateAndExtractHeadersAction, logger, cdsLogger)
   private val UuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"

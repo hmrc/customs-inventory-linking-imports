@@ -59,7 +59,7 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
           XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString,
           XClientId -> TestXClientId
         )
-        when(mockHeaderValidator.validateHeaders(any[Request[AnyContent]], ameq(mockLogger))).thenReturn(validationResult)
+        when(mockHeaderValidator.validateHeaders(any[Request[AnyContent]])).thenReturn(validationResult)
 
         val actualResult: Result = await(actionBuilderValidator.invokeBlock(request, blockReturningOk))
 
