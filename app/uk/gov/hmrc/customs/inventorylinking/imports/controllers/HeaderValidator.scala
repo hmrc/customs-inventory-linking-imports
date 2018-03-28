@@ -39,27 +39,35 @@ trait HeaderValidator {
     lazy val maybeXBadgeIdentifier = headers.get(XBadgeIdentifier)
 
     //TODO: find out why logger.error string is not appearing red in scoverage report
-    if (!hasAccept(headers)) {
-      logger.error(s"$ACCEPT header was invalid: ${maybeAccept.getOrElse("")}")
-      Left(ErrorAcceptHeaderInvalid)
-    } else if (!hasContentType(headers)) {
-      logger.error(s"$CONTENT_TYPE header was invalid: ${maybeContentType.getOrElse("")}")
-      Left(ErrorContentTypeHeaderInvalid)
-    } else if (!hasXClientId(headers)) {
-      logger.error(s"$XClientId header was invalid: ${maybeXClientId.getOrElse("")}")
-      Left(ErrorInternalServerError)
-    } else if (!hasXBadgeIdentifier(headers)) {
-        logger.error(s"$XBadgeIdentifier header was invalid: ${maybeXBadgeIdentifier.getOrElse("")}")
-        Left(ErrorGenericBadRequest)
-    } else {
-      logger.debug(
-        s"$ACCEPT header passed validation: ${maybeAccept}\n"
-      + s"$CONTENT_TYPE header passed validation: ${maybeContentType}\n"
-      + s"$XClientId header passed validation: ${maybeXClientId}\n"
-      + s"$XBadgeIdentifier header passed validation: ${maybeXBadgeIdentifier}")
+//    if (!hasAccept(headers)) {
+//      logger.error(s"$ACCEPT header was invalid: ${maybeAccept.getOrElse("")}")
+//      Left(ErrorAcceptHeaderInvalid)
+//    } else if (!hasContentType(headers)) {
+//      logger.error(s"$CONTENT_TYPE header was invalid: ${maybeContentType.getOrElse("")}")
+//      Left(ErrorContentTypeHeaderInvalid)
+//    } else if (!hasXClientId(headers)) {
+//      logger.error(s"$XClientId header was invalid: ${maybeXClientId.getOrElse("")}")
+//      Left(ErrorInternalServerError)
+//    } else if (!hasXBadgeIdentifier(headers)) {
+//        logger.error(s"$XBadgeIdentifier header was invalid: ${maybeXBadgeIdentifier.getOrElse("")}")
+//        Left(ErrorGenericBadRequest)
+//    } else {
+//      logger.debug(
+//        s"$ACCEPT header passed validation: ${maybeAccept}\n"
+//      + s"$CONTENT_TYPE header passed validation: ${maybeContentType}\n"
+//      + s"$XClientId header passed validation: ${maybeXClientId}\n"
+//      + s"$XBadgeIdentifier header passed validation: ${maybeXBadgeIdentifier}")
+//
+//      Right(())
+//    }
 
-      Right(())
-    }
+    val theResult: Either[ErrorResponse, Unit] = for {
+      accept <- hasAccept(headers).right
+      contentType <- hasContentType(headers).right
+      xClientId <- hasXClientId(headers).right
+      xbadgeIdentifier <- hasXBadgeIdentifier(headers).right
+    } yield {println("XXXXXXXXXXXXXXXXXXXXXXXXXXX" + (accept, contentType, xClientId, xbadgeIdentifier)) ;()}
+    theResult
   }
 
   private lazy val validAcceptHeaders = Seq(Version1AcceptHeaderValue)
@@ -67,14 +75,26 @@ trait HeaderValidator {
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
 
-  private def hasAccept(implicit h: Headers) = h.get(ACCEPT).fold(false)(validAcceptHeaders.contains(_))
+  //TODO: add logging
+  private def hasAccept(implicit h: Headers) = {
+    val left = Left(ErrorAcceptHeaderInvalid)
+    h.get(ACCEPT).fold[Either[ErrorResponse, String]](left){a => if (validAcceptHeaders.contains(a)) Right((a)) else left}
+  }
 
-  private def hasContentType(implicit h: Headers) = h.get(CONTENT_TYPE).fold(false)(h => validContentTypeHeaders.contains(h.toLowerCase()))
+  private def hasContentType(implicit h: Headers) = {
+    val left = Left(ErrorContentTypeHeaderInvalid)
+    h.get(CONTENT_TYPE).fold[Either[ErrorResponse, String]](left)(c => if (validContentTypeHeaders.contains(c.toLowerCase())) Right((c)) else left)
+  }
 
-  private def hasXClientId(implicit h: Headers) = h.get(XClientId).fold(false)(xClientIdRegex.findFirstIn(_).nonEmpty)
+  private def hasXClientId(implicit h: Headers) = {
+    val left = Left(ErrorInternalServerError)
+    h.get(XClientId).fold[Either[ErrorResponse, String]](left)(x => if (xClientIdRegex.findFirstIn(x).nonEmpty) Right((x)) else left)
+  }
 
-  private def hasXBadgeIdentifier(implicit h: Headers) = h.get(XBadgeIdentifier).fold(false)(xBadgeIdentifierRegex.findFirstIn(_).nonEmpty)
-
+  private def hasXBadgeIdentifier(implicit h: Headers) = {
+    val left = Left(ErrorGenericBadRequest)
+    h.get(XBadgeIdentifier).fold[Either[ErrorResponse, String]](left)(b => if (xBadgeIdentifierRegex.findFirstIn(b).nonEmpty) Right((b)) else left)
+  }
 }
 
 @Singleton
