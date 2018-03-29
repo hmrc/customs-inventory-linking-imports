@@ -16,19 +16,7 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-import org.joda.time.DateTime
+import play.api.mvc.{Request, WrappedRequest}
 
-import scala.xml.NodeSeq
-
-case class RequestData(
-  badgeIdentifier: String,
-  conversationId: String,
-  correlationId: String,
-  dateTime: DateTime,
-
-  //TODO: use body in Play2 WrappedRequest
-  body: NodeSeq,
-
-  requestedApiVersion: String,
-  clientId: String
-)
+//TODO: rename rdWrapper to requestData
+case class ValidatedRequest[A](rdWrapper: RequestData, request: Request[A]) extends WrappedRequest[A](request)

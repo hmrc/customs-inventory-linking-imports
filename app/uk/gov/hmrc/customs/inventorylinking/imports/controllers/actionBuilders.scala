@@ -20,20 +20,26 @@ import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.mvc._
+import play.api.http.Status
+import play.api.mvc.{ActionRefiner, _}
+import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
+import uk.gov.hmrc.auth.core.{AuthProviders, AuthorisationException, AuthorisedFunctions, Enrolment}
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.UnauthorizedCode
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ExtractedHeaders, RequestData, ValidatedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
+import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.control.NonFatal
 import scala.xml.NodeSeq
 
 @Singleton
 class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: ImportsLogger) extends ActionRefiner[Request, ValidatedRequest] {
-
-  //TODO: add logging
-  private val actionName = this.getClass.getSimpleName
 
   override def refine[A](inputRequest: Request[A]): Future[Either[Result, ValidatedRequest[A]]] = Future.successful {
     implicit val r: Request[A] = inputRequest
@@ -41,11 +47,10 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
 
     validator.validateHeaders(inputRequest) match {
       case Left(result) => Left(result.XmlResult)
-      case Right(extractedHeaders) => {
+      case Right(extractedHeaders) =>
         val requestData = createData(extractedHeaders, inputRequest.asInstanceOf[Request[AnyContent]])
         val validatedRequest = ValidatedRequest(requestData, inputRequest)
         Right(validatedRequest)
-      }
     }
   }
 
@@ -63,3 +68,47 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
   )
 
 }
+
+@Singleton
+class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector, logger: ImportsLogger) extends AuthorisedFunctions {
+
+  private val errorResponseUnauthorisedGeneral =
+    ErrorResponse(Status.UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
+
+  def authAction(importsMessageType: ImportsMessageType): ActionRefiner[ValidatedRequest, ValidatedRequest] = new ActionRefiner[ValidatedRequest, ValidatedRequest]() {
+
+    override def refine[A](validatedRequest: ValidatedRequest[A]): Future[Either[Result, ValidatedRequest[A]]] = {
+      implicit val r = validatedRequest.asInstanceOf[ValidatedRequest[AnyContent]]
+      implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+
+      def enrolmentForMessageType = importsMessageType match {
+        case ValidateMovement =>
+          Enrolment("write:customs-il-imports-movement-validation")
+        case GoodsArrival =>
+          Enrolment("write:customs-il-imports-arrival-notifications")
+      }
+
+      def addConversationIdHeader(r: Result, conversationId: String) = {
+        r.withHeaders(XConversationId -> conversationId)
+      }
+
+      def handleError: PartialFunction[Throwable, Future[Either[Result, ValidatedRequest[A]]]] = {
+        case NonFatal(authEx: AuthorisationException) =>
+          logger.error(s"User is not authorised for this service.")
+          logger.debug(s"User is not authorised for this service", authEx)
+          Future.successful(Left(addConversationIdHeader(errorResponseUnauthorisedGeneral.XmlResult, validatedRequest.rdWrapper.conversationId)))
+
+        case NonFatal(e) =>
+          logger.error(s"An error occurred while processing request.")
+          logger.debug(s"An error occurred while processing request ", e)
+          Future.successful(Left(addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.rdWrapper.conversationId)))
+      }
+
+      val future: Future[Either[Result, ValidatedRequest[A]]] = authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
+        Future.successful(Right(validatedRequest))
+      }.recoverWith(handleError)
+      future
+    }
+  }
+}
+

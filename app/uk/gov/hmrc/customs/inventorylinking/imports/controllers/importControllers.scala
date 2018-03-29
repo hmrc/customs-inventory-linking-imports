@@ -84,8 +84,6 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
 
   private def authoriseAndSend(implicit rdWrapper: ValidatedRequest[AnyContent]): Future[Result] = {
-// TODO: remove if HeaderCarrier is not required
-//    implicit val hc: HeaderCarrier = rdWrapper.rdWrapper.headerCarrier
     def enrolmentForMessageType = importsMessageType match {
       case ValidateMovement => Enrolment("write:customs-il-imports-movement-validation")
       case GoodsArrival => Enrolment("write:customs-il-imports-arrival-notifications")

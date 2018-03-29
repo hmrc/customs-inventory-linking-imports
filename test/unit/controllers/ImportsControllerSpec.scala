@@ -140,12 +140,12 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       "called by unauthorised CSP" should {
         s"return result 401 UNAUTHORISED for $messageTypeName" in {
           unauthoriseCsp(authPredicate)
+
           val result: Result = await(controller.apply(request))
 
           status(result) shouldBe UNAUTHORIZED
           stringToXml(contentAsString(result)) shouldBe stringToXml(unAuthorisedError)
           header(XConversationIdHeaderName, result).get should fullyMatch regex UuidRegex
-
           verifyZeroInteractions(messageSender)
         }
       }
