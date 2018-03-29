@@ -34,7 +34,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               connector: ImportsConnector,
                               logger: ImportsLogger) {
 
-  def validateAndSend(messageType: ImportsMessageType)(implicit rdWrapper: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
+  def validateAndSend(messageType: ImportsMessageType)(implicit validatedRequest: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
 
     def service = messageType match {
       case GoodsArrival => goodsArrivalXmlValidationService
@@ -42,9 +42,9 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
 
     for {
-      _ <- service.validate(rdWrapper.rdWrapper.body)
+      _ <- service.validate(validatedRequest.rdWrapper.body)
       clientSubscriptionId <- apiSubscriptionFieldsConnector.getClientSubscriptionId()
-      outgoingRequest = outgoingRequestBuilder.build(messageType, rdWrapper, clientSubscriptionId)
+      outgoingRequest = outgoingRequestBuilder.build(messageType, validatedRequest, clientSubscriptionId)
       result <- connector.post(outgoingRequest)
     } yield result
   }
