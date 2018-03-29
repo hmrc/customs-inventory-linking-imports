@@ -30,13 +30,13 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Versi
 @Singleton
 class HeaderValidator @Inject() (logger: CdsLogger) {
 
+  private lazy val validAcceptHeaders = Seq(Version1AcceptHeaderValue)
+  private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
+  private lazy val xClientIdRegex = "^\\S+$".r
+  private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
+
   def validateHeaders[A](implicit request: Request[A]): Either[ErrorResponse, ExtractedHeaders] = {
     implicit val headers = request.headers
-
-    lazy val validAcceptHeaders = Seq(Version1AcceptHeaderValue)
-    lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
-    lazy val xClientIdRegex = "^\\S+$".r
-    lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
 
     def hasAccept = validateHeader(ACCEPT, validAcceptHeaders.contains(_), ErrorAcceptHeaderInvalid)
 
@@ -46,24 +46,6 @@ class HeaderValidator @Inject() (logger: CdsLogger) {
 
     def hasXBadgeIdentifier = validateHeader(XBadgeIdentifier, xBadgeIdentifierRegex.findFirstIn(_).nonEmpty, ErrorGenericBadRequest)
 
-    def validateHeader(headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)(implicit h: Headers): Either[ErrorResponse, String] = {
-      val left = Left(errorResponse)
-      val leftWithLog = {
-        logger.error(s"$errorResponse ")
-        left
-      }
-      def leftWithLogContainingValue(s: String) = {
-        logger.error(s"$errorResponse '$s'")
-        left
-      }
-
-      h.get(headerName).fold[Either[ErrorResponse, String]]{
-        leftWithLog
-      }{
-        b => if (rule(b)) Right((b)) else leftWithLogContainingValue(b)
-      }
-    }
-
     val theResult: Either[ErrorResponse, ExtractedHeaders] = for {
       accept <- hasAccept.right
       contentType <- hasContentType.right
@@ -71,14 +53,31 @@ class HeaderValidator @Inject() (logger: CdsLogger) {
       xBadgeIdentifier <- hasXBadgeIdentifier.right
     } yield {
       logger.debug(
-        s"$ACCEPT header passed validation: ${accept}\n"
-      + s"$CONTENT_TYPE header passed validation: ${contentType}\n"
-      + s"$XClientId header passed validation: ${xClientId}\n"
-      + s"$XBadgeIdentifier header passed validation: ${xBadgeIdentifier}")
+        s"$ACCEPT header passed validation: $accept\n"
+      + s"$CONTENT_TYPE header passed validation: $contentType\n"
+      + s"$XClientId header passed validation: $xClientId\n"
+      + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier")
       ExtractedHeaders(xBadgeIdentifier, xClientId)
     }
     theResult
   }
 
+  private def validateHeader(headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)(implicit h: Headers): Either[ErrorResponse, String] = {
+    val left = Left(errorResponse)
+    val leftWithLog = {
+      logger.error(s"$errorResponse ")
+      left
+    }
+    def leftWithLogContainingValue(s: String) = {
+      logger.error(s"$errorResponse '$s'")
+      left
+    }
+
+    h.get(headerName).fold[Either[ErrorResponse, String]]{
+      leftWithLog
+    }{
+      h => if (rule(h)) Right(h) else leftWithLogContainingValue(h)
+    }
+  }
 }
 
