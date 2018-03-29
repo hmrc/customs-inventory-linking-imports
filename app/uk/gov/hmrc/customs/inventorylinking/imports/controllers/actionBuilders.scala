@@ -17,8 +17,8 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import java.util.UUID
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.Status
 import play.api.mvc.{ActionRefiner, _}
@@ -30,13 +30,14 @@ import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthC
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService, XmlValidationErrorsMapper}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-import scala.xml.NodeSeq
+import scala.xml.{NodeSeq, SAXException}
 
 @Singleton
 class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: ImportsLogger) extends ActionRefiner[Request, ValidatedRequest] {
@@ -76,6 +77,7 @@ class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector
     ErrorResponse(Status.UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
 
   def authAction(importsMessageType: ImportsMessageType): ActionRefiner[ValidatedRequest, ValidatedRequest] = new ActionFilter[ValidatedRequest]() {
+
     override protected def filter[A](validatedRequest: ValidatedRequest[A]): Future[Option[Result]] = {
       implicit val r = validatedRequest.asInstanceOf[ValidatedRequest[AnyContent]]
       implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
@@ -107,4 +109,45 @@ class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector
     }
   }
 }
+
+@Singleton
+class PayloadValidationAction @Inject()(goodsArrivalXmlValidationService: GoodsArrivalXmlValidationService,
+                                         validateMovementXmlValidationService: ValidateMovementXmlValidationService,
+                                         logger: ImportsLogger) {
+
+  def validatePayload(importsMessageType: ImportsMessageType): ActionRefiner[ValidatedRequest, ValidatedRequest] = new ActionFilter[ValidatedRequest]() {
+
+    override protected def filter[A](validatedRequest: ValidatedRequest[A]): Future[Option[Result]] = {
+
+
+      implicit val r = validatedRequest.asInstanceOf[ValidatedRequest[AnyContent]]
+      implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+
+
+      def service = importsMessageType match {
+        case GoodsArrival => goodsArrivalXmlValidationService
+        case ValidateMovement => validateMovementXmlValidationService
+      }
+
+      def addConversationIdHeader(r: Result, conversationId: String) = {
+        r.withHeaders(XConversationId -> conversationId)
+      }
+
+      service.validate(validatedRequest.requestData.body).map(_ => None).recoverWith{
+        case NonFatal(saxe: SAXException) =>
+          logger.error(s"XML processing error.")
+          logger.debug(s"XML processing error.", saxe)
+          Future.successful(
+            Some(addConversationIdHeader(ErrorResponse.ErrorGenericBadRequest.withErrors(
+              XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult, validatedRequest.requestData.conversationId)))
+        case NonFatal(e) =>
+          logger.error(s"An error occurred while processing request.")
+          logger.debug(s"An error occurred while processing request ", e)
+          Future.successful(
+            Some(addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.requestData.conversationId)))
+      }
+    }
+  }
+}
+
 
