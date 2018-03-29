@@ -74,8 +74,8 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
   private val importsLogger = mock[ImportsLogger]
   private val validateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(cdsLogger), importsLogger)
   private val authAction = new AuthAction(mockAuthConnector, importsLogger)
-  private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockAuthConnector, mockMessageSender, validateAndExtractHeadersAction, authAction, logger, cdsLogger)
-  private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockAuthConnector, mockMessageSender, validateAndExtractHeadersAction, authAction, logger, cdsLogger)
+  private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockMessageSender, validateAndExtractHeadersAction, authAction, logger, cdsLogger)
+  private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockMessageSender, validateAndExtractHeadersAction, authAction, logger, cdsLogger)
   private val UuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
   private val errorResultUnauthorised = ErrorResponse(UNAUTHORIZED, errorCode = "UNAUTHORIZED",
     message = "Unauthorised request").XmlResult.withHeaders("X-Conversation-ID" -> ConversationId.toString)

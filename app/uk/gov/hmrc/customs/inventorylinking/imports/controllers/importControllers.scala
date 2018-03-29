@@ -19,10 +19,8 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import javax.inject.{Inject, Singleton}
 
 import play.api.mvc.{Action, AnyContent, Result, _}
-import uk.gov.hmrc.auth.core.AuthorisedFunctions
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -35,14 +33,13 @@ import scala.util.control.NonFatal
 import scala.xml.SAXException
 
 abstract class ImportController(importsConfigService: ImportsConfigService,
-                                override val authConnector: MicroserviceAuthConnector,
                                 messageSender: MessageSender,
                                 importsMessageType: ImportsMessageType,
                                 validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                                 authAction: AuthAction,
                                 logger: ImportsLogger,
                                 cdsLogger: CdsLogger //TODO: Change to ImportsLogger
-                               ) extends BaseController with AuthorisedFunctions {
+                               ) extends BaseController {
 
   def process(): Action[AnyContent] =  (Action andThen validateAndExtractHeadersAction andThen authAction.authAction(importsMessageType)).async(bodyParser = xmlOrEmptyBody)  {
     implicit validatedRequest: ValidatedRequest[AnyContent] =>
@@ -81,13 +78,12 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 
 @Singleton
 class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigService,
-                                       authConnector: MicroserviceAuthConnector,
                                        messageSender: MessageSender,
                                        validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                                        authAction: AuthAction,
                                        logger: ImportsLogger,
                                        cdsLogger: CdsLogger)
-  extends ImportController(importsConfigService, authConnector, messageSender, GoodsArrival, validateAndExtractHeadersAction, authAction, logger, cdsLogger) {
+  extends ImportController(importsConfigService, messageSender, GoodsArrival, validateAndExtractHeadersAction, authAction, logger, cdsLogger) {
 
   def post(): Action[AnyContent] = {
     super.process()
@@ -96,13 +92,12 @@ class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigServic
 
 @Singleton
 class ValidateMovementController @Inject()(importsConfigService: ImportsConfigService,
-                                           authConnector: MicroserviceAuthConnector,
                                            messageSender: MessageSender,
                                            validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                                            authAction: AuthAction,
                                            logger: ImportsLogger,
                                            cdsLogger: CdsLogger)
-  extends ImportController(importsConfigService, authConnector, messageSender, ValidateMovement, validateAndExtractHeadersAction, authAction, logger, cdsLogger) {
+  extends ImportController(importsConfigService, messageSender, ValidateMovement, validateAndExtractHeadersAction, authAction, logger, cdsLogger) {
 
   def post(): Action[AnyContent] = {
     super.process()
