@@ -75,9 +75,8 @@ class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector
   private val errorResponseUnauthorisedGeneral =
     ErrorResponse(Status.UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
 
-  def authAction(importsMessageType: ImportsMessageType): ActionRefiner[ValidatedRequest, ValidatedRequest] = new ActionRefiner[ValidatedRequest, ValidatedRequest]() {
-
-    override def refine[A](validatedRequest: ValidatedRequest[A]): Future[Either[Result, ValidatedRequest[A]]] = {
+  def authAction(importsMessageType: ImportsMessageType): ActionRefiner[ValidatedRequest, ValidatedRequest] = new ActionFilter[ValidatedRequest]() {
+    override protected def filter[A](validatedRequest: ValidatedRequest[A]): Future[Option[Result]] = {
       implicit val r = validatedRequest.asInstanceOf[ValidatedRequest[AnyContent]]
       implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 
@@ -92,22 +91,19 @@ class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector
         r.withHeaders(XConversationId -> conversationId)
       }
 
-      def handleError: PartialFunction[Throwable, Future[Either[Result, ValidatedRequest[A]]]] = {
+      authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
+        Future.successful(None)
+      }.recoverWith{
         case NonFatal(authEx: AuthorisationException) =>
           logger.error(s"User is not authorised for this service.")
           logger.debug(s"User is not authorised for this service", authEx)
-          Future.successful(Left(addConversationIdHeader(errorResponseUnauthorisedGeneral.XmlResult, validatedRequest.rdWrapper.conversationId)))
+          Future.successful(Some(addConversationIdHeader(errorResponseUnauthorisedGeneral.XmlResult, validatedRequest.rdWrapper.conversationId)))
 
         case NonFatal(e) =>
           logger.error(s"An error occurred while processing request.")
           logger.debug(s"An error occurred while processing request ", e)
-          Future.successful(Left(addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.rdWrapper.conversationId)))
+          Future.successful(Some(addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.rdWrapper.conversationId)))
       }
-
-      val future: Future[Either[Result, ValidatedRequest[A]]] = authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
-        Future.successful(Right(validatedRequest))
-      }.recoverWith(handleError)
-      future
     }
   }
 }
