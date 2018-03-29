@@ -75,7 +75,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
       val response = await(getApiSubscriptionFields)
 
       response shouldBe FieldsId
-      verifyGetSubscriptionFieldsCalled(rdWrapper.rdWrapper.clientId)
+      verifyGetSubscriptionFieldsCalled(rdWrapper.requestData.clientId)
     }
 
     "return a failed future when external service returns 404" in {
@@ -107,7 +107,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   }
 
-  private def getApiSubscriptionFields(): Future[UUID] = {
+  private def getApiSubscriptionFields: Future[UUID] = {
     connector.getClientSubscriptionId()
   }
 }

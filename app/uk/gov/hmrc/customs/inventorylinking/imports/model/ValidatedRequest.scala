@@ -18,5 +18,4 @@ package uk.gov.hmrc.customs.inventorylinking.imports.model
 
 import play.api.mvc.{Request, WrappedRequest}
 
-//TODO: rename rdWrapper to requestData
-case class ValidatedRequest[A](rdWrapper: RequestData, request: Request[A]) extends WrappedRequest[A](request)
+case class ValidatedRequest[A](requestData: RequestData, request: Request[A]) extends WrappedRequest[A](request)

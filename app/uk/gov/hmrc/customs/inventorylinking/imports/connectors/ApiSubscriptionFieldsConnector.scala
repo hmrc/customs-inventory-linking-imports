@@ -38,8 +38,8 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
   private val version = "1.0"
   //TODO: pass in clientId explicitly
-  def getClientSubscriptionId()(implicit rdWrapper: ValidatedRequest[AnyContent]): Future[UUID] = {
-    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.rdWrapper.clientId}/context/$apiContextEncoded/version/$version"
+  def getClientSubscriptionId()(implicit validatedRequest: ValidatedRequest[AnyContent]): Future[UUID] = {
+    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${validatedRequest.requestData.clientId}/context/$apiContextEncoded/version/$version"
     get(url).map(r => r.fieldsId)
   }
 

@@ -46,19 +46,19 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
       //TODO: plug in another Action Builder to validate payload
       //TODO: after that, all this controller does is to call the connector
 
-      messageSender.validateAndSend(importsMessageType).map(_ => addConversationIdHeader(Accepted, validatedRequest.rdWrapper.conversationId)).recoverWith{
+      messageSender.validateAndSend(importsMessageType).map(_ => addConversationIdHeader(Accepted, validatedRequest.requestData.conversationId)).recoverWith{
         case NonFatal(saxe: SAXException) =>
           logger.error(s"XML processing error.")
           logger.debug(s"XML processing error.", saxe)
           Future.successful(
             addConversationIdHeader(ErrorResponse.ErrorGenericBadRequest.withErrors(
-              XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult, validatedRequest.rdWrapper.conversationId)
+              XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult, validatedRequest.requestData.conversationId)
           )
         case NonFatal(e) =>
           logger.error(s"An error occurred while processing request.")
           logger.debug(s"An error occurred while processing request ", e)
           Future.successful(
-            addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.rdWrapper.conversationId)
+            addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.requestData.conversationId)
           )
       }
 

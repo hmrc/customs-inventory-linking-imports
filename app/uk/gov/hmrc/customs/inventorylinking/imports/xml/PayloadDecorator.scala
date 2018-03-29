@@ -25,20 +25,20 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 import scala.xml.NodeSeq
 
 class PayloadDecorator {
-  def wrap(rdWrapper: ValidatedRequest[AnyContent], clientSubscriptionId: UUID, wrapperRootElementLabel: String): NodeSeq =
+  def wrap(validatedRequest: ValidatedRequest[AnyContent], clientSubscriptionId: UUID, wrapperRootElementLabel: String): NodeSeq =
     <n1:rootElementToBeRenamed
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:n1="http://gov.uk/customs/inventoryLinkingImport/v1"
     xsi:schemaLocation="http://gov.uk/customs/inventoryLinkingImport/v1request_schema.xsd">
       <n1:requestCommon>
         <n1:clientID>{ clientSubscriptionId.toString }</n1:clientID>
-        <n1:conversationID>{ rdWrapper.rdWrapper.conversationId }</n1:conversationID>
-        <n1:correlationID>{ rdWrapper.rdWrapper.correlationId }</n1:correlationID>
-        <n1:badgeIdentifier>{ rdWrapper.rdWrapper.badgeIdentifier }</n1:badgeIdentifier>
-        <n1:dateTimeStamp>{ dateTimeNoMillis.print(rdWrapper.rdWrapper.dateTime)}</n1:dateTimeStamp>
+        <n1:conversationID>{ validatedRequest.requestData.conversationId }</n1:conversationID>
+        <n1:correlationID>{ validatedRequest.requestData.correlationId }</n1:correlationID>
+        <n1:badgeIdentifier>{ validatedRequest.requestData.badgeIdentifier }</n1:badgeIdentifier>
+        <n1:dateTimeStamp>{ dateTimeNoMillis.print(validatedRequest.requestData.dateTime)}</n1:dateTimeStamp>
       </n1:requestCommon>
       <n1:requestDetail>
-        { rdWrapper.rdWrapper.body }
+        { validatedRequest.requestData.body }
       </n1:requestDetail>
     </n1:rootElementToBeRenamed>.copy(label = wrapperRootElementLabel)
 }

@@ -28,7 +28,7 @@ import scala.xml.NodeSeq
 
 case class OutgoingRequest(service: ServiceConfig,
                            outgoingBody: NodeSeq,
-                           rdWrapper: ValidatedRequest[AnyContent]) {
+                           validatedRequest: ValidatedRequest[AnyContent]) {
 
   lazy val bearerToken: String = service.bearerToken.getOrElse(throw new IllegalStateException("Bearer token not present"))
   lazy val url: String = service.url
@@ -37,10 +37,10 @@ case class OutgoingRequest(service: ServiceConfig,
       ACCEPT -> XML,
       CONTENT_TYPE -> s"$XML; charset=UTF-8",
       AUTHORIZATION -> s"Bearer $bearerToken",
-      DATE -> rdWrapper.rdWrapper.dateTime.toString(ISODateTimeFormat.dateTimeNoMillis()),
+      DATE -> validatedRequest.requestData.dateTime.toString(ISODateTimeFormat.dateTimeNoMillis()),
       XForwardedHost -> "MDTP",
-      XConversationId -> rdWrapper.rdWrapper.conversationId,
-      XCorrelationId -> rdWrapper.rdWrapper.correlationId
+      XConversationId -> validatedRequest.requestData.conversationId,
+      XCorrelationId -> validatedRequest.requestData.correlationId
     )
 }
 

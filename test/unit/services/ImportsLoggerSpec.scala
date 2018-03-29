@@ -31,9 +31,9 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
   private val requestMock = mock[Request[AnyContent]]
 
   implicit val rdWrapper = ValidatedRequest[AnyContent](requestData, requestMock)
-  when(rdWrapper.rdWrapper.conversationId).thenReturn("conversation-id")
-  when(rdWrapper.rdWrapper.clientId).thenReturn("some-client-id")
-  when(rdWrapper.rdWrapper.requestedApiVersion).thenReturn("1.0")
+  when(rdWrapper.requestData.conversationId).thenReturn("conversation-id")
+  when(rdWrapper.requestData.clientId).thenReturn("some-client-id")
+  when(rdWrapper.requestData.requestedApiVersion).thenReturn("1.0")
   val cdsLoggerMock: CdsLogger = mock[CdsLogger]
   val logger = new ImportsLogger(cdsLoggerMock)
 

@@ -35,11 +35,11 @@ class OutgoingRequestSpec extends WordSpecLike with Matchers with MockitoSugar {
     private val requestData = mock[RequestData]
     private val requestMock = mock[Request[AnyContent]]
 
-    private val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, requestMock)
-    val request = OutgoingRequest(serviceConfig, outgoingBody, rdWrapper)
-    when(rdWrapper.rdWrapper.dateTime).thenReturn(TestData.requestDateTime)
-    when(rdWrapper.rdWrapper.conversationId).thenReturn(TestData.ConversationId.toString)
-    when(rdWrapper.rdWrapper.correlationId).thenReturn(TestData.CorrelationId.toString)
+    private val validatedRequest: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, requestMock)
+    val request = OutgoingRequest(serviceConfig, outgoingBody, validatedRequest)
+    when(validatedRequest.requestData.dateTime).thenReturn(TestData.requestDateTime)
+    when(validatedRequest.requestData.conversationId).thenReturn(TestData.ConversationId.toString)
+    when(validatedRequest.requestData.correlationId).thenReturn(TestData.CorrelationId.toString)
   }
 
   "headers" should {

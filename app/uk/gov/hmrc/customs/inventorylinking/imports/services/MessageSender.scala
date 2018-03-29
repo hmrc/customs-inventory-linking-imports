@@ -42,7 +42,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
 
     for {
-      _ <- service.validate(validatedRequest.rdWrapper.body)
+      _ <- service.validate(validatedRequest.requestData.body)
       clientSubscriptionId <- apiSubscriptionFieldsConnector.getClientSubscriptionId()
       outgoingRequest = outgoingRequestBuilder.build(messageType, validatedRequest, clientSubscriptionId)
       result <- connector.post(outgoingRequest)

@@ -97,12 +97,12 @@ class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector
         case NonFatal(authEx: AuthorisationException) =>
           logger.error(s"User is not authorised for this service.")
           logger.debug(s"User is not authorised for this service", authEx)
-          Future.successful(Some(addConversationIdHeader(errorResponseUnauthorisedGeneral.XmlResult, validatedRequest.rdWrapper.conversationId)))
+          Future.successful(Some(addConversationIdHeader(errorResponseUnauthorisedGeneral.XmlResult, validatedRequest.requestData.conversationId)))
 
         case NonFatal(e) =>
           logger.error(s"An error occurred while processing request.")
           logger.debug(s"An error occurred while processing request ", e)
-          Future.successful(Some(addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.rdWrapper.conversationId)))
+          Future.successful(Some(addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.requestData.conversationId)))
       }
     }
   }

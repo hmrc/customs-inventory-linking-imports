@@ -52,11 +52,11 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
 
     lazy val requestData = mock[RequestData]
 
-    implicit val rdWrapperMock: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
+    implicit val validatedRequest: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
 
     val headers: HeaderMap = Map(HeaderConstants.XClientId -> TestXClientId, HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
     val sender: MessageSender = new MessageSender(apiSubscriptionFieldsConnector, outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, importsConnector, mock[ImportsLogger])
-    lazy val outgoingRequest = OutgoingRequest(serviceConfig, outgoingBody, rdWrapperMock)
+    lazy val outgoingRequest = OutgoingRequest(serviceConfig, outgoingBody, validatedRequest)
 
     implicit val mockHeaderCarrier: HeaderCarrier = mock[HeaderCarrier]
     val request: Request[AnyContent] = mock[Request[AnyContent]]
@@ -67,7 +67,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     }
 
     when(apiSubscriptionFieldsConnector.getClientSubscriptionId()(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(FieldsId))
-    when(rdWrapperMock.rdWrapper.body).thenReturn(outgoingBody)
+    when(validatedRequest.requestData.body).thenReturn(outgoingBody)
   }
 
   val messageTypes = Table(
@@ -82,7 +82,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         "return the result from the connector" in new SetUp {
 
           val importsMessageType: ImportsMessageType = messageType
-          when(outgoingRequestBuilder.build(messageType, rdWrapperMock, FieldsId)).thenReturn(outgoingRequest)
+          when(outgoingRequestBuilder.build(messageType, validatedRequest, FieldsId)).thenReturn(outgoingRequest)
           when(service.validate(outgoingBody)).thenReturn(Future.successful(()))
           when(importsConnector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
 
