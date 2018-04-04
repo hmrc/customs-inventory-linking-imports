@@ -124,7 +124,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         s"return 202 ACCEPTED for $messageTypeName" in {
 
           authoriseCsp(authPredicate)
-          when(mockMessageSender.validateAndSend(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(HttpResponse(ACCEPTED)))
+          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(HttpResponse(ACCEPTED)))
           when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
           when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
 
@@ -136,7 +136,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         s"return X-Conversation-Id header for $messageTypeName" in {
 
           authoriseCsp(authPredicate)
-          when(mockMessageSender.validateAndSend(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(HttpResponse(ACCEPTED)))
+          when(mockMessageSender.send(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(HttpResponse(ACCEPTED)))
           when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
           when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
 
@@ -164,7 +164,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         "return 500 Internal Server Error" in {
 
           authoriseCsp(authPredicate)
-          when(mockMessageSender.validateAndSend(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(emulatedServiceFailure))
+          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(emulatedServiceFailure))
           when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
           when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
 
@@ -176,7 +176,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         s"return X-Conversation-Id header for $messageTypeName" in {
 
           authoriseCsp(authPredicate)
-          when(mockMessageSender.validateAndSend(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(emulatedServiceFailure))
+          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(emulatedServiceFailure))
           when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
           when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
 
@@ -194,7 +194,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       "return bad request" in {
 
         authoriseCsp(authPredicate)
-        when(mockMessageSender.validateAndSend(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
+        when(mockMessageSender.send(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
 
         when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
         when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))

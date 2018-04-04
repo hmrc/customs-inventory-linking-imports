@@ -37,13 +37,13 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
                                 authAction: AuthAction,
                                 payloadValidationAction: PayloadValidationAction,
                                 logger: ImportsLogger,
-                                cdsLogger: CdsLogger //TODO: Change to ImportsLogger
+                                cdsLogger: CdsLogger
                                ) extends BaseController {
 
   def process(): Action[AnyContent] =  (Action andThen (validateAndExtractHeadersAction andThen authAction.authAction(importsMessageType) andThen payloadValidationAction.validatePayload(importsMessageType))).async(bodyParser = xmlOrEmptyBody)  {
     implicit validatedRequest: ValidatedRequest[AnyContent] =>
 
-      messageSender.validateAndSend(importsMessageType)
+      messageSender.send(importsMessageType)
         .map(_ => addConversationIdHeader(Accepted, validatedRequest.requestData.conversationId))
         .recoverWith{
         case NonFatal(e) =>

@@ -33,8 +33,8 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               validateMovementXmlValidationService: ValidateMovementXmlValidationService,
                               connector: ImportsConnector,
                               logger: ImportsLogger) {
-  // TODO rename to send only
-  def validateAndSend(messageType: ImportsMessageType)(implicit validatedRequest: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
+
+  def send(messageType: ImportsMessageType)(implicit validatedRequest: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
     for {
       clientSubscriptionId <- apiSubscriptionFieldsConnector.getClientSubscriptionId()
       outgoingRequest = outgoingRequestBuilder.build(messageType, validatedRequest, clientSubscriptionId)
