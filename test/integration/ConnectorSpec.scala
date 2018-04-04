@@ -23,10 +23,11 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.{AnyContent, Request}
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.http.{BadGatewayException, BadRequestException, NotFoundException, Upstream5xxResponse}
 import util.ExternalServicesConfig.{AuthToken, Host, Port}
 import util.TestData
@@ -50,11 +51,13 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
       "microservice.services.goodsarrival.bearer-token" -> AuthToken
     )).build()
 
-  private implicit val rdWrapper = mock[RequestDataWrapper]
+  private val requestData = mock[RequestData]
+  private val requestMock = mock[Request[AnyContent]]
+  private implicit val validatedRequest = ValidatedRequest[AnyContent](requestData, requestMock)
   private lazy val connector = app.injector.instanceOf[ImportsConnector]
   private lazy val serviceConfigProvider = app.injector.instanceOf[ServiceConfigProvider]
-  private val validateMovementRequest = OutgoingRequest(serviceConfigProvider.getConfig("validatemovement"), outgoingBody, rdWrapper)
-  private val goodsArrivalRequest = OutgoingRequest(serviceConfigProvider.getConfig("goodsarrival"), outgoingBody, rdWrapper)
+  private val validateMovementRequest = OutgoingRequest(serviceConfigProvider.getConfig("validatemovement"), outgoingBody, validatedRequest)
+  private val goodsArrivalRequest = OutgoingRequest(serviceConfigProvider.getConfig("goodsarrival"), outgoingBody, validatedRequest)
 
   override protected def beforeAll() {
     startMockServer()
@@ -65,9 +68,9 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
   }
 
   override protected def beforeEach(): Unit = {
-    when(rdWrapper.conversationId).thenReturn("conv-id")
-    when(rdWrapper.clientId).thenReturn(None)
-    when(rdWrapper.requestedApiVersion).thenReturn("1.23")
+    when(requestData.conversationId).thenReturn("conv-id")
+    when(requestData.clientId).thenReturn("")
+    when(requestData.requestedApiVersion).thenReturn("1.23")
   }
 
   override protected def afterAll() {
@@ -83,9 +86,9 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
 
     "ImportsConnector" should {
 
-      when(rdWrapper.dateTime).thenReturn(DateTime.now(DateTimeZone.UTC))
-      when(rdWrapper.conversationId).thenReturn(TestData.conversationId.toString)
-      when(rdWrapper.correlationId).thenReturn(TestData.correlationId.toString)
+      when(requestData.dateTime).thenReturn(DateTime.now(DateTimeZone.UTC))
+      when(requestData.conversationId).thenReturn(TestData.ConversationId.toString)
+      when(requestData.correlationId).thenReturn(TestData.CorrelationId.toString)
 
       s"make a correct request for $messageType" in {
         setupBackendServiceToReturn(url, ACCEPTED)

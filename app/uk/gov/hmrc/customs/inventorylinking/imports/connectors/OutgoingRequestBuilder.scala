@@ -19,6 +19,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
@@ -26,12 +27,12 @@ import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 @Singleton
 class OutgoingRequestBuilder @Inject()(configProvider: ServiceConfigProvider, payloadDecorator: PayloadDecorator) {
 
-  def build(importsMessageType: ImportsMessageType, rdWrapper: RequestDataWrapper, clientSubscriptionId: UUID): OutgoingRequest = {
-    val outgoingBody = payloadDecorator.wrap(rdWrapper, clientSubscriptionId, importsMessageType.wrapperRootElementLabel)
+  def build(importsMessageType: ImportsMessageType, validatedRequest: ValidatedRequest[AnyContent], clientSubscriptionId: UUID): OutgoingRequest = {
+    val outgoingBody = payloadDecorator.wrap(validatedRequest, clientSubscriptionId, importsMessageType.wrapperRootElementLabel)
 
     OutgoingRequest(
       configProvider.getConfig(importsMessageType.name),
       outgoingBody,
-      rdWrapper)
+      validatedRequest)
   }
 }
