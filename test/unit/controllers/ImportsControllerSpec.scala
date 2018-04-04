@@ -87,7 +87,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
     message = "Unauthorised request").XmlResult.withHeaders("X-Conversation-ID" -> ConversationId.toString)
 
   private implicit val headerCarrier: HeaderCarrier = mock[HeaderCarrier]
-  private val requestData: RequestData = createRequestData(request)
+  private val requestData: RequestData = createRequestData
   private implicit val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
 
   private val defaultUuid: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")

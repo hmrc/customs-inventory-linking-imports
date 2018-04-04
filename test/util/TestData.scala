@@ -120,8 +120,7 @@ object TestData {
     def postTo(endpoint: String): FakeRequest[R] = fakeRequest.copyFakeRequest(method = POST, uri = endpoint)
   }
 
-  //TODO: simplify this to use hard coded values ie not derived from request
-  def createRequestData(request: Request[AnyContent]): RequestData = RequestData(
+  def createRequestData(): RequestData = RequestData(
     badgeIdentifier = XBadgeIdentifierHeaderValueAsString,
     conversationId = UUID.randomUUID().toString,
     correlationId = UUID.randomUUID().toString,

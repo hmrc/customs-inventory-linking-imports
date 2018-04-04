@@ -40,7 +40,7 @@ object LoggingHelper {
   private def formatMessage(msg: String, rdWrapper: ValidatedRequest[AnyContent]): String = {
     s"${format(rdWrapper)} $msg".trim
   }
-  
+
   private def format(validatedRequest: ValidatedRequest[AnyContent]): String = {
     s"[conversationId=${validatedRequest.requestData.conversationId}][clientId=${validatedRequest.requestData.clientId}][requestedApiVersion=${validatedRequest.requestData.requestedApiVersion}]"
   }

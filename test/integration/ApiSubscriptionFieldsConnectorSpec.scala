@@ -43,7 +43,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   private val request: mvc.Request[AnyContent] = mock[mvc.Request[AnyContent]]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private lazy val requestData: RequestData = createRequestData(request)
+  private lazy val requestData: RequestData = createRequestData
   private implicit lazy val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
 
   override protected def beforeAll() {
