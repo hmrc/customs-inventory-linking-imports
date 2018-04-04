@@ -44,7 +44,6 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
 
   override def refine[A](inputRequest: Request[A]): Future[Either[Result, ValidatedRequest[A]]] = Future.successful {
     implicit val r: Request[A] = inputRequest
-    implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 
     validator.validateHeaders(inputRequest) match {
       case Left(result) => Left(result.XmlResult)
@@ -92,20 +91,19 @@ class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector
       def addConversationIdHeader(r: Result, conversationId: String) = {
         r.withHeaders(XConversationId -> conversationId)
       }
-      // TODO make this simpler, do the future/option wrapping outside and add conv id in one place
-      authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
+
+      (authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
         Future.successful(None)
       }.recoverWith{
         case NonFatal(authEx: AuthorisationException) =>
           logger.error(s"User is not authorised for this service.")
           logger.debug(s"User is not authorised for this service", authEx)
-          Future.successful(Some(addConversationIdHeader(errorResponseUnauthorisedGeneral.XmlResult, validatedRequest.requestData.conversationId)))
-
+          Future.successful(Some(errorResponseUnauthorisedGeneral.XmlResult))
         case NonFatal(e) =>
           logger.error(s"An error occurred while processing request.")
           logger.debug(s"An error occurred while processing request ", e)
-          Future.successful(Some(addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.requestData.conversationId)))
-      }
+          Future.successful(Some(ErrorResponse.ErrorInternalServerError.XmlResult))
+      }).map(maybeResult => maybeResult.map(r => addConversationIdHeader(r, validatedRequest.requestData.conversationId)))
     }
   }
 }
@@ -119,10 +117,7 @@ class PayloadValidationAction @Inject()(goodsArrivalXmlValidationService: GoodsA
 
     override protected def filter[A](validatedRequest: ValidatedRequest[A]): Future[Option[Result]] = {
 
-
       implicit val r = validatedRequest.asInstanceOf[ValidatedRequest[AnyContent]]
-      implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
-
 
       def service = importsMessageType match {
         case GoodsArrival => goodsArrivalXmlValidationService
@@ -132,20 +127,20 @@ class PayloadValidationAction @Inject()(goodsArrivalXmlValidationService: GoodsA
       def addConversationIdHeader(r: Result, conversationId: String) = {
         r.withHeaders(XConversationId -> conversationId)
       }
-      // TODO make this simpler, do the future/option wrapping outside and add conv id in one place
-      service.validate(validatedRequest.requestData.body).map(_ => None).recoverWith{
+
+      (service.validate(validatedRequest.requestData.body).map(_ => None).recoverWith{
         case NonFatal(saxe: SAXException) =>
           logger.error(s"XML processing error.")
           logger.debug(s"XML processing error.", saxe)
           Future.successful(
-            Some(addConversationIdHeader(ErrorResponse.ErrorGenericBadRequest.withErrors(
-              XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult, validatedRequest.requestData.conversationId)))
+            Some(ErrorResponse.ErrorGenericBadRequest.withErrors(
+              XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult))
         case NonFatal(e) =>
           logger.error(s"An error occurred while processing request.")
           logger.debug(s"An error occurred while processing request ", e)
           Future.successful(
-            Some(addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.requestData.conversationId)))
-      }
+            Some(ErrorResponse.ErrorInternalServerError.XmlResult))
+      }).map(maybeResult => maybeResult.map(r => addConversationIdHeader(r, validatedRequest.requestData.conversationId)))
     }
   }
 }
