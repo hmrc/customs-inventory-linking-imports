@@ -43,14 +43,14 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
   def process(): Action[AnyContent] =  (Action andThen (validateAndExtractHeadersAction andThen authAction.authAction(importsMessageType) andThen payloadValidationAction.validatePayload(importsMessageType))).async(bodyParser = xmlOrEmptyBody)  {
     implicit validatedRequest: ValidatedRequest[AnyContent] =>
 
-      messageSender.send(importsMessageType)
-        .map(_ => addConversationIdHeader(Accepted, validatedRequest.requestData.conversationId))
+      (messageSender.send(importsMessageType)
+        .map(_ => Accepted)
         .recoverWith{
-        case NonFatal(e) =>
-          logger.error(s"An error occurred while processing request.")
-          logger.debug(s"An error occurred while processing request ", e)
-          Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
-      }.map(x => addConversationIdHeader(x, validatedRequest.requestData.conversationId))
+          case NonFatal(e) =>
+            logger.error(s"An error occurred while processing request.")
+            logger.debug(s"An error occurred while processing request ", e)
+            Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
+        }).map(x => addConversationIdHeader(x, validatedRequest.requestData.conversationId))
   }
 
 

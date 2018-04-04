@@ -122,7 +122,7 @@ object TestData {
 
   //TODO: simplify this to use hard coded values ie not derived from request
   def createRequestData(request: Request[AnyContent]): RequestData = RequestData(
-    badgeIdentifier = request.headers.get(XBadgeIdentifier).fold(XBadgeIdentifierHeaderValueAsString)(s => s),
+    badgeIdentifier = XBadgeIdentifierHeaderValueAsString,
     conversationId = UUID.randomUUID().toString,
     correlationId = UUID.randomUUID().toString,
     dateTime = DateTime.now(DateTimeZone.UTC),
@@ -132,6 +132,6 @@ object TestData {
     body = NodeSeq.Empty,
 
     requestedApiVersion = "1.0",
-    clientId = request.headers.get(XClientId).get
+    clientId = TestXClientId
   )
 }

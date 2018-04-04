@@ -26,7 +26,7 @@ import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.xml.sax.SAXException
-import play.api.http.Status.BAD_REQUEST
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
 import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 import play.api.test.FakeRequest
@@ -38,6 +38,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Request
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.ApiSubscriptionFieldsTestData._
+import util.TestData
 import util.TestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -62,6 +63,14 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
        |      </error>
        |   </errors>
        |</errorResponse>
+    """.stripMargin
+
+  private val internalServerError =
+    """<?xml version="1.0" encoding="UTF-8"?>
+      |<errorResponse>
+      |  <code>INTERNAL_SERVER_ERROR</code>
+      |  <message>Internal server error</message>
+      |</errorResponse>
     """.stripMargin
 
   private val requestData = RequestData(
@@ -112,6 +121,18 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
 
         status(actualResult) shouldBe BAD_REQUEST
         stringToXml(contentAsString(actualResult)) shouldBe stringToXml(badRequestError)
+        header(XConversationIdHeaderName, actualResult).get should fullyMatch regex UuidRegex
+      }
+
+      s"return $INTERNAL_SERVER_ERROR response for $description when invalid xml is sent" in new SetUp() {
+
+        when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(TestData.emulatedServiceFailure))
+        when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(TestData.emulatedServiceFailure))
+
+        val actualResult: Result = await(payloadValidationAction.validatePayload(msgType).invokeBlock(validationRequest, blockReturningOk))
+
+        status(actualResult) shouldBe INTERNAL_SERVER_ERROR
+        stringToXml(contentAsString(actualResult)) shouldBe stringToXml(internalServerError)
         header(XConversationIdHeaderName, actualResult).get should fullyMatch regex UuidRegex
       }
     }

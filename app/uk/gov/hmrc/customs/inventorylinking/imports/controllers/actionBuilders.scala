@@ -92,7 +92,7 @@ class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector
       def addConversationIdHeader(r: Result, conversationId: String) = {
         r.withHeaders(XConversationId -> conversationId)
       }
-
+      // TODO make this simpler, do the future/option wrapping outside and add conv id in one place
       authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
         Future.successful(None)
       }.recoverWith{
@@ -132,7 +132,7 @@ class PayloadValidationAction @Inject()(goodsArrivalXmlValidationService: GoodsA
       def addConversationIdHeader(r: Result, conversationId: String) = {
         r.withHeaders(XConversationId -> conversationId)
       }
-
+      // TODO make this simpler, do the future/option wrapping outside and add conv id in one place
       service.validate(validatedRequest.requestData.body).map(_ => None).recoverWith{
         case NonFatal(saxe: SAXException) =>
           logger.error(s"XML processing error.")
