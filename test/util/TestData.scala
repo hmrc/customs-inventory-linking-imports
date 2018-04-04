@@ -21,18 +21,20 @@ import java.util.UUID
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.http.MimeTypes.{JSON, XML}
+import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE, POST}
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core.{AuthProviders, Enrolment}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{XBadgeIdentifier, XClientId}
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import util.ApiSubscriptionFieldsTestData.TestXClientId
 import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 
 import scala.util.Random
-import scala.xml.Elem
+import scala.xml.{Elem, NodeSeq}
 
 object TestData {
 
@@ -41,11 +43,13 @@ object TestData {
   val XConversationIdHeaderName = "X-Conversation-ID"
   val XCorrelationIdHeaderName = "X-Correlation-ID"
 
-  val conversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
-  val correlationId: UUID = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
+  val ConversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
+  val CorrelationId: UUID = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
   val XBadgeIdentifierHeaderValueAsString = "ABC123"
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
+
+  val TestExtractedHeaders = ExtractedHeaders(XBadgeIdentifierHeaderValueAsString, TestXClientId)
 
   lazy val InvalidAcceptHeader = ACCEPT -> JSON
   lazy val InvalidContentTypeJsonHeader = CONTENT_TYPE -> JSON
@@ -56,7 +60,7 @@ object TestData {
   lazy val ValidContentTypeHeader = CONTENT_TYPE -> (XML + "; charset=utf-8")
   lazy val ValidXClientIdHeader = XClientIdHeaderName -> TestXClientId
   lazy val ValidXBadgeIdentifierHeader = XBadgeIdentifierHeaderName -> XBadgeIdentifierHeaderValueAsString
-  lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> conversationId.toString
+  lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> ConversationId.toString
   val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader)
 
   val validBasicAuthToken = s"Basic ${Random.alphanumeric.take(18).mkString}=="
@@ -116,4 +120,17 @@ object TestData {
     def postTo(endpoint: String): FakeRequest[R] = fakeRequest.copyFakeRequest(method = POST, uri = endpoint)
   }
 
+  def createRequestData(): RequestData = RequestData(
+    badgeIdentifier = XBadgeIdentifierHeaderValueAsString,
+    conversationId = UUID.randomUUID().toString,
+    correlationId = UUID.randomUUID().toString,
+    dateTime = DateTime.now(DateTimeZone.UTC),
+
+    //TODO: use body in Play2 WrappedRequest
+    //body = request.body.asXml.getOrElse(NodeSeq.Empty),
+    body = NodeSeq.Empty,
+
+    requestedApiVersion = "1.0",
+    clientId = TestXClientId
+  )
 }

@@ -18,44 +18,41 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, Result, _}
-import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
-import uk.gov.hmrc.auth.core.{AuthProviders, AuthorisationException, AuthorisedFunctions, Enrolment}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
+import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, XmlValidationErrorsMapper}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-import scala.xml.SAXException
 
 abstract class ImportController(importsConfigService: ImportsConfigService,
-                                override val authConnector: MicroserviceAuthConnector,
                                 messageSender: MessageSender,
                                 importsMessageType: ImportsMessageType,
-                                logger: ImportsLogger) extends BaseController with HeaderValidator with AuthorisedFunctions {
+                                validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
+                                authAction: AuthAction,
+                                payloadValidationAction: PayloadValidationAction,
+                                logger: ImportsLogger,
+                                cdsLogger: CdsLogger
+                               ) extends BaseController {
 
-  private lazy val ErrorResponseUnauthorisedGeneral =
-    ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
+  def process(): Action[AnyContent] =  (Action andThen (validateAndExtractHeadersAction andThen authAction.authAction(importsMessageType) andThen payloadValidationAction.validatePayload(importsMessageType))).async(bodyParser = xmlOrEmptyBody)  {
+    implicit validatedRequest: ValidatedRequest[AnyContent] =>
 
-  def process(): Action[AnyContent] = Action.async(bodyParser = xmlOrEmptyBody) { implicit request =>
-    implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
-    validateHeaders(rdWrapper, logger) match {
-      case Right(_) =>
-        val eventualResult = authoriseAndSend
-        logger.info("Request processed successfully")
-        eventualResult
-
-      case Left(errorResponse) =>
-        Future.successful(errorResponse.XmlResult)
-    }
+      (messageSender.send(importsMessageType)
+        .map(_ => Accepted)
+        .recoverWith{
+          case NonFatal(e) =>
+            logger.error(s"An error occurred while processing request.")
+            logger.debug(s"An error occurred while processing request ", e)
+            Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
+        }).map(x => addConversationIdHeader(x, validatedRequest.requestData.conversationId))
   }
+
 
   private def xmlOrEmptyBody: BodyParser[AnyContent] = BodyParser(rq => parse.xml(rq).map {
     case Right(xml) => Right(AnyContentAsXml(xml))
@@ -65,48 +62,17 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
   private def addConversationIdHeader(r: Result, conversationId: String) = {
     r.withHeaders(XConversationId -> conversationId)
   }
-
-  private def handleError(implicit rdWrapper: RequestDataWrapper): PartialFunction[Throwable, Future[Result]] = {
-
-    case NonFatal(saxe: SAXException) =>
-      logger.error(s"XML processing error.")
-      logger.debug(s"XML processing error.", saxe)
-      Future.successful(
-        ErrorResponse.ErrorGenericBadRequest.withErrors(
-          XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult)
-
-    case NonFatal(authEx: AuthorisationException) =>
-      logger.error(s"User is not authorised for this service.")
-      logger.debug(s"User is not authorised for this service", authEx)
-      Future.successful(addConversationIdHeader(ErrorResponseUnauthorisedGeneral.XmlResult, rdWrapper.conversationId))
-
-    case NonFatal(e) =>
-      logger.error(s"An error occurred while processing request.")
-      logger.debug(s"An error occurred while processing request ", e)
-      Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
-  }
-
-
-  private def authoriseAndSend(implicit rdWrapper: RequestDataWrapper): Future[Result] = {
-    implicit val hc: HeaderCarrier = rdWrapper.headerCarrier
-    def enrolmentForMessageType = importsMessageType match {
-      case ValidateMovement => Enrolment("write:customs-il-imports-movement-validation")
-      case GoodsArrival => Enrolment("write:customs-il-imports-arrival-notifications")
-    }
-
-    authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
-      messageSender.validateAndSend(importsMessageType).
-        map(_ => Accepted)
-    }.recoverWith(handleError).
-      map(r => addConversationIdHeader(r, rdWrapper.conversationId))
-  }
 }
 
 @Singleton
 class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigService,
-                                       authConnector: MicroserviceAuthConnector,
-                                       messageSender: MessageSender, logger: ImportsLogger)
-  extends ImportController(importsConfigService, authConnector, messageSender, GoodsArrival, logger) {
+                                       messageSender: MessageSender,
+                                       validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
+                                       authAction: AuthAction,
+                                       payloadValidationAction: PayloadValidationAction,
+                                       logger: ImportsLogger,
+                                       cdsLogger: CdsLogger)
+  extends ImportController(importsConfigService, messageSender, GoodsArrival, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger) {
 
   def post(): Action[AnyContent] = {
     super.process()
@@ -115,10 +81,13 @@ class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigServic
 
 @Singleton
 class ValidateMovementController @Inject()(importsConfigService: ImportsConfigService,
-                                           authConnector: MicroserviceAuthConnector,
                                            messageSender: MessageSender,
-                                           logger: ImportsLogger)
-  extends ImportController(importsConfigService, authConnector, messageSender, ValidateMovement, logger) {
+                                           validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
+                                           authAction: AuthAction,
+                                           payloadValidationAction: PayloadValidationAction,
+                                           logger: ImportsLogger,
+                                           cdsLogger: CdsLogger)
+  extends ImportController(importsConfigService, messageSender, ValidateMovement, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger) {
 
   def post(): Action[AnyContent] = {
     super.process()

@@ -17,18 +17,18 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
 import javax.inject.Singleton
-
 import com.google.inject.Inject
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 
 @Singleton
 class ImportsLogger @Inject()(logger: CdsLogger) {
 
-  def debug(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.debug(formatDebug(s, rdWrapper))
-  def debug(s: => String, e: => Throwable)(implicit rdWrapper: RequestDataWrapper): Unit = logger.debug(formatDebug(s, rdWrapper), e)
-  def info(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.info(formatInfo(s, rdWrapper))
-  def warn(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.warn(formatWarn(s, rdWrapper))
-  def error(s: => String)(implicit rdWrapper: RequestDataWrapper): Unit = logger.error(formatError(s, rdWrapper))
+  def debug(s: => String)(implicit rdWrapper: ValidatedRequest[AnyContent]): Unit = logger.debug(formatDebug(s, rdWrapper))
+  def debug(s: => String, e: => Throwable)(implicit rdWrapper: ValidatedRequest[AnyContent]): Unit = logger.debug(formatDebug(s, rdWrapper), e)
+  def info(s: => String)(implicit rdWrapper: ValidatedRequest[AnyContent]): Unit = logger.info(formatInfo(s, rdWrapper))
+  def warn(s: => String)(implicit rdWrapper: ValidatedRequest[AnyContent]): Unit = logger.warn(formatWarn(s, rdWrapper))
+  def error(s: => String)(implicit rdWrapper: ValidatedRequest[AnyContent]): Unit = logger.error(formatError(s, rdWrapper))
 }

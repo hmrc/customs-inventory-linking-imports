@@ -16,18 +16,16 @@
 
 package unit.connectors
 
-import java.util.UUID
-
-import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.Mockito._
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status.ACCEPTED
+import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -44,13 +42,15 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
     private val wsHttp: WSHttp = mock[WSHttp]
     private val connector = new ImportsConnector(wsHttp, mock[ImportsLogger])
     private val validOutgoingMessage: Elem = <message></message>
+    private lazy val requestMock = mock[Request[AnyContent]]
+    private lazy val requestData = mock[RequestData]
+    private lazy val request = OutgoingRequest(serviceConfig, validOutgoingMessage, validatedRequest)
+    private implicit val validatedRequest = ValidatedRequest[AnyContent](requestData, requestMock)
 
-    private implicit val rdWrapper = mock[RequestDataWrapper]
 
-    private val request = OutgoingRequest(serviceConfig, validOutgoingMessage, rdWrapper)
 
     def stubHttpClientReturnsResponseForValidMessage(response: Future[HttpResponse]): OngoingStubbing[Future[HttpResponse]] = {
-      when(rdWrapper.dateTime).thenReturn(requestDateTime)
+      when(requestData.dateTime).thenReturn(requestDateTime)
       when(wsHttp.POSTString(meq(serviceConfig.url), meq(validOutgoingMessage.toString()), any[Seq[(String, String)]])
       (any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])).
         thenReturn(response)

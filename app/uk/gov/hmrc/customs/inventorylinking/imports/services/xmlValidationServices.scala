@@ -27,8 +27,9 @@ import javax.xml.validation.{Schema, SchemaFactory}
 import com.google.inject.Singleton
 import org.xml.sax.{ErrorHandler, SAXParseException}
 import play.api.Configuration
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, RequestDataWrapper, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement, ValidatedRequest}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,7 +52,7 @@ abstract class XmlValidationService(configuration: Configuration, messageType: I
 
   private lazy val maxSAXErrors = configuration.getInt("xml.max-errors").getOrElse(Int.MaxValue)
 
-  def validate(xml: NodeSeq)(implicit ec: ExecutionContext, rd: RequestDataWrapper): Future[Unit] = {
+  def validate(xml: NodeSeq)(implicit ec: ExecutionContext, rd: ValidatedRequest[AnyContent]): Future[Unit] = {
     logger.debug(s"Validating payload $xml")
     Future(doValidate(xml))
   }

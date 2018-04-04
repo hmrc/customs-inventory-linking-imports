@@ -22,15 +22,16 @@ import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.{Application, mvc}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{AnyContent, Headers}
 import play.api.test.Helpers._
+import play.api.{Application, mvc}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.http._
 import util.ApiSubscriptionFieldsTestData._
 import util.ExternalServicesConfig.{Host, Port}
+import util.TestData._
 import util.externalservices.{ApiSubscriptionFieldsService, InventoryLinkingImportsExternalServicesConfig}
 
 import scala.concurrent.Future
@@ -42,7 +43,8 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   private val request: mvc.Request[AnyContent] = mock[mvc.Request[AnyContent]]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, hc)
+  private lazy val requestData: RequestData = createRequestData
+  private implicit lazy val rdWrapper: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
 
   override protected def beforeAll() {
     startMockServer()
@@ -73,7 +75,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
       val response = await(getApiSubscriptionFields)
 
       response shouldBe FieldsId
-      verifyGetSubscriptionFieldsCalled(rdWrapper.clientId.get)
+      verifyGetSubscriptionFieldsCalled(rdWrapper.requestData.clientId)
     }
 
     "return a failed future when external service returns 404" in {
@@ -105,7 +107,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   }
 
-  private def getApiSubscriptionFields(): Future[UUID] = {
+  private def getApiSubscriptionFields: Future[UUID] = {
     connector.getClientSubscriptionId()
   }
 }

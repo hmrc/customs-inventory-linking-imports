@@ -19,9 +19,10 @@ package unit.services
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
+import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{OutgoingRequest, OutgoingRequestBuilder}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderMap, RequestDataWrapper, ValidateMovement}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{HeaderMap, RequestData, ValidateMovement, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import util.ApiSubscriptionFieldsTestData.FieldsId
 import util.TestData._
@@ -33,9 +34,14 @@ class OutgoingRequestBuilderSpec extends WordSpecLike with Matchers with Mockito
     val headers: HeaderMap = Map(ValidXClientIdHeader, ValidXBadgeIdentifierHeader)
     val decorator: PayloadDecorator = mock[PayloadDecorator]
     val builder: OutgoingRequestBuilder = new OutgoingRequestBuilder(serviceConfigProvider, decorator)
-    val rdWrapperMock = mock[RequestDataWrapper]
-    when(rdWrapperMock.body).thenReturn(outgoingBody)
-    when(rdWrapperMock.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
+
+    lazy val requestData = mock[RequestData]
+    lazy val requestMock = mock[Request[AnyContent]]
+
+    val rdWrapperMock = ValidatedRequest[AnyContent](requestData, requestMock)
+
+    when(requestData.body).thenReturn(outgoingBody)
+    when(requestData.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
     when(decorator.wrap(rdWrapperMock, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")).thenReturn(decoratedBody)
     when(serviceConfigProvider.getConfig("validatemovement")).thenReturn(serviceConfig)
 
