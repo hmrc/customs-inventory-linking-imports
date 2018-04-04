@@ -64,12 +64,12 @@ class HeaderValidator @Inject() (logger: CdsLogger) {
 
   private def validateHeader(headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)(implicit h: Headers): Either[ErrorResponse, String] = {
     val left = Left(errorResponse)
-    val leftWithLog = {
-      logger.error(s"$errorResponse ")
+    def leftWithLog = {
+      logger.error(s"${errorResponse.message} ")
       left
     }
-    def leftWithLogContainingValue(s: String) = {
-      logger.error(s"$errorResponse '$s'")
+    def leftWithLogContainingValue(value: String) = {
+      logger.error(s"${errorResponse.message}. header value = '$value'")
       left
     }
 
