@@ -17,51 +17,40 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.mvc.{Action, AnyContent, Result, _}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender, XmlValidationErrorsMapper}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender}
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-import scala.xml.SAXException
 
 abstract class ImportController(importsConfigService: ImportsConfigService,
                                 messageSender: MessageSender,
                                 importsMessageType: ImportsMessageType,
                                 validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                                 authAction: AuthAction,
+                                payloadValidationAction: PayloadValidationAction,
                                 logger: ImportsLogger,
                                 cdsLogger: CdsLogger //TODO: Change to ImportsLogger
                                ) extends BaseController {
 
-  def process(): Action[AnyContent] =  (Action andThen validateAndExtractHeadersAction andThen authAction.authAction(importsMessageType)).async(bodyParser = xmlOrEmptyBody)  {
+  def process(): Action[AnyContent] =  (Action andThen (validateAndExtractHeadersAction andThen authAction.authAction(importsMessageType) andThen payloadValidationAction.validatePayload(importsMessageType))).async(bodyParser = xmlOrEmptyBody)  {
     implicit validatedRequest: ValidatedRequest[AnyContent] =>
-      //TODO: plug in another Action Builder to validate payload
-      //TODO: after that, all this controller does is to call the connector
 
-      messageSender.validateAndSend(importsMessageType).map(_ => addConversationIdHeader(Accepted, validatedRequest.requestData.conversationId)).recoverWith{
-        case NonFatal(saxe: SAXException) =>
-          logger.error(s"XML processing error.")
-          logger.debug(s"XML processing error.", saxe)
-          Future.successful(
-            addConversationIdHeader(ErrorResponse.ErrorGenericBadRequest.withErrors(
-              XmlValidationErrorsMapper.toResponseContents(saxe): _*).XmlResult, validatedRequest.requestData.conversationId)
-          )
+      messageSender.validateAndSend(importsMessageType)
+        .map(_ => addConversationIdHeader(Accepted, validatedRequest.requestData.conversationId))
+        .recoverWith{
         case NonFatal(e) =>
           logger.error(s"An error occurred while processing request.")
           logger.debug(s"An error occurred while processing request ", e)
-          Future.successful(
-            addConversationIdHeader(ErrorResponse.ErrorInternalServerError.XmlResult, validatedRequest.requestData.conversationId)
-          )
-      }
-
+          Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
+      }.map(x => addConversationIdHeader(x, validatedRequest.requestData.conversationId))
   }
 
 
@@ -73,7 +62,6 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
   private def addConversationIdHeader(r: Result, conversationId: String) = {
     r.withHeaders(XConversationId -> conversationId)
   }
-
 }
 
 @Singleton
@@ -81,9 +69,10 @@ class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigServic
                                        messageSender: MessageSender,
                                        validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                                        authAction: AuthAction,
+                                       payloadValidationAction: PayloadValidationAction,
                                        logger: ImportsLogger,
                                        cdsLogger: CdsLogger)
-  extends ImportController(importsConfigService, messageSender, GoodsArrival, validateAndExtractHeadersAction, authAction, logger, cdsLogger) {
+  extends ImportController(importsConfigService, messageSender, GoodsArrival, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger) {
 
   def post(): Action[AnyContent] = {
     super.process()
@@ -95,9 +84,10 @@ class ValidateMovementController @Inject()(importsConfigService: ImportsConfigSe
                                            messageSender: MessageSender,
                                            validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                                            authAction: AuthAction,
+                                           payloadValidationAction: PayloadValidationAction,
                                            logger: ImportsLogger,
                                            cdsLogger: CdsLogger)
-  extends ImportController(importsConfigService, messageSender, ValidateMovement, validateAndExtractHeadersAction, authAction, logger, cdsLogger) {
+  extends ImportController(importsConfigService, messageSender, ValidateMovement, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger) {
 
   def post(): Action[AnyContent] = {
     super.process()

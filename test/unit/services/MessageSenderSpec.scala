@@ -96,7 +96,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         "return failed future when validation service throws an exception" in new SetUp {
 
           val importsMessageType: ImportsMessageType = messageType
-          when(service.validate(outgoingBody)).thenReturn(Future.failed(emulatedServiceFailure))
+          when(apiSubscriptionFieldsConnector.getClientSubscriptionId()).thenReturn(Future.failed(emulatedServiceFailure))
 
           val caught = intercept[EmulatedServiceFailure](await(sender.validateAndSend(messageType)))
 
