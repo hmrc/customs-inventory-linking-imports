@@ -17,9 +17,9 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logger
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 
@@ -31,7 +31,7 @@ class ImportsConnector @Inject()(wsHttp: WSHttp, logger: ImportsLogger) {
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  def post(request: OutgoingRequest)(implicit rdw: RequestDataWrapper): Future[HttpResponse] = {
+  def post(request: OutgoingRequest)(implicit rdw: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
     logger.debug(s"Outgoing request body: ${request.outgoingBody.toString} headers: ${request.headers}")
     wsHttp.POSTString(request.url, request.outgoingBody.toString, request.headers).
       recoverWith {

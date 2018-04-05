@@ -18,7 +18,8 @@ package unit.xml
 
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import play.api.mvc.{AnyContent, Request}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
 import util.ApiSubscriptionFieldsTestData._
@@ -31,17 +32,21 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val xml: NodeSeq = <node1></node1>
 
   private val payloadWrapper = new PayloadDecorator
-  private val rdWrapperMock = mock[RequestDataWrapper]
+  private val mockRequestData = mock[RequestData]
+  private val mockRequest = mock[Request[AnyContent]]
+  private val mockBody = mock[AnyContent]
+  private val validatedRequest = ValidatedRequest[AnyContent](mockRequestData, mockRequest)
 
-  private def wrapPayload() = payloadWrapper.wrap(rdWrapperMock, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")
+  private def wrapPayload() = payloadWrapper.wrap(validatedRequest, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")
 
   "PayloadWrapper" should {
 
-    when(rdWrapperMock.body).thenReturn(xml)
-    when(rdWrapperMock.badgeIdentifier).thenReturn(Some(XBadgeIdentifierHeaderValueAsString))
-    when(rdWrapperMock.conversationId).thenReturn(conversationId.toString)
-    when(rdWrapperMock.correlationId).thenReturn(correlationId.toString)
-    when(rdWrapperMock.dateTime).thenReturn(requestDateTime)
+    when(mockRequest.body).thenReturn(mockBody)
+    when(mockBody.asXml).thenReturn(Some(xml))
+    when(mockRequestData.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
+    when(mockRequestData.conversationId).thenReturn(ConversationId.toString)
+    when(mockRequestData.correlationId).thenReturn(CorrelationId.toString)
+    when(mockRequestData.dateTime).thenReturn(requestDateTime)
 
     "set the root element label" in {
       val result = wrapPayload()
@@ -69,7 +74,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "conversationID"
 
-      rd.head.text shouldBe conversationId.toString
+      rd.head.text shouldBe ConversationId.toString
     }
 
     "set the clientId" in {
@@ -85,7 +90,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "correlationID"
 
-      rd.head.text shouldBe correlationId.toString
+      rd.head.text shouldBe CorrelationId.toString
     }
 
     "set the badgeIdentifier" in {

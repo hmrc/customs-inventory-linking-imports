@@ -16,32 +16,33 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import play.api.mvc.AnyContent
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 
 object LoggingHelper {
 
-  def formatError(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper)
+  def formatError(msg: String, validatedRequest: ValidatedRequest[AnyContent]): String = {
+    formatMessage(msg, validatedRequest)
   }
 
-  def formatWarn(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper)
+  def formatWarn(msg: String, validatedRequest: ValidatedRequest[AnyContent]): String = {
+    formatMessage(msg, validatedRequest)
   }
 
-  def formatInfo(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper)
+  def formatInfo(msg: String, validatedRequest: ValidatedRequest[AnyContent]): String = {
+    formatMessage(msg, validatedRequest)
   }
 
-  def formatDebug(msg: String, rdWrapper: RequestDataWrapper): String = {
-    formatMessage(msg, rdWrapper)
+  def formatDebug(msg: String, validatedRequest: ValidatedRequest[AnyContent]): String = {
+    formatMessage(msg, validatedRequest)
   }
 
-  private def formatMessage(msg: String, rdWrapper: RequestDataWrapper): String = {
-    s"${format(rdWrapper)} $msg".trim
+  private def formatMessage(msg: String, validatedRequest: ValidatedRequest[AnyContent]): String = {
+    s"${format(validatedRequest)} $msg".trim
   }
-  
-  private def format(rdWrapper: RequestDataWrapper): String = {
-    s"[conversationId=${rdWrapper.conversationId}][clientId=${rdWrapper.clientId.getOrElse("")}][requestedApiVersion=${rdWrapper.requestedApiVersion}]"
+
+  private def format(validatedRequest: ValidatedRequest[AnyContent]): String = {
+    s"[conversationId=${validatedRequest.requestData.conversationId}][clientId=${validatedRequest.requestData.clientId}][requestedApiVersion=${validatedRequest.requestData.requestedApiVersion}]"
   }
 
 }

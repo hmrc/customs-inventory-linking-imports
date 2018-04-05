@@ -31,7 +31,7 @@ import org.xml.sax.SAXException
 import play.api.http.HeaderNames.{ACCEPT, CONTENT_TYPE}
 import play.api.http.MimeTypes
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import play.api.mvc.{AnyContentAsXml, Result}
+import play.api.mvc._
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{UNAUTHORIZED, contentAsString, header}
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -39,27 +39,28 @@ import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.auth.core.{AuthorisationException, InsufficientEnrolments}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{PayloadValidationAction, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, RequestDataWrapper, ValidateMovement}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsMessageType, _}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ImportsConfigService, MessageSender, ValidateMovementXmlValidationService}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.ApiSubscriptionFieldsTestData
 import util.TestData._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Node, Utility, XML}
+import scala.xml.{Node, NodeSeq, Utility, XML}
 
 class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
 
   private val mockAuthConnector: MicroserviceAuthConnector = mock[MicroserviceAuthConnector]
-  private val serviceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
+  private val mockServiceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
   private val badgeIdentifier = "BADGE1"
-  private val messageSender: MessageSender = mock[MessageSender]
+  private val mockMessageSender: MessageSender = mock[MessageSender]
   private val configuration = mock[ImportsConfigService]
-  private implicit val mockMaterialiser = mock[Materializer]
+  private implicit val mockMaterializer = mock[Materializer]
   private implicit val timeout = Timeout(5L, SECONDS)
   private val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(outgoingBody).
     withHeaders(
@@ -69,14 +70,23 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       XBadgeIdentifierHeaderName -> badgeIdentifier)
 
   private val logger = mock[ImportsLogger]
-  private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockAuthConnector, messageSender, logger)
-  private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockAuthConnector, messageSender, logger)
+  private val cdsLogger = mock[CdsLogger]
+  private val importsLogger = mock[ImportsLogger]
+  private val validateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(cdsLogger), importsLogger)
+  private val authAction = new AuthAction(mockAuthConnector, importsLogger)
+
+  private val mockGoodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
+  private val mockValidateMovementXmlValidationService: ValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
+
+  private val payloadValidationAction = new PayloadValidationAction(mockGoodsArrivalXmlValidationService, mockValidateMovementXmlValidationService, logger)
+
+  private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockMessageSender, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger)
+  private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockMessageSender, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger)
   private val UuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
-  private val errorResultUnauthorised = ErrorResponse(UNAUTHORIZED, errorCode = "UNAUTHORIZED",
-    message = "Unauthorised request").XmlResult.withHeaders("X-Conversation-ID" -> conversationId.toString)
 
   private implicit val headerCarrier: HeaderCarrier = mock[HeaderCarrier]
-  private implicit val rdWrapper: RequestDataWrapper = RequestDataWrapper(request, headerCarrier)
+  private val requestData: RequestData = createRequestData
+  private implicit val validatedRequestt: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
 
   private val defaultUuid: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
 
@@ -95,9 +105,8 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       |</errorResponse>""".stripMargin
 
   override protected def beforeEach() {
-    reset(serviceConfigProvider, messageSender)
+    reset(mockServiceConfigProvider, mockMessageSender)
   }
-
 
   private val controllers = Table(("Message Type Name", "Imports Message Type", "Auth Predicate", "controller post"),
     ("Goods Arrival", GoodsArrival, GoodsArrivalAuthPredicate, goodsArrivalController.post()),
@@ -107,12 +116,14 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
   forAll(controllers) { case (messageTypeName, importsMessageType,  authPredicate, controller) =>
 
     "POST valid declaration" when {
+
       "message is sent successfully" should {
         s"return 202 ACCEPTED for $messageTypeName" in {
 
           authoriseCsp(authPredicate)
-          when(messageSender.validateAndSend(ameq(importsMessageType))(any[RequestDataWrapper])).
-            thenReturn(Future.successful(HttpResponse(ACCEPTED)))
+          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(HttpResponse(ACCEPTED)))
+          when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
+          when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
 
           val result = await(controller.apply(request))
 
@@ -122,8 +133,9 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         s"return X-Conversation-Id header for $messageTypeName" in {
 
           authoriseCsp(authPredicate)
-          when(messageSender.validateAndSend(importsMessageType)(rdWrapper)).
-            thenReturn(Future.successful(HttpResponse(ACCEPTED)))
+          when(mockMessageSender.send(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(HttpResponse(ACCEPTED)))
+          when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
+          when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
 
           val result = await(controller.apply(request))
 
@@ -131,17 +143,16 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         }
       }
 
-
       "called by unauthorised CSP" should {
         s"return result 401 UNAUTHORISED for $messageTypeName" in {
           unauthoriseCsp(authPredicate)
+
           val result: Result = await(controller.apply(request))
 
           status(result) shouldBe UNAUTHORIZED
           stringToXml(contentAsString(result)) shouldBe stringToXml(unAuthorisedError)
           header(XConversationIdHeaderName, result).get should fullyMatch regex UuidRegex
-
-          verifyZeroInteractions(messageSender)
+          verifyZeroInteractions(mockMessageSender)
         }
       }
 
@@ -149,8 +160,9 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         "return 500 Internal Server Error" in {
 
           authoriseCsp(authPredicate)
-          when(messageSender.validateAndSend(importsMessageType)(rdWrapper)).
-            thenReturn(Future.failed(emulatedServiceFailure))
+          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(emulatedServiceFailure))
+          when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
+          when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
 
           val result = await(controller.apply(request))
 
@@ -160,8 +172,9 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
         s"return X-Conversation-Id header for $messageTypeName" in {
 
           authoriseCsp(authPredicate)
-          when(messageSender.validateAndSend(importsMessageType)(rdWrapper)).
-            thenReturn(Future.failed(emulatedServiceFailure))
+          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(emulatedServiceFailure))
+          when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
+          when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
 
           val result = await(controller.apply(request))
 
@@ -177,8 +190,9 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
       "return bad request" in {
 
         authoriseCsp(authPredicate)
-        when(messageSender.validateAndSend(ameq(importsMessageType))(any[RequestDataWrapper])).
-          thenReturn(Future.failed(new SAXException()))
+        when(mockMessageSender.send(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
+        when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
+        when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
 
         val result = await(controller.apply(request))
 

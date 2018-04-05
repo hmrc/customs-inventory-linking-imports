@@ -16,10 +16,7 @@
 
 package unit.services
 
-import java.net.URLEncoder
-import java.util.UUID
-
-import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.Matchers
 import org.scalatest.mockito.MockitoSugar
@@ -50,21 +47,26 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     val importsConnector: ImportsConnector = mock[ImportsConnector]
     val apiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
 
-    implicit val rdWrapperMock: RequestDataWrapper = mock[RequestDataWrapper]
+    lazy val mockRequestData = mock[RequestData]
+
+    implicit val validatedRequest: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](mockRequestData, mockRequest)
+
     val headers: HeaderMap = Map(HeaderConstants.XClientId -> TestXClientId, HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
     val sender: MessageSender = new MessageSender(apiSubscriptionFieldsConnector, outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, importsConnector, mock[ImportsLogger])
-    lazy val outgoingRequest = OutgoingRequest(serviceConfig, outgoingBody, rdWrapperMock)
+    lazy val outgoingRequest = OutgoingRequest(serviceConfig, outgoingBody, validatedRequest)
 
     implicit val mockHeaderCarrier: HeaderCarrier = mock[HeaderCarrier]
-    val request: Request[AnyContent] = mock[Request[AnyContent]]
+    val mockRequest: Request[AnyContent] = mock[Request[AnyContent]]
+    val mockBody: AnyContent = mock[AnyContent]
 
     protected def service: XmlValidationService = importsMessageType match {
       case GoodsArrival => goodsArrivalXmlValidationService
       case ValidateMovement => validateMovementXmlValidationService
     }
 
-    when(apiSubscriptionFieldsConnector.getClientSubscriptionId()(any[RequestDataWrapper])).thenReturn(Future.successful(FieldsId))
-    when(rdWrapperMock.body).thenReturn(outgoingBody)
+    when(apiSubscriptionFieldsConnector.getClientSubscriptionId()(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(FieldsId))
+    when(mockRequest.body).thenReturn(mockBody)
+    when(mockBody.asXml).thenReturn(Some(outgoingBody))
   }
 
   val messageTypes = Table(
@@ -79,12 +81,11 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         "return the result from the connector" in new SetUp {
 
           val importsMessageType: ImportsMessageType = messageType
-          when(outgoingRequestBuilder.build(messageType, rdWrapperMock, FieldsId)).thenReturn(outgoingRequest)
+          when(outgoingRequestBuilder.build(messageType, validatedRequest, FieldsId)).thenReturn(outgoingRequest)
           when(service.validate(outgoingBody)).thenReturn(Future.successful(()))
           when(importsConnector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
-          when(rdWrapperMock.headers).thenReturn(headers)
 
-          val actualResponse = await(sender.validateAndSend(messageType))
+          val actualResponse = await(sender.send(messageType))
 
           actualResponse shouldBe httpResponse
         }
@@ -94,10 +95,9 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         "return failed future when validation service throws an exception" in new SetUp {
 
           val importsMessageType: ImportsMessageType = messageType
-          when(service.validate(outgoingBody)).thenReturn(Future.failed(emulatedServiceFailure))
-          when(rdWrapperMock.headers).thenReturn(headers)
+          when(apiSubscriptionFieldsConnector.getClientSubscriptionId()).thenReturn(Future.failed(emulatedServiceFailure))
 
-          val caught = intercept[EmulatedServiceFailure](await(sender.validateAndSend(messageType)))
+          val caught = intercept[EmulatedServiceFailure](await(sender.send(messageType)))
 
           caught shouldBe emulatedServiceFailure
         }

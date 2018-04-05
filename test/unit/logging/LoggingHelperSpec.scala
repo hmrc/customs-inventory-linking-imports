@@ -18,8 +18,9 @@ package unit.logging
 
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.{AnyContent, Request}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
 import uk.gov.hmrc.play.test.UnitSpec
 
 class LoggingHelperSpec extends UnitSpec with MockitoSugar {
@@ -30,26 +31,29 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
 
   "LoggingHelper" should {
 
-    val rdWrapper = mock[RequestDataWrapper]
-    when(rdWrapper.headers).thenReturn(Map("ACCEPT" -> "Blah", "Authorization" -> "Bearer super-secret-token"))
-    when(rdWrapper.conversationId).thenReturn("conversation-id")
-    when(rdWrapper.clientId).thenReturn(Some("some-client-id"))
-    when(rdWrapper.requestedApiVersion).thenReturn("1.0")
+    val requestData = mock[RequestData]
+    val requestMock = mock[Request[AnyContent]]
+
+    val validatedRequest = ValidatedRequest[AnyContent](requestData, requestMock)
+
+    when(requestData.conversationId).thenReturn("conversation-id")
+    when(requestData.clientId).thenReturn("some-client-id")
+    when(requestData.requestedApiVersion).thenReturn("1.0")
 
     "testFormatInfo" in {
-      LoggingHelper.formatInfo("Info message", rdWrapper) shouldBe expectedMessage("Info message", "value-not-logged")
+      LoggingHelper.formatInfo("Info message", validatedRequest) shouldBe expectedMessage("Info message", "value-not-logged")
     }
 
     "testFormatError" in {
-      LoggingHelper.formatError("Error message", rdWrapper) shouldBe expectedMessage("Error message", "value-not-logged")
+      LoggingHelper.formatError("Error message", validatedRequest) shouldBe expectedMessage("Error message", "value-not-logged")
     }
 
     "testFormatWarn" in {
-      LoggingHelper.formatWarn("Warn message", rdWrapper) shouldBe expectedMessage("Warn message", "value-not-logged")
+      LoggingHelper.formatWarn("Warn message", validatedRequest) shouldBe expectedMessage("Warn message", "value-not-logged")
     }
 
     "testFormatDebug" in {
-      LoggingHelper.formatDebug("Debug message", rdWrapper) shouldBe expectedMessage("Debug message", "Bearer super-secret-token")
+      LoggingHelper.formatDebug("Debug message", validatedRequest) shouldBe expectedMessage("Debug message", "Bearer super-secret-token")
     }
   }
 }

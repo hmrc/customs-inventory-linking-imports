@@ -18,12 +18,14 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import java.net.URLEncoder
 import java.util.UUID
-
 import javax.inject.{Inject, Singleton}
+
+import play.api.mvc.{AnyContent, RequestHeader}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, RequestDataWrapper}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, WSHttp}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -35,15 +37,15 @@ class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
 
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
   private val version = "1.0"
-  //TODO: pass in clientId explicitly
-  def getClientSubscriptionId()(implicit rdWrapper: RequestDataWrapper): Future[UUID] = {
-    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${rdWrapper.clientId.getOrElse(throw new IllegalStateException("clientId not present"))}/context/$apiContextEncoded/version/$version"
+
+  def getClientSubscriptionId()(implicit validatedRequest: ValidatedRequest[AnyContent]): Future[UUID] = {
+    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${validatedRequest.requestData.clientId}/context/$apiContextEncoded/version/$version"
     get(url).map(r => r.fieldsId)
   }
 
-  private def get(url: String)(implicit rd: RequestDataWrapper): Future[ApiSubscriptionFieldsResponse] = {
+  private def get(url: String)(implicit rd: ValidatedRequest[AnyContent]): Future[ApiSubscriptionFieldsResponse] = {
+    implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
     logger.debug(s"Getting fields id from api-subscription-fields service. url = $url")
-    implicit val hc: HeaderCarrier = rd.headerCarrier
 
     http.GET[ApiSubscriptionFieldsResponse](url)
       .recoverWith {

@@ -23,25 +23,25 @@ import play.api.http.HeaderNames._
 import play.api.mvc.{AnyContent, Headers, Request}
 import play.api.test.Helpers.CONTENT_TYPE
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
+import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.RequestDataWrapper
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData._
 
 class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with MockitoSugar {
 
-  val validator = new HeaderValidator {}
-
-  implicit val rdWrapper = mock[RequestDataWrapper]
+  implicit val validatedRequest = mock[ValidatedRequest[AnyContent]]
   implicit val request = mock[Request[AnyContent]]
-  implicit val loggerMock = mock[ImportsLogger]
+  implicit val loggerMock = mock[CdsLogger]
+
+  val validator = new HeaderValidator(loggerMock)
 
   val headersTable =
     Table(
       ("description", "Headers", "Expected response"),
-      ("Valid Headers", ValidHeaders, Right(())),
-      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), Right(())),
+      ("Valid Headers", ValidHeaders, Right(TestExtractedHeaders)),
+      ("Valid content type XML with no space header", ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"), Right(TestExtractedHeaders)),
       ("Missing accept header", ValidHeaders - ACCEPT, Left(ErrorAcceptHeaderInvalid)),
       ("Missing content type header", ValidHeaders - CONTENT_TYPE, Left(ErrorContentTypeHeaderInvalid)),
       ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, Left(ErrorInternalServerError)),
@@ -56,10 +56,10 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
   "HeaderValidatorAction" should {
     forAll(headersTable) { (description, headers, response) =>
       s"$description" in {
-        when(rdWrapper.request).thenReturn(request)
+        when(validatedRequest.request).thenReturn(request)
         when(request.headers).thenReturn(new Headers(headers.toSeq))
 
-        validator.validateHeaders(rdWrapper, loggerMock) shouldBe response
+        validator.validateHeaders(request) shouldBe response
       }
     }
   }
