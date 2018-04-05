@@ -18,17 +18,11 @@ package uk.gov.hmrc.customs.inventorylinking.imports.model
 
 import org.joda.time.DateTime
 
-import scala.xml.NodeSeq
-
 case class RequestData(
   badgeIdentifier: String,
   conversationId: String,
   correlationId: String,
   dateTime: DateTime,
-
-  //TODO: use body in Play2 WrappedRequest
-  body: NodeSeq,
-
   requestedApiVersion: String,
   clientId: String
 )

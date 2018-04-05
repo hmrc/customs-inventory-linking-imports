@@ -98,7 +98,7 @@ object TestData {
   type EmulatedServiceFailure = UnsupportedOperationException
   val emulatedServiceFailure = new EmulatedServiceFailure("Emulated service failure.")
 
-  val outgoingBody: Elem = <payload>payload</payload>
+  val outgoingBody: NodeSeq = <payload>payload</payload>
   val decoratedBody = <wrapped><payload>payload</payload></wrapped>
 
   val ValidValidateMovementRequest = FakeRequest("POST", "/movement-validation")
@@ -123,11 +123,6 @@ object TestData {
     conversationId = UUID.randomUUID().toString,
     correlationId = UUID.randomUUID().toString,
     dateTime = DateTime.now(DateTimeZone.UTC),
-
-    //TODO: use body in Play2 WrappedRequest
-    //body = request.body.asXml.getOrElse(NodeSeq.Empty),
-    body = NodeSeq.Empty,
-
     requestedApiVersion = "1.0",
     clientId = TestXClientId
   )

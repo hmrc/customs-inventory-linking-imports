@@ -59,14 +59,9 @@ class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logg
     conversationId = UUID.randomUUID().toString,
     correlationId = UUID.randomUUID().toString,
     dateTime = DateTime.now(DateTimeZone.UTC),
-
-    //TODO: use body in Play2 WrappedRequest
-    body = request.body.asXml.getOrElse(NodeSeq.Empty),
-
     requestedApiVersion = "1.0",
     clientId = extractedHeaders.xClientId
   )
-
 }
 
 @Singleton
@@ -128,7 +123,7 @@ class PayloadValidationAction @Inject()(goodsArrivalXmlValidationService: GoodsA
         r.withHeaders(XConversationId -> conversationId)
       }
 
-      service.validate(validatedRequest.requestData.body).map(_ => None).recoverWith {
+      service.validate(r.body.asXml.getOrElse(NodeSeq.Empty)).map(_ => None).recoverWith {
         case NonFatal(saxe: SAXException) =>
           logger.error(s"XML processing error.")
           logger.debug(s"XML processing error.", saxe)

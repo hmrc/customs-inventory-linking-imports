@@ -78,7 +78,6 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
     ConversationId.toString,
     CorrelationId.toString,
     dateTime = DateTime.now(),
-    body = NodeSeq.Empty,
     requestedApiVersion = "1.0",
     TestXClientId
   )

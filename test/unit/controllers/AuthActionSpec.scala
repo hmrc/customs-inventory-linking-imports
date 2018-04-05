@@ -74,7 +74,6 @@ class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenProperty
     ConversationId.toString,
     CorrelationId.toString,
     dateTime = DateTime.now(),
-    body = NodeSeq.Empty,
     requestedApiVersion = "1.0",
     TestXClientId
   )

@@ -38,7 +38,7 @@ class PayloadDecorator {
         <n1:dateTimeStamp>{ dateTimeNoMillis.print(validatedRequest.requestData.dateTime)}</n1:dateTimeStamp>
       </n1:requestCommon>
       <n1:requestDetail>
-        { validatedRequest.requestData.body }
+        { validatedRequest.body.asXml.get }
       </n1:requestDetail>
     </n1:rootElementToBeRenamed>.copy(label = wrapperRootElementLabel)
 }

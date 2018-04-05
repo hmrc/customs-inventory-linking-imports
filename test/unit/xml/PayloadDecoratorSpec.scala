@@ -32,20 +32,21 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val xml: NodeSeq = <node1></node1>
 
   private val payloadWrapper = new PayloadDecorator
-  private val requestData = mock[RequestData]
-  private val requestMock = mock[Request[AnyContent]]
-
-  private val validatedRequest = ValidatedRequest[AnyContent](requestData, requestMock)
+  private val mockRequestData = mock[RequestData]
+  private val mockRequest = mock[Request[AnyContent]]
+  private val mockBody = mock[AnyContent]
+  private val validatedRequest = ValidatedRequest[AnyContent](mockRequestData, mockRequest)
 
   private def wrapPayload() = payloadWrapper.wrap(validatedRequest, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")
 
   "PayloadWrapper" should {
 
-    when(requestData.body).thenReturn(xml)
-    when(requestData.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
-    when(requestData.conversationId).thenReturn(ConversationId.toString)
-    when(requestData.correlationId).thenReturn(CorrelationId.toString)
-    when(requestData.dateTime).thenReturn(requestDateTime)
+    when(mockRequest.body).thenReturn(mockBody)
+    when(mockBody.asXml).thenReturn(Some(xml))
+    when(mockRequestData.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
+    when(mockRequestData.conversationId).thenReturn(ConversationId.toString)
+    when(mockRequestData.correlationId).thenReturn(CorrelationId.toString)
+    when(mockRequestData.dateTime).thenReturn(requestDateTime)
 
     "set the root element label" in {
       val result = wrapPayload()
