@@ -17,9 +17,11 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
+
 import play.api.mvc.{Action, AnyContent, Result, _}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, PayloadValidationAction, ValidateAndExtractHeadersAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -40,7 +42,11 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
                                 cdsLogger: CdsLogger
                                ) extends BaseController {
 
-  def process(): Action[AnyContent] =  (Action andThen (validateAndExtractHeadersAction andThen authAction.authAction(importsMessageType) andThen payloadValidationAction.validatePayload(importsMessageType))).async(bodyParser = xmlOrEmptyBody)  {
+  def process(): Action[AnyContent] =  (
+    Action andThen
+    validateAndExtractHeadersAction andThen
+    authAction.authAction(importsMessageType) andThen
+    payloadValidationAction.validatePayload(importsMessageType)).async(bodyParser = xmlOrEmptyBody)  {
     implicit validatedRequest: ValidatedRequest[AnyContent] =>
 
       messageSender.send(importsMessageType)
