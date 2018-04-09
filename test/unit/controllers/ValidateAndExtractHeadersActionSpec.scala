@@ -24,7 +24,8 @@ import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Request, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.ErrorContentTypeHeaderInvalid
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{HeaderValidator, ValidateAndExtractHeadersAction}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.ValidateAndExtractHeadersAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
