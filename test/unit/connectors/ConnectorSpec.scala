@@ -26,8 +26,8 @@ import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.WSHttp
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData
 import util.TestData.requestDateTime
@@ -39,8 +39,8 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
 
   trait SetupConnector {
     private val serviceConfig = ServiceConfig("the-url", Some("bearerToken"), "default")
-    private val wsHttp: WSHttp = mock[WSHttp]
-    private val connector = new ImportsConnector(wsHttp, mock[ImportsLogger])
+    private val http: HttpClient = mock[HttpClient]
+    private val connector = new ImportsConnector(http, mock[ImportsLogger])
     private val validOutgoingMessage: Elem = <message></message>
     private lazy val requestMock = mock[Request[AnyContent]]
     private lazy val requestData = mock[RequestData]
@@ -49,7 +49,7 @@ class ConnectorSpec extends UnitSpec with MockitoSugar {
 
     def stubHttpClientReturnsResponseForValidMessage(response: Future[HttpResponse]): OngoingStubbing[Future[HttpResponse]] = {
       when(requestData.dateTime).thenReturn(requestDateTime)
-      when(wsHttp.POSTString(meq(serviceConfig.url), meq(validOutgoingMessage.toString()), any[Seq[(String, String)]])
+      when(http.POSTString(meq(serviceConfig.url), meq(validOutgoingMessage.toString()), any[Seq[(String, String)]])
       (any[HttpReads[HttpResponse]], any[HeaderCarrier], any[ExecutionContext])).
         thenReturn(response)
     }

@@ -17,14 +17,12 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.http.Status
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
-import uk.gov.hmrc.auth.core.{AuthProviders, AuthorisationException, AuthorisedFunctions, Enrolment}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.UnauthorizedCode
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement, ValidatedRequest}
@@ -36,7 +34,7 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 
 @Singleton
-class AuthAction @Inject()(override val authConnector: MicroserviceAuthConnector, logger: ImportsLogger) extends AuthorisedFunctions {
+class AuthAction @Inject()(override val authConnector: AuthConnector, logger: ImportsLogger) extends AuthorisedFunctions {
 
   private val errorResponseUnauthorisedGeneral =
     ErrorResponse(Status.UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
