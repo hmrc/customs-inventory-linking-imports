@@ -18,20 +18,21 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import java.net.URLEncoder
 import java.util.UUID
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import play.api.mvc.{AnyContent, RequestHeader}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ValidatedRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, WSHttp}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class ApiSubscriptionFieldsConnector @Inject()(http: WSHttp,
+class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
                                                servicesConfig: ImportsConfigService,
                                                logger: ImportsLogger) {
 

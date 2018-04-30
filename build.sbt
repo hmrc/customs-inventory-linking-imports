@@ -19,7 +19,7 @@ lazy val allResolvers = resolvers ++= Seq(
   Resolver.jcenterRepo
 )
 
-val compileDependencies = Seq(microserviceBootStrap, authClient, xmlResolver, customsApiCommon)
+val compileDependencies = Seq(bootstrapPlay25, xmlResolver, customsApiCommon)
 
 val testDependencies = Seq(hmrcTest, scalaTest, pegDown, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
 
@@ -56,7 +56,7 @@ lazy val microservice = (project in file("."))
     allResolvers
   )
 
-def onPackageName(rootPackage: String): (String => Boolean) = {
+def onPackageName(rootPackage: String): String => Boolean = {
   testName => testName startsWith rootPackage
 }
 
@@ -138,4 +138,4 @@ packageBin in Compile := {
   (packageBin in Compile).value
 }
 
-evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false)
+evictionWarningOptions in update := EvictionWarningOptions.default.withWarnTransitiveEvictions(false)

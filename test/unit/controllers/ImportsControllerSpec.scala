@@ -36,13 +36,11 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{UNAUTHORIZED, contentAsString, header}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
-import uk.gov.hmrc.auth.core.{AuthorisationException, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, InsufficientEnrolments}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, PayloadValidationAction, ValidateAndExtractHeadersAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers._
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, PayloadValidationAction, ValidateAndExtractHeadersAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsMessageType, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ImportsConfigService, MessageSender, ValidateMovementXmlValidationService}
@@ -56,7 +54,7 @@ import scala.xml.{Node, NodeSeq, Utility, XML}
 
 class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
 
-  private val mockAuthConnector: MicroserviceAuthConnector = mock[MicroserviceAuthConnector]
+  private val mockAuthConnector: AuthConnector = mock[AuthConnector]
   private val mockServiceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
   private val badgeIdentifier = "BADGE1"
   private val mockMessageSender: MessageSender = mock[MessageSender]

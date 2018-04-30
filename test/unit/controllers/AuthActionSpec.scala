@@ -33,10 +33,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, header}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
-import uk.gov.hmrc.auth.core.{AuthorisationException, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, InsufficientEnrolments}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.UnauthorizedCode
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.MicroserviceAuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.AuthAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, RequestData, ValidateMovement, ValidatedRequest}
@@ -79,7 +78,7 @@ class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenProperty
   )
 
   trait SetUp {
-    private lazy val mockAuthConnector: MicroserviceAuthConnector = mock[MicroserviceAuthConnector]
+    private lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
     val mockLogger = mock[ImportsLogger]
     val authActionBuilder = new AuthAction(mockAuthConnector, mockLogger)
     val request = FakeRequest().withXmlBody(NodeSeq.Empty)
