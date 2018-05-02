@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns="http://gov.uk/customs/inventoryLinkingImport/v1" 
-           xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-           targetNamespace="http://gov.uk/customs/inventoryLinkingImport/v1" 
-           elementFormDefault="qualified" version="1.0">
-           
+<xs:schema xmlns="http://gov.uk/customs/inventoryLinkingImport/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://gov.uk/customs/inventoryLinkingImport/v1" elementFormDefault="qualified" version="1.0">
 	<xs:include schemaLocation="inventoryLinkingImportCommonTypes.xsd"/>
-	
 	<!-- =============================================================================================== -->
 	<!-- Inventory Linking imports Validate Movement Response                                            -->
 	<!--CSPs perform a link between the ICR and the MRN and respond with a positive or negative response.-->
-    <!-- =============================================================================================== -->
+	<!-- =============================================================================================== -->
 	<xs:element name="InventoryLinkingImportsValidateMovementResponse">
 		<xs:annotation>
 			<xs:documentation>Inventory Linking Imports Validate Movement Response
@@ -17,8 +12,6 @@
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="messageCode" type="messageCode" minOccurs="1" maxOccurs="1"/>
-				<xs:element name="dateOfEntry" type="xs:dateTime" nillable="false" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="entryNumber" type="entryNumber" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="entryVersionNumber" type="entryVersionNumber" nillable="true" minOccurs="0" maxOccurs="1"/>
 				<xs:element name="inventoryConsignmentReference" type="inventoryConsignmentReference" nillable="false" minOccurs="1" maxOccurs="1"/>
