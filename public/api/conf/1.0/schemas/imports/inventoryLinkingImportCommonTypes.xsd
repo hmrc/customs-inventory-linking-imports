@@ -22,7 +22,7 @@
 	</xs:simpleType>
 	<xs:simpleType name="inventoryConsignmentReference">
 		<xs:restriction base="xs:string">
-			<xs:maxLength value="25"/>
+			<xs:maxLength value="35"/>
 			<xs:pattern value="([a-zA-Z0-9])*"/>
 		</xs:restriction>
 	</xs:simpleType>

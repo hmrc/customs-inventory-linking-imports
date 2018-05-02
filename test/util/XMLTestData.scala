@@ -33,8 +33,6 @@ object XMLTestData {
 
   val InvalidInventoryLinkingMovementRequestXML: Elem =
     <InventoryLinkingImportsValidateMovementResponse foo="bar" xmlns="http://gov.uk/customs/inventoryLinkingImport/v1"> <!--invalid-->
-      <messageCode>str</messageCode>
-      <dateOfEntry>2008-09-29T02:49:45</dateOfEntry>
       <entryNumber>string</entryNumber>
       <entryVersionNumber>3</entryVersionNumber>
       <inventoryConsignmentReference>string</inventoryConsignmentReference>
@@ -43,8 +41,6 @@ object XMLTestData {
 
   val InvalidInventoryLinkingMovementRequestXMLWithMultipleErrors: Elem =
     <InventoryLinkingImportsValidateMovementResponse foo="bar" xmlns="http://gov.uk/customs/inventoryLinkingImport/v1"> <!--invalid-->
-      <messageCode>str</messageCode>
-      <dateOfEntry>2008-09-29T02:49:45</dateOfEntry>
       <entryNumber>abc_123</entryNumber> <!--invalid-->
       <entryVersionNumber>A</entryVersionNumber> <!--invalid-->
       <inventoryConsignmentReference>string</inventoryConsignmentReference>
@@ -53,8 +49,6 @@ object XMLTestData {
 
   val ValidInventoryLinkingMovementRequestXML: Elem =
     <InventoryLinkingImportsValidateMovementResponse xmlns="http://gov.uk/customs/inventoryLinkingImport/v1">
-      <messageCode>str</messageCode>
-      <dateOfEntry>2008-09-29T02:49:45</dateOfEntry>
       <entryNumber>string</entryNumber>
       <entryVersionNumber>3</entryVersionNumber>
       <inventoryConsignmentReference>string</inventoryConsignmentReference>
@@ -63,45 +57,29 @@ object XMLTestData {
 
   val ValidInventoryLinkingGoodsArrivalRequestXML: Elem =
     <inventoryLinkingImportsGoodsArrival xmlns="http://gov.uk/customs/inventoryLinkingImport/v1">
-      <messageCode>str</messageCode>
-      <dateOfEntry>2008-09-29T02:49:45</dateOfEntry>
       <entryNumber>string</entryNumber>
       <!--Optional:-->
       <entryVersionNumber>3</entryVersionNumber>
-      <goodsArrivalDeclaration>Y</goodsArrivalDeclaration>
       <inventoryConsignmentReference>string</inventoryConsignmentReference>
-      <!--Optional:-->
-      <irc>str</irc>
       <!--Optional:-->
       <transportNationality>st</transportNationality>
     </inventoryLinkingImportsGoodsArrival>
 
   val InvalidInventoryLinkingGoodsArrivalRequestXML: Elem =
     <inventoryLinkingImportsGoodsArrival foo="bar" xmlns="http://gov.uk/customs/inventoryLinkingImport/v1"> <!--invalid-->
-      <messageCode>str</messageCode>
-      <dateOfEntry>2008-09-29T02:49:45</dateOfEntry>
       <entryNumber>string</entryNumber>
       <!--Optional:-->
       <entryVersionNumber>3</entryVersionNumber>
-      <goodsArrivalDeclaration>Y</goodsArrivalDeclaration>
       <inventoryConsignmentReference>string</inventoryConsignmentReference>
-      <!--Optional:-->
-      <irc>str</irc>
-      <!--Optional:-->
       <transportNationality>st</transportNationality>
     </inventoryLinkingImportsGoodsArrival>
 
   val InvalidInventoryLinkingGoodsArrivalRequestXMLWithMultipleErrors: Elem =
     <inventoryLinkingImportsGoodsArrival foo="bar" xmlns="http://gov.uk/customs/inventoryLinkingImport/v1"> <!--invalid-->
-      <messageCode>str</messageCode>
-      <dateOfEntry>2008-09-29T02:49:45</dateOfEntry>
       <entryNumber>abc_123</entryNumber> <!--invalid-->
       <!--Optional:-->
       <entryVersionNumber>A</entryVersionNumber> <!--invalid-->
-      <goodsArrivalDeclaration>Y</goodsArrivalDeclaration>
       <inventoryConsignmentReference>string</inventoryConsignmentReference>
-      <!--Optional:-->
-      <irc>str</irc>
       <!--Optional:-->
       <transportNationality>st</transportNationality>
     </inventoryLinkingImportsGoodsArrival>
