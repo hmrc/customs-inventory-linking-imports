@@ -46,6 +46,11 @@ documentation:
 
       (annotations.scope): "write:customs-il-imports-movement-validation"
       securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-il-imports-movement-validation" ] } ]
+      body:
+        application/xml:
+          type: !include schemas/imports/inventoryLinkingImportValidateMovementResponse.xsd
+          example: !include examples/ValidateMovementResponse.xml
+
       responses:
         202:
         400:
@@ -100,6 +105,11 @@ documentation:
 
       (annotations.scope): "write:customs-il-imports-arrival-notifications"
       securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-il-imports-arrival-notifications" ] } ]
+      body:
+        application/xml:
+          type: !include schemas/imports/inventoryLinkingImportArriveGoods.xsd
+          example: !include examples/GoodsArrivalNotification.xml
+
       responses:
         202:
         400:
