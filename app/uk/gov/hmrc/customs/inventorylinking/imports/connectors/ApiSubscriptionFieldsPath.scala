@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.model
+package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-case class ExtractedHeaders(
-  badgeIdentifier: String,
-  xClientId: String
-)
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionKey
+
+object ApiSubscriptionFieldsPath {
+  def url(baseUrlAndContext: String, apiSubscriptionKey: ApiSubscriptionKey): String =
+    s"$baseUrlAndContext/application/${apiSubscriptionKey.clientId}/context/${apiSubscriptionKey.context}/version/${apiSubscriptionKey.version}"
+}

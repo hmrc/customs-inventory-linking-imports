@@ -16,40 +16,34 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
-
-import org.joda.time.{DateTime, DateTimeZone}
 import play.api.mvc.{ActionRefiner, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedHeadersRequest}
 
 import scala.concurrent.Future
 
+/** Action builder that validates headers.
+  * <li/>INPUT - `ConversationIdRequest`
+  * <li/>OUTPUT - `ValidatedHeadersRequest`
+  * <li/>ERROR - 4XX Result if is a header validation error. This terminates the action builder pipeline.
+  */
 @Singleton
-class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: ImportsLogger) extends ActionRefiner[Request, ValidatedRequest] {
+class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: ImportsLogger) extends ActionRefiner[ConversationIdRequest, ValidatedHeadersRequest] {
 
-  override def refine[A](inputRequest: Request[A]): Future[Either[Result, ValidatedRequest[A]]] = Future.successful {
-    implicit val r: Request[A] = inputRequest
+  override def refine[A](cr: ConversationIdRequest[A]): Future[Either[Result, ValidatedHeadersRequest[A]]] = Future.successful {
+    implicit val id = cr
 
-    validator.validateHeaders(inputRequest) match {
-      case Left(result) => Left(result.XmlResult)
-      case Right(extractedHeaders) =>
-        val requestData = createData(extractedHeaders, inputRequest.asInstanceOf[Request[AnyContent]])
-        val validatedRequest = ValidatedRequest(requestData, inputRequest)
-        Right(validatedRequest)
+    validator.validateHeaders(cr) match {
+      case Left(result) => Left(result.XmlResult.withConversationId)
+      case Right(extracted) =>
+        val vhr = ValidatedHeadersRequest(extracted.badgeIdentifier, cr.conversationId, extracted.clientId, cr.request)
+        Right(vhr)
     }
   }
 
-  private def createData(extractedHeaders: ExtractedHeaders, request: Request[AnyContent]) = RequestData(
-    badgeIdentifier = extractedHeaders.badgeIdentifier,
-    conversationId = UUID.randomUUID().toString,
-    correlationId = UUID.randomUUID().toString,
-    dateTime = DateTime.now(DateTimeZone.UTC),
-    requestedApiVersion = "1.0",
-    clientId = extractedHeaders.xClientId
-  )
 }
 
 

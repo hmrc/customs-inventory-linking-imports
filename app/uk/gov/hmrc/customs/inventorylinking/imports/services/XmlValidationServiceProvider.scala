@@ -16,22 +16,8 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import uk.gov.hmrc.customs.api.common.controllers.ResponseContents
+import javax.inject.{Inject, Singleton}
 
-import scala.xml.SAXException
-
-object XmlValidationErrorsMapper {
-
-  def toResponseContents(saxe: SAXException): Seq[ResponseContents] = {
-    @annotation.tailrec
-    def loop(thr: Exception, acc: List[ResponseContents]): List[ResponseContents] = {
-      val newAcc = ResponseContents("xml_validation_error", thr.getMessage) :: acc
-      thr match {
-        case saxError: SAXException if Option(saxError.getException).isDefined => loop(saxError.getException, newAcc)
-        case _ => newAcc
-      }
-    }
-
-    loop(saxe, Nil)
-  }
-}
+@Singleton
+class XmlValidationServiceProvider @Inject()(val submission: GoodsArrivalXmlValidationService,
+                                             val cancellation: ValidateMovementXmlValidationService)

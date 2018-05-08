@@ -17,15 +17,15 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
-import play.api.mvc.{Headers, Request}
+import play.api.mvc.Headers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorGenericBadRequest, ErrorInternalServerError}
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorInternalServerError}
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ExtractedHeaders
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeadersImpl}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{BadgeIdentifier, ClientId}
 
 @Singleton
 class HeaderValidator @Inject() (logger: CdsLogger) {
@@ -35,8 +35,8 @@ class HeaderValidator @Inject() (logger: CdsLogger) {
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
 
-  def validateHeaders[A](implicit request: Request[A]): Either[ErrorResponse, ExtractedHeaders] = {
-    implicit val headers = request.headers
+  def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
+    implicit val headers = conversationIdRequest.headers
 
     def hasAccept = validateHeader(ACCEPT, validAcceptHeaders.contains(_), ErrorAcceptHeaderInvalid)
 
@@ -44,9 +44,9 @@ class HeaderValidator @Inject() (logger: CdsLogger) {
 
     def hasXClientId = validateHeader(XClientId, xClientIdRegex.findFirstIn(_).nonEmpty, ErrorInternalServerError)
 
-    def hasXBadgeIdentifier = validateHeader(XBadgeIdentifier, xBadgeIdentifierRegex.findFirstIn(_).nonEmpty, ErrorGenericBadRequest)
+    def hasXBadgeIdentifier = validateHeader(XBadgeIdentifier, xBadgeIdentifierRegex.findFirstIn(_).nonEmpty, ErrorInternalServerError)
 
-    val theResult: Either[ErrorResponse, ExtractedHeaders] = for {
+    val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
       accept <- hasAccept.right
       contentType <- hasContentType.right
       xClientId <- hasXClientId.right
@@ -57,12 +57,13 @@ class HeaderValidator @Inject() (logger: CdsLogger) {
       + s"$CONTENT_TYPE header passed validation: $contentType\n"
       + s"$XClientId header passed validation: $xClientId\n"
       + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier")
-      ExtractedHeaders(xBadgeIdentifier, xClientId)
+      ExtractedHeadersImpl(BadgeIdentifier(xBadgeIdentifier), ClientId(xClientId))
     }
     theResult
   }
 
-  private def validateHeader(headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)(implicit h: Headers): Either[ErrorResponse, String] = {
+  private def validateHeader[A](headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)
+                               (implicit conversationIdRequest: ConversationIdRequest[A], h: Headers): Either[ErrorResponse, String] = {
     val left = Left(errorResponse)
     def leftWithLog = {
       logger.error(s"${errorResponse.message} ")

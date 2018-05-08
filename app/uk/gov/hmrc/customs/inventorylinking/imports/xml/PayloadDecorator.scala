@@ -16,29 +16,32 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.xml
 
-import java.util.UUID
-
-import org.joda.time.format.ISODateTimeFormat.dateTimeNoMillis
-import play.api.mvc.AnyContent
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
+import org.joda.time.DateTime
+import org.joda.time.format.ISODateTimeFormat
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 
 import scala.xml.NodeSeq
 
 class PayloadDecorator {
-  def wrap(validatedRequest: ValidatedRequest[AnyContent], clientSubscriptionId: UUID, wrapperRootElementLabel: String): NodeSeq =
+  def wrap[A](xml: NodeSeq,
+              clientId: String,
+              correlationId: String,
+              wrapperRootElementLabel: String,
+              dateTime: DateTime)(implicit vpr: ValidatedPayloadRequest[A]): NodeSeq =
+
     <n1:rootElementToBeRenamed
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:n1="http://gov.uk/customs/inventoryLinkingImport/v1"
     xsi:schemaLocation="http://gov.uk/customs/inventoryLinkingImport/v1request_schema.xsd">
       <n1:requestCommon>
-        <n1:clientID>{ clientSubscriptionId.toString }</n1:clientID>
-        <n1:conversationID>{ validatedRequest.requestData.conversationId }</n1:conversationID>
-        <n1:correlationID>{ validatedRequest.requestData.correlationId }</n1:correlationID>
-        <n1:badgeIdentifier>{ validatedRequest.requestData.badgeIdentifier }</n1:badgeIdentifier>
-        <n1:dateTimeStamp>{ dateTimeNoMillis.print(validatedRequest.requestData.dateTime)}</n1:dateTimeStamp>
+        <n1:clientID>{ clientId }</n1:clientID>
+        <n1:conversationID>{ vpr.conversationId.toString}</n1:conversationID>
+        <n1:correlationID>{ correlationId }</n1:correlationID>
+        <n1:badgeIdentifier>{ vpr.badgeIdentifier }</n1:badgeIdentifier>
+        <n1:dateTimeStamp>{ dateTime.toString(ISODateTimeFormat.dateTimeNoMillis) }</n1:dateTimeStamp>
       </n1:requestCommon>
       <n1:requestDetail>
-        { validatedRequest.body.asXml.get }
+        { xml }
       </n1:requestDetail>
     </n1:rootElementToBeRenamed>.copy(label = wrapperRootElementLabel)
 }

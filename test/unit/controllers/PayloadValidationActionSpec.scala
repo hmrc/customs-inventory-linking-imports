@@ -31,7 +31,7 @@ import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, header}
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.PayloadValidationAction
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.payloadValidationAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, RequestData, ValidateMovement, ValidatedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService}
@@ -85,7 +85,7 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
     val mockLogger = mock[ImportsLogger]
     val mockGoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
     val mockValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
-    val payloadValidationAction = new PayloadValidationAction(mockGoodsArrivalXmlValidationService, mockValidateMovementXmlValidationService, mockLogger)
+    val payloadValidationAction = new payloadValidationAction(mockGoodsArrivalXmlValidationService, mockValidateMovementXmlValidationService, mockLogger)
     val request = FakeRequest().withXmlBody(NodeSeq.Empty)
     implicit val validationRequest = ValidatedRequest[AnyContent](requestData, request)
 

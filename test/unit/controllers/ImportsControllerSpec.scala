@@ -40,7 +40,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, Insufficien
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers._
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, PayloadValidationAction, ValidateAndExtractHeadersAction}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, payloadValidationAction, ValidateAndExtractHeadersAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsMessageType, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ImportsConfigService, MessageSender, ValidateMovementXmlValidationService}
@@ -77,7 +77,7 @@ class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with Mocki
   private val mockGoodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
   private val mockValidateMovementXmlValidationService: ValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
 
-  private val payloadValidationAction = new PayloadValidationAction(mockGoodsArrivalXmlValidationService, mockValidateMovementXmlValidationService, logger)
+  private val payloadValidationAction = new payloadValidationAction(mockGoodsArrivalXmlValidationService, mockValidateMovementXmlValidationService, logger)
 
   private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockMessageSender, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger)
   private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockMessageSender, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger)

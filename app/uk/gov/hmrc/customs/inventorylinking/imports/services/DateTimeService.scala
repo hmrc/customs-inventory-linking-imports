@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports
+package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-package object model {
+import java.time.Clock
 
-  type SeqOfHeader = Seq[(String, String)]
+import org.joda.time.{DateTime, DateTimeZone}
+
+class DateTimeService {
+  def nowUtc(): DateTime = new DateTime(Clock.systemUTC().instant().toEpochMilli, DateTimeZone.UTC)
 }

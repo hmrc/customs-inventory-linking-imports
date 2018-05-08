@@ -16,26 +16,68 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
+import java.util.UUID
+
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.AnyContent
+import org.joda.time.DateTime
+import play.api.http.HeaderNames._
+import play.api.http.MimeTypes
+import play.api.http.MimeTypes.XML
+import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsMessageType
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.xml.NodeSeq
 
 @Singleton
-class ImportsConnector @Inject()(http: HttpClient, logger: ImportsLogger) {
+class ImportsConnector @Inject()(http: HttpClient,
+                                 logger: ImportsLogger,
+                                 importsMessageType: ImportsMessageType,
+                                 serviceConfigProvider: ServiceConfigProvider) {
 
-  private implicit val hc: HeaderCarrier = HeaderCarrier()
+  def send[A](xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
+    val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
+    val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = getHeaders(date, correlationId, vpr.conversationId.uuid), authorization = Some(Authorization(bearerToken)))
+    post(xml, config.url)
+  }
 
-  def post(request: OutgoingRequest)(implicit rdw: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
-    logger.debug(s"Outgoing request body: ${request.outgoingBody.toString} headers: ${request.headers}")
-    http.POSTString(request.url, request.outgoingBody.toString, request.headers).
-      recoverWith {
+  private def getHeaders(date: DateTime, correlationId: UUID, conversationId: UUID) = {
+    Seq(
+      (ACCEPT, MimeTypes.XML),
+      (CONTENT_TYPE, s"$XML; charset=UTF-8"),
+      (DATE, date.toString("EEE, dd MMM yyyy HH:mm:ss z")),
+      (X_FORWARDED_HOST, "MDTP"),
+      (XConversationId, conversationId.toString),
+      (XCorrelationId, correlationId.toString))
+  }
+
+  private def post[A](xml: NodeSeq, url: String)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
+    logger.debug(s"Sending request to MDG. Payload: ${xml.toString()}")
+    http.POSTString[HttpResponse](url, xml.toString())
+      .recoverWith {
         case httpError: HttpException => Future.failed(new RuntimeException(httpError))
       }
+      .recoverWith {
+        case e: Throwable =>
+          logger.error(s"Call to wco declaration submission failed. url=$url")
+          Future.failed(e)
+      }
   }
+//  private implicit val hc: HeaderCarrier = HeaderCarrier()
+//
+//  def post(request: OutgoingRequest)(implicit rdw: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
+//    logger.debug(s"Outgoing request body: ${request.outgoingBody.toString} headers: ${request.headers}")
+//    http.POSTString(request.url, request.outgoingBody.toString, request.headers).
+//      recoverWith {
+//        case httpError: HttpException => Future.failed(new RuntimeException(httpError))
+//      }
+//  }
 }

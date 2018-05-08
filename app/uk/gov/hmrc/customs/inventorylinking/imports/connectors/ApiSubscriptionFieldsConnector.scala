@@ -16,16 +16,12 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import java.net.URLEncoder
-import java.util.UUID
-
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.{AnyContent, RequestHeader}
+import uk.gov.hmrc.customs.api.common.config.ServicesConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ValidatedRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ApiSubscriptionKey}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
-import uk.gov.hmrc.play.HeaderCarrierConverter
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,20 +29,21 @@ import scala.concurrent.Future
 
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
-                                               servicesConfig: ImportsConfigService,
+                                               servicesConfig: ServicesConfig,
                                                logger: ImportsLogger) {
 
-  private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
-  private val version = "1.0"
+  private val service = "api-subscription-fields"
+  private val serviceContext = service + ".context"
+  private lazy val baseUrl = servicesConfig.baseUrl(service)
+  private lazy val context = servicesConfig.getConfString(serviceContext, throw new IllegalStateException(s"Configuration error - $serviceContext not found."))
 
-  def getClientSubscriptionId()(implicit validatedRequest: ValidatedRequest[AnyContent]): Future[UUID] = {
-    val url = s"${servicesConfig.apiSubscriptionFieldsBaseUrl}/application/${validatedRequest.requestData.clientId}/context/$apiContextEncoded/version/$version"
-    get(url).map(r => r.fieldsId)
+  def getSubscriptionFields[A](apiSubsKey: ApiSubscriptionKey)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
+    val url = ApiSubscriptionFieldsPath.url(s"$baseUrl$context", apiSubsKey)
+    get(url)
   }
 
-  private def get(url: String)(implicit rd: ValidatedRequest[AnyContent]): Future[ApiSubscriptionFieldsResponse] = {
-    implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
-    logger.debug(s"Getting fields id from api-subscription-fields service. url = $url")
+  private def get[A](url: String)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
+    logger.debug(s"Getting fields id from api subscription fields service. url=$url")
 
     http.GET[ApiSubscriptionFieldsResponse](url)
       .recoverWith {
@@ -54,8 +51,9 @@ class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
       }
       .recoverWith {
         case e: Throwable =>
-          logger.error(s"Call to get api subscription fields failed. url = $url")
+          logger.error(s"Call to subscription information service failed. url=$url")
           Future.failed(e)
       }
   }
+
 }

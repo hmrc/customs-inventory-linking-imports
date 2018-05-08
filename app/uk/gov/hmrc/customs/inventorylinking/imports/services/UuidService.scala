@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.model
+package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import org.joda.time.DateTime
+import java.util.UUID
 
-case class RequestData(
-  badgeIdentifier: String,
-  conversationId: String,
-  correlationId: String,
-  dateTime: DateTime,
-  requestedApiVersion: String,
-  clientId: String
-)
+import com.google.inject.Singleton
+
+@Singleton
+class UuidService {
+
+  def uuid(): UUID = UUID.randomUUID()
+
+}

@@ -16,22 +16,30 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-trait ImportsMessageType {
-  def name: String
-  def wrapperRootElementLabel: String
+import java.util.UUID
+
+case class Eori(value: String) extends AnyVal
+
+case class ClientId(value: String) extends AnyVal {
+  override def toString: String = value.toString
 }
 
-case object GoodsArrival extends ImportsMessageType {
-  val name = "goodsarrival"
-  val wrapperRootElementLabel = "InventoryLinkingImportsInboundGoodsArrival"
+case class ConversationId(uuid: UUID) extends AnyVal {
+  override def toString: String = uuid.toString
 }
 
-case object ValidateMovement extends ImportsMessageType {
-  val name = "validatemovement"
-  val wrapperRootElementLabel = "InventoryLinkingImportsInboundValidateMovementResponse"
+case class CorrelationId(uuid: UUID) extends AnyVal {
+  override def toString: String = uuid.toString
 }
 
-trait ImportsConfig {
-  val whiteListedCspApplicationIds: Seq[String]
-  val apiSubscriptionFieldsBaseUrl: String
+case class BadgeIdentifier(value: String) extends AnyVal
+
+case class FieldsId(value: String) extends AnyVal
+
+sealed trait ApiVersion {
+  val value: String
+  override def toString: String = value
+}
+object VersionOne extends ApiVersion{
+  override val value: String = "1.0"
 }

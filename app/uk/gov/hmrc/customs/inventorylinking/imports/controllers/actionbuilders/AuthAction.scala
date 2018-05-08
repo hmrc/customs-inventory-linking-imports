@@ -24,50 +24,47 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.UnauthorizedCode
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement, ValidatedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ValidatedHeadersRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Left
 import scala.util.control.NonFatal
 
 @Singleton
-class AuthAction @Inject()(override val authConnector: AuthConnector, logger: ImportsLogger) extends AuthorisedFunctions {
+class AuthAction @Inject()(override val authConnector: AuthConnector,
+                           logger: ImportsLogger,
+                           importsMessageType: ImportsMessageType)
+  extends ActionRefiner[ValidatedHeadersRequest, AuthorisedRequest] with AuthorisedFunctions {
 
   private val errorResponseUnauthorisedGeneral =
     ErrorResponse(Status.UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
 
-  def authAction(importsMessageType: ImportsMessageType): ActionRefiner[ValidatedRequest, ValidatedRequest] = new ActionFilter[ValidatedRequest]() {
+  override def refine[A](vhr: ValidatedHeadersRequest[A]): Future[Either[Result, AuthorisedRequest[A]]] = {
+    implicit val implicitVhr = vhr
+    implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 
-    override protected def filter[A](validatedRequest: ValidatedRequest[A]): Future[Option[Result]] = {
-      implicit val r = validatedRequest.asInstanceOf[ValidatedRequest[AnyContent]]
-      implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+    def enrolmentForMessageType = importsMessageType match {
+      case ValidateMovement =>
+        Enrolment("write:customs-il-imports-movement-validation")
+      case GoodsArrival =>
+        Enrolment("write:customs-il-imports-arrival-notifications")
+    }
 
-      def enrolmentForMessageType = importsMessageType match {
-        case ValidateMovement =>
-          Enrolment("write:customs-il-imports-movement-validation")
-        case GoodsArrival =>
-          Enrolment("write:customs-il-imports-arrival-notifications")
-      }
-
-      def addConversationIdHeader(r: Result, conversationId: String) = {
-        r.withHeaders(XConversationId -> conversationId)
-      }
-
-      authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
-        Future.successful(None)
-      }.recoverWith {
-        case NonFatal(authEx: AuthorisationException) =>
-          logger.error(s"User is not authorised for this service.")
-          logger.debug(s"User is not authorised for this service", authEx)
-          Future.successful(Some(errorResponseUnauthorisedGeneral.XmlResult))
-        case NonFatal(e) =>
-          logger.error(s"An error occurred while processing request.")
-          logger.debug(s"An error occurred while processing request ", e)
-          Future.successful(Some(ErrorResponse.ErrorInternalServerError.XmlResult))
-      }.map(maybeResult => maybeResult.map(r => addConversationIdHeader(r, validatedRequest.requestData.conversationId)))
+    authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
+      Future.successful(Right(vhr.toAuthorisedRequest))
+    }.recover{
+      case NonFatal(_: AuthorisationException) =>
+        logger.error("Not authorised")
+        Left(errorResponseUnauthorisedGeneral.XmlResult.withConversationId)
+      case NonFatal(e) =>
+        logger.error("Error authorising CSP", e)
+        throw e
     }
   }
+
 }
