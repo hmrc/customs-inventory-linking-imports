@@ -17,18 +17,18 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders
 
 import javax.inject.{Inject, Singleton}
-import play.api.http.Status
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.UnauthorizedCode
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsMessageType
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ValidatedHeadersRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -36,35 +36,30 @@ import scala.util.Left
 import scala.util.control.NonFatal
 
 @Singleton
-class AuthAction @Inject()(override val authConnector: AuthConnector,
-                           logger: ImportsLogger,
-                           importsMessageType: ImportsMessageType)
-  extends ActionRefiner[ValidatedHeadersRequest, AuthorisedRequest] with AuthorisedFunctions {
+class AuthAction @Inject()(logger: ImportsLogger) extends BaseController {
 
   private val errorResponseUnauthorisedGeneral =
-    ErrorResponse(Status.UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
+    ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
 
-  override def refine[A](vhr: ValidatedHeadersRequest[A]): Future[Either[Result, AuthorisedRequest[A]]] = {
-    implicit val implicitVhr = vhr
-    implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+  case class Authenticate(override val authConnector: AuthConnector, importsMessageType: ImportsMessageType)
+    extends ActionRefiner[ValidatedHeadersRequest, AuthorisedRequest] with AuthorisedFunctions {
 
-    def enrolmentForMessageType = importsMessageType match {
-      case ValidateMovement =>
-        Enrolment("write:customs-il-imports-movement-validation")
-      case GoodsArrival =>
-        Enrolment("write:customs-il-imports-arrival-notifications")
+    override def refine[A](vhr: ValidatedHeadersRequest[A]): Future[Either[Result, AuthorisedRequest[A]]] = {
+      implicit val implicitVhr = vhr
+      implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+
+      authorised(importsMessageType.enrolment and AuthProviders(PrivilegedApplication)) {
+        Future.successful(Right(vhr.toAuthorisedRequest))
+      }.recover{
+        case NonFatal(_: AuthorisationException) =>
+          logger.error("Not authorised")
+          Left(errorResponseUnauthorisedGeneral.XmlResult.withConversationId)
+        case NonFatal(e) =>
+          logger.error("Error authorising CSP", e)
+          throw e
+      }
     }
 
-    authorised(enrolmentForMessageType and AuthProviders(PrivilegedApplication)) {
-      Future.successful(Right(vhr.toAuthorisedRequest))
-    }.recover{
-      case NonFatal(_: AuthorisationException) =>
-        logger.error("Not authorised")
-        Left(errorResponseUnauthorisedGeneral.XmlResult.withConversationId)
-      case NonFatal(e) =>
-        logger.error("Error authorising CSP", e)
-        throw e
-    }
   }
 
 }

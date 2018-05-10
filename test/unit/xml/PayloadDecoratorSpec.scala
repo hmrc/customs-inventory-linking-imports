@@ -16,13 +16,11 @@
 
 package unit.xml
 
-import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
-import play.api.mvc.{AnyContent, Request}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{CorrelationId, FieldsId}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
-import util.ApiSubscriptionFieldsTestData._
+import util.TestData
 import util.TestData._
 
 import scala.xml.NodeSeq
@@ -32,21 +30,11 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val xml: NodeSeq = <node1></node1>
 
   private val payloadWrapper = new PayloadDecorator
-  private val mockRequestData = mock[RequestData]
-  private val mockRequest = mock[Request[AnyContent]]
-  private val mockBody = mock[AnyContent]
-  private val validatedRequest = ValidatedRequest[AnyContent](mockRequestData, mockRequest)
+  private implicit val vpr = TestData.TestCspValidatedPayloadRequest
 
-  private def wrapPayload() = payloadWrapper.wrap(validatedRequest, FieldsId, "InventoryLinkingImportsInboundValidateMovementResponse")
+  private def wrapPayload() = payloadWrapper.wrap(xml, FieldsId.toString, CorrelationId.toString, "InventoryLinkingImportsInboundValidateMovementResponse", requestDateTime)
 
   "PayloadWrapper" should {
-
-    when(mockRequest.body).thenReturn(mockBody)
-    when(mockBody.asXml).thenReturn(Some(xml))
-    when(mockRequestData.badgeIdentifier).thenReturn(XBadgeIdentifierHeaderValueAsString)
-    when(mockRequestData.conversationId).thenReturn(ConversationId.toString)
-    when(mockRequestData.correlationId).thenReturn(CorrelationId.toString)
-    when(mockRequestData.dateTime).thenReturn(requestDateTime)
 
     "set the root element label" in {
       val result = wrapPayload()
@@ -74,7 +62,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "conversationID"
 
-      rd.head.text shouldBe ConversationId.toString
+      rd.head.text shouldBe conversationId.toString
     }
 
     "set the clientId" in {
@@ -82,7 +70,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "clientID"
 
-      rd.head.text shouldBe FieldsIdAsString
+      rd.head.text shouldBe FieldsId.toString
     }
 
     "set the correlationID" in {
@@ -98,7 +86,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "badgeIdentifier"
 
-      rd.head.text shouldBe XBadgeIdentifierHeaderValueAsString
+      rd.head.text shouldBe validBadgeIdentifierValue
     }
   }
 }

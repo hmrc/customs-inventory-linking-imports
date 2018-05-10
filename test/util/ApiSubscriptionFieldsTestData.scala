@@ -19,31 +19,34 @@ package util
 import java.util.UUID
 
 import com.typesafe.config.{Config, ConfigFactory}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse}
+import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import util.ExternalServicesConfig.{Host, Port}
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 
-object ApiSubscriptionFieldsTestData {
-  val FieldsIdAsString = "327d9145-4965-4d28-a2c5-39dedee50334"
-  val TestXClientId = "SOME_X_CLIENT_ID"
-  val ApiContext = "some/api/context"
-  val ApiContextEncoded = "some%2Fapi%2Fcontext"
-  val TestApiVersion = "1.0"
-  val FieldsId: UUID = UUID.fromString(FieldsIdAsString)
-  val TestApiSubscriptionFieldsResponse = ApiSubscriptionFieldsResponse(FieldsId)
-  val ResponseJsonString: String =
+trait ApiSubscriptionFieldsTestData {
+  val fieldsIdString = "327d9145-4965-4d28-a2c5-39dedee50334"
+  val fieldsId = FieldsId(fieldsIdString)
+  val xClientId = "SOME_X_CLIENT_ID"
+  val clientId = ClientId(xClientId)
+  val apiContext = "some/api/context"
+  val apiContextEncoded = "some%2Fapi%2Fcontext"
+  val apiVersion = "1.0"
+  val apiSubscriptionKey = ApiSubscriptionKey(clientId, apiContext, VersionOne)
+  val apiSubscriptionKeyWithEncodedContext: ApiSubscriptionKey = apiSubscriptionKey.copy(context = apiContextEncoded)
+  val apiSubscriptionFieldsResponse = ApiSubscriptionFieldsResponse(UUID.fromString(fieldsIdString))
+  val responseJsonString: String =
     s"""{
        |  "clientId": "afsdknbw34ty4hebdv",
        |  "apiContext": "ciao-api",
        |  "apiVersion": "1.0",
-       |  "fieldsId":"$FieldsIdAsString",
+       |  "fieldsId":"$fieldsIdString",
        |  "fields":{
        |    "callback-id":"http://localhost",
        |    "token":"abc123"
        |  }
        |}""".stripMargin
 
-  lazy val ValidConfig: Config = ConfigFactory.parseString(
+  lazy val validConfig: Config = ConfigFactory.parseString(
     s"""
        |Test {
        |  microservice {
@@ -58,7 +61,7 @@ object ApiSubscriptionFieldsTestData {
        |}
     """.stripMargin)
 
-  lazy val InvalidConfigMissingHost: Config = ConfigFactory.parseString(
+  lazy val invalidConfigMissingHost: Config = ConfigFactory.parseString(
     s"""
        |Test {
        |  microservice {
@@ -72,7 +75,7 @@ object ApiSubscriptionFieldsTestData {
        |}
     """.stripMargin)
 
-  lazy val InvalidConfigMissingContext: Config = ConfigFactory.parseString(
+  lazy val invalidConfigMissingContext: Config = ConfigFactory.parseString(
     s"""
        |Test {
        |  microservice {
@@ -87,3 +90,6 @@ object ApiSubscriptionFieldsTestData {
     """.stripMargin)
 
 }
+
+object ApiSubscriptionFieldsTestData extends ApiSubscriptionFieldsTestData
+

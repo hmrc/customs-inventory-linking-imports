@@ -37,7 +37,7 @@ class PayloadDecorator {
         <n1:clientID>{ clientId }</n1:clientID>
         <n1:conversationID>{ vpr.conversationId.toString}</n1:conversationID>
         <n1:correlationID>{ correlationId }</n1:correlationID>
-        <n1:badgeIdentifier>{ vpr.badgeIdentifier }</n1:badgeIdentifier>
+        <n1:badgeIdentifier>{ vpr.badgeIdentifier.value }</n1:badgeIdentifier>
         <n1:dateTimeStamp>{ dateTime.toString(ISODateTimeFormat.dateTimeNoMillis) }</n1:dateTimeStamp>
       </n1:requestCommon>
       <n1:requestDetail>

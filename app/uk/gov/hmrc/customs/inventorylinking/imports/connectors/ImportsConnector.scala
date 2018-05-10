@@ -39,10 +39,9 @@ import scala.xml.NodeSeq
 @Singleton
 class ImportsConnector @Inject()(http: HttpClient,
                                  logger: ImportsLogger,
-                                 importsMessageType: ImportsMessageType,
                                  serviceConfigProvider: ServiceConfigProvider) {
 
-  def send[A](xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
+  def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = getHeaders(date, correlationId, vpr.conversationId.uuid), authorization = Some(Authorization(bearerToken)))
@@ -60,24 +59,16 @@ class ImportsConnector @Inject()(http: HttpClient,
   }
 
   private def post[A](xml: NodeSeq, url: String)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
-    logger.debug(s"Sending request to MDG. Payload: ${xml.toString()}")
+    logger.debug(s"Sending request to backend. Payload: ${xml.toString()}")
     http.POSTString[HttpResponse](url, xml.toString())
       .recoverWith {
         case httpError: HttpException => Future.failed(new RuntimeException(httpError))
       }
       .recoverWith {
         case e: Throwable =>
-          logger.error(s"Call to wco declaration submission failed. url=$url")
+          logger.error(s"Call to backend failed. url=$url")
           Future.failed(e)
       }
   }
-//  private implicit val hc: HeaderCarrier = HeaderCarrier()
-//
-//  def post(request: OutgoingRequest)(implicit rdw: ValidatedRequest[AnyContent]): Future[HttpResponse] = {
-//    logger.debug(s"Outgoing request body: ${request.outgoingBody.toString} headers: ${request.headers}")
-//    http.POSTString(request.url, request.outgoingBody.toString, request.headers).
-//      recoverWith {
-//        case httpError: HttpException => Future.failed(new RuntimeException(httpError))
-//      }
-//  }
+
 }

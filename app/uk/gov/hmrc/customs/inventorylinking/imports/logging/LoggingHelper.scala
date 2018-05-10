@@ -55,7 +55,7 @@ object LoggingHelper {
       case _ => ""
     }
     def extractedHeaders = r match {
-      case h: ExtractedHeaders => s"[clientId=${h.clientId}][badgeIdentifier=${h.badgeIdentifier}]"
+      case h: ExtractedHeaders => s"[clientId=${h.clientId}][badgeIdentifier=${h.badgeIdentifier.value}]"
       case _ => ""
     }
     s"$conversationId$extractedHeaders"

@@ -75,7 +75,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     val correlationId = uniqueIdsService.correlation
     val xmlToSend = preparePayload(vpr.xmlBody, subscriptionFieldsId: FieldsId, correlationId, importsMessageType, dateTime)
 
-    connector.send(xmlToSend, dateTime, correlationId.uuid).map(_ => Right(())).recover{
+    connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map(_ => Right(())).recover{
       case NonFatal(e) =>
         logger.error(s"Inventory linking call failed: ${e.getMessage}", e)
         Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)

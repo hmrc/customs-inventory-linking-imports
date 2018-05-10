@@ -16,92 +16,106 @@
 
 package unit.services
 
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
+import java.util.UUID
+
+import org.joda.time.DateTime
+import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
 import org.scalatest.Matchers
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
-import play.api.http.Status.ACCEPTED
-import play.api.mvc.{AnyContent, Request}
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector, OutgoingRequest, OutgoingRequestBuilder}
+import play.api.mvc.{AnyContentAsXml, Result}
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{FieldsId => _, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.services._
+import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.ApiSubscriptionFieldsTestData._
-import util.TestData._
+import util.TestData.{TestCspValidatedPayloadRequest, TestXmlPayload, _}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.xml.NodeSeq
 
 class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with TableDrivenPropertyChecks {
 
+  private val dateTime = new DateTime()
+  private val headerCarrier: HeaderCarrier = HeaderCarrier()
+  private val expectedApiSubscriptionKey = ApiSubscriptionKey(clientId, "customs%2Finventory-linking-imports", VersionOne)
+  private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
+  private val wrappedValidXML = <wrapped></wrapped>
+
   trait SetUp {
-    protected val importsMessageType: ImportsMessageType
+    protected val importsMessageType: ImportsMessageType = GoodsArrival //TODO set to value in table
+    protected val mockLogger: ImportsLogger = mock[ImportsLogger]
+    protected val mockImportsConnector: ImportsConnector = mock[ImportsConnector]
+    protected val mockApiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
+    protected val mockPayloadDecorator: PayloadDecorator = mock[PayloadDecorator]
+    protected val mockDateTimeProvider: DateTimeService = mock[DateTimeService]
+    protected val mockHttpResponse: HttpResponse = mock[HttpResponse]
 
-    val httpResponse: AnyRef with HttpResponse = HttpResponse(ACCEPTED)
-    val outgoingRequestBuilder = mock[OutgoingRequestBuilder]
-    lazy val goodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
-    lazy val validateMovementXmlValidationService: ValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
-    val importsConnector: ImportsConnector = mock[ImportsConnector]
-    val apiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
+    protected lazy val service: MessageSender = new MessageSender(mockApiSubscriptionFieldsConnector, mockPayloadDecorator, mockImportsConnector,
+      mockDateTimeProvider, stubUniqueIdsService, mockLogger)
 
-    lazy val mockRequestData = mock[RequestData]
-
-    implicit val validatedRequest: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](mockRequestData, mockRequest)
-
-    val headers: HeaderMap = Map(HeaderConstants.XClientId -> TestXClientId, HeaderConstants.XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString)
-    val sender: MessageSender = new MessageSender(apiSubscriptionFieldsConnector, outgoingRequestBuilder, goodsArrivalXmlValidationService, validateMovementXmlValidationService, importsConnector, mock[ImportsLogger])
-    lazy val outgoingRequest = OutgoingRequest(serviceConfig, outgoingBody, validatedRequest)
-
-    implicit val mockHeaderCarrier: HeaderCarrier = mock[HeaderCarrier]
-    val mockRequest: Request[AnyContent] = mock[Request[AnyContent]]
-    val mockBody: AnyContent = mock[AnyContent]
-
-    protected def service: XmlValidationService = importsMessageType match {
-      case GoodsArrival => goodsArrivalXmlValidationService
-      case ValidateMovement => validateMovementXmlValidationService
+    protected def send(vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest, hc: HeaderCarrier = headerCarrier): Either[Result, Unit] = {
+      await(service.send(importsMessageType)(vpr, hc))
     }
 
-    when(apiSubscriptionFieldsConnector.getClientSubscriptionId()(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(FieldsId))
-    when(mockRequest.body).thenReturn(mockBody)
-    when(mockBody.asXml).thenReturn(Some(outgoingBody))
+    when(mockPayloadDecorator.wrap(meq(TestXmlPayload), meq(fieldsId.value), meq(correlationIdValue), meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])).thenReturn(wrappedValidXML)
+    when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
+    when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]])).thenReturn(mockHttpResponse)
+    when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
   }
 
-  val messageTypes = Table(
-    "Message type",
-    GoodsArrival,
-    ValidateMovement
-  )
+  "MessageSender" should {
 
-  forAll(messageTypes){(messageType) =>
-    s"$messageType send" when {
-      "message is valid" should {
-        "return the result from the connector" in new SetUp {
+    "send transformed xml to connector" in new SetUp() {
 
-          val importsMessageType: ImportsMessageType = messageType
-          when(outgoingRequestBuilder.build(messageType, validatedRequest, FieldsId)).thenReturn(outgoingRequest)
-          when(service.validate(outgoingBody)).thenReturn(Future.successful(()))
-          when(importsConnector.post(outgoingRequest)).thenReturn(Future.successful(httpResponse))
+      val result: Either[Result, Unit] = send()
 
-          val actualResponse = await(sender.send(messageType))
-
-          actualResponse shouldBe httpResponse
-        }
-      }
-
-      "message is invalid" should {
-        "return failed future when validation service throws an exception" in new SetUp {
-
-          val importsMessageType: ImportsMessageType = messageType
-          when(apiSubscriptionFieldsConnector.getClientSubscriptionId()).thenReturn(Future.failed(emulatedServiceFailure))
-
-          val caught = intercept[EmulatedServiceFailure](await(sender.send(messageType)))
-
-          caught shouldBe emulatedServiceFailure
-        }
-      }
+      result shouldBe Right(())
+      verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]])
     }
   }
+
+
+  "get utc date time and pass to connector" in new SetUp() {
+
+    val result: Either[Result, Unit] = send()
+
+    result shouldBe Right(())
+    verify(mockImportsConnector).send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]])
+  }
+
+  "call payload decorator passing incoming xml" in new SetUp() {
+
+    val result: Either[Result, Unit] = send()
+
+    result shouldBe Right(())
+    verify(mockPayloadDecorator).wrap(meq(TestXmlPayload), meq(fieldsId.value), meq(correlationIdValue), meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])
+    verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKey))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+  }
+
+  "return Left of error Result when subscription fields call fails" in new SetUp() {
+    when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(emulatedServiceFailure))
+
+    val result: Either[Result, Unit] = send()
+
+    result shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+    verifyZeroInteractions(mockPayloadDecorator)
+    verifyZeroInteractions(mockImportsConnector)
+  }
+
+  "return Left of error Result when backend call fails" in new SetUp() {
+    when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]])).thenReturn(Future.failed(emulatedServiceFailure))
+
+    val result: Either[Result, Unit] = send()
+
+    result shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+  }
+
 }

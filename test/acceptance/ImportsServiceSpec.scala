@@ -20,8 +20,7 @@ import org.scalatest._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.mvc.Result
 import play.api.test.Helpers._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
-import util.ApiSubscriptionFieldsTestData.TestXClientId
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionKey, GoodsArrival, ValidateMovement, VersionOne}
 import util.TestData._
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 import util.externalservices.{ApiSubscriptionFieldsService, AuthService, InventoryLinkingImportsService}
@@ -42,6 +41,9 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
       |  <message>Internal server error</message>
       |</errorResponse>
     """.stripMargin
+
+  private val apiSubscriptionKeyImports =
+    ApiSubscriptionKey(clientId = clientId, context = "customs%2Finventory-linking-imports", version = VersionOne)
 
   override protected def beforeAll() {
     startMockServer()
@@ -72,7 +74,7 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
         authServiceAuthorisesCSP(messageType)
 
         And("the Back End Service will return a successful response")
-        startApiSubscriptionFieldsService(TestXClientId)
+        startApiSubscriptionFieldsService(apiSubscriptionKeyImports)
         setupBackendServiceToReturn(url, ACCEPTED)
 
         When(s"a valid $messageTypeDesc message is submitted with valid headers")
@@ -88,7 +90,7 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
         authServiceAuthorisesCSP(messageType)
 
         And("the Back End Service will return an error response")
-        startApiSubscriptionFieldsService(TestXClientId)
+        startApiSubscriptionFieldsService(apiSubscriptionKeyImports)
         setupBackendServiceToReturn(url, NOT_FOUND)
 
         When(s"a valid $messageTypeDesc message request is submitted")

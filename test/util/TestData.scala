@@ -18,9 +18,13 @@ package util
 
 import java.util.UUID
 
+import com.google.inject.AbstractModule
 import org.joda.time.{DateTime, DateTimeZone}
+import org.scalatest.mockito.MockitoSugar
 import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.http.MimeTypes.{JSON, XML}
+import play.api.inject.guice.GuiceableModule
+import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE, POST}
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
@@ -28,7 +32,9 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.{AuthProviders, Enrolment}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import util.ApiSubscriptionFieldsTestData.TestXClientId
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeadersImpl, ValidatedHeadersRequest, ValidatedPayloadRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{UniqueIdsService, UuidService}
 import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 
 import scala.util.Random
@@ -41,30 +47,39 @@ object TestData {
   val XConversationIdHeaderName = "X-Conversation-ID"
   val XCorrelationIdHeaderName = "X-Correlation-ID"
 
-  val ConversationId: UUID = UUID.fromString("a26a559c-9a1c-42c5-a164-6508beea7749")
-  val CorrelationId: UUID = UUID.fromString("954e2369-3bfa-4aaa-a2a2-c4700e3f71ec")
-  val XBadgeIdentifierHeaderValueAsString = "ABC123"
+  val conversationIdValue = "38400000-8cf0-11bd-b23e-10b96e4ef00d"
+  val conversationIdUuid: UUID = UUID.fromString(conversationIdValue)
+  val conversationId: ConversationId = ConversationId(conversationIdUuid)
+
+  val correlationIdValue = "e61f8eee-812c-4b8f-b193-06aedc60dca2"
+  val correlationIdUuid: UUID = UUID.fromString(correlationIdValue)
+  val correlationId = CorrelationId(correlationIdUuid)
+
+  val validBadgeIdentifierValue = "BADGEID123"
+  val invalidBadgeIdentifierValue = "INVALIDBADGEID123456789"
+  val invalidBadgeIdentifier: BadgeIdentifier = BadgeIdentifier(invalidBadgeIdentifierValue)
+  val badgeIdentifier: BadgeIdentifier = BadgeIdentifier(validBadgeIdentifierValue)
+
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
-  val TestExtractedHeaders = ExtractedHeaders(XBadgeIdentifierHeaderValueAsString, TestXClientId)
+  val TestExtractedHeaders = ExtractedHeadersImpl(BadgeIdentifier(validBadgeIdentifierValue), ApiSubscriptionFieldsTestData.clientId)
 
   lazy val InvalidAcceptHeader = ACCEPT -> JSON
   lazy val InvalidContentTypeJsonHeader = CONTENT_TYPE -> JSON
   lazy val InvalidXClientIdHeader = XClientIdHeaderName -> "This is not a UUID"
   lazy val InvalidXBadgeIdentifier = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
 
-  lazy val ValidAcceptHeader = ACCEPT -> AcceptHeaderValue
-  lazy val ValidContentTypeHeader = CONTENT_TYPE -> (XML + "; charset=utf-8")
-  lazy val ValidXClientIdHeader = XClientIdHeaderName -> TestXClientId
-  lazy val ValidXBadgeIdentifierHeader = XBadgeIdentifierHeaderName -> XBadgeIdentifierHeaderValueAsString
+  lazy val ValidAcceptHeader: (String, String) = ACCEPT -> AcceptHeaderValue
+  lazy val ValidContentTypeHeader: (String, String) = CONTENT_TYPE -> (XML + "; charset=utf-8")
+  lazy val ValidXClientIdHeader: (String, String) = XClientIdHeaderName -> ApiSubscriptionFieldsTestData.clientId.value
+  lazy val ValidXBadgeIdentifierHeader: (String, String) = XBadgeIdentifierHeaderName -> validBadgeIdentifierValue
   lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> ConversationId.toString
   val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader)
 
   val validBasicAuthToken = s"Basic ${Random.alphanumeric.take(18).mkString}=="
 
   val cspBearerToken = "CSP-Bearer-Token"
-  val nonCspBearerToken = "Software-House-Bearer-Token"
 
   val validateMovementsXsdElementName = "InventoryLinkingImportsValidateMovementResponse"
 
@@ -112,18 +127,34 @@ object TestData {
   val GoodsArrivalAuthPredicate: Predicate = Enrolment("write:customs-il-imports-arrival-notifications") and AuthProviders(PrivilegedApplication)
   val ValidateMovementAuthPredicate: Predicate = Enrolment("write:customs-il-imports-movement-validation") and AuthProviders(PrivilegedApplication)
 
+  object TestModule extends AbstractModule {
+    def configure(): Unit = {
+      bind(classOf[UuidService]) toInstance mockUuidService
+    }
+
+    def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
+  }
+
+  val mockUuidService: UuidService = MockitoSugar.mock[UuidService]
+  val stubUniqueIdsService = new UniqueIdsService(mockUuidService) {
+    override def conversation: ConversationId = conversationId
+    override def correlation: CorrelationId = correlationId
+  }
+
+  val TestXmlPayload: Elem = <foo>bar</foo>
+  val TestFakeRequest: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(TestXmlPayload)
+  val TestConversationIdRequest = ConversationIdRequest(conversationId, TestFakeRequest)
+  val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeaders)
+  val TestAuthorisedRequest = TestValidatedHeadersRequest.toAuthorisedRequest
+  val TestCspValidatedPayloadRequest: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
+  val TestValidatedHeadersRequestNoBadge: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeaders)
+
+  def testFakeRequest(badgeIdString: String = badgeIdentifier.value): FakeRequest[AnyContentAsXml] =
+    FakeRequest().withXmlBody(TestXmlPayload)
+
   implicit class FakeRequestOps[R](val fakeRequest: FakeRequest[R]) extends AnyVal {
     def fromCsp: FakeRequest[R] = fakeRequest.withHeaders(AUTHORIZATION -> s"Bearer $cspBearerToken")
 
     def postTo(endpoint: String): FakeRequest[R] = fakeRequest.copyFakeRequest(method = POST, uri = endpoint)
   }
-
-  def createRequestData: RequestData = RequestData(
-    badgeIdentifier = XBadgeIdentifierHeaderValueAsString,
-    conversationId = UUID.randomUUID().toString,
-    correlationId = UUID.randomUUID().toString,
-    dateTime = DateTime.now(DateTimeZone.UTC),
-    requestedApiVersion = "1.0",
-    clientId = TestXClientId
-  )
 }

@@ -16,126 +16,82 @@
 
 package unit.controllers
 
-import java.util.concurrent.TimeUnit.SECONDS
-
-import akka.stream.Materializer
-import akka.util.Timeout
-import org.joda.time.DateTime
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
-import org.xml.sax.SAXException
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR}
-import play.api.mvc.Results._
-import play.api.mvc.{AnyContent, Result}
+import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsString, header}
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.payloadValidationAction
+import uk.gov.hmrc.customs.api.common.controllers.{ErrorResponse, ResponseContents}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.PayloadValidationAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, RequestData, ValidateMovement, ValidatedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedPayloadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService}
 import uk.gov.hmrc.play.test.UnitSpec
-import util.ApiSubscriptionFieldsTestData._
-import util.TestData
-import util.TestData._
+import util.TestData.{TestAuthorisedRequest, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
-import scala.xml._
+import scala.concurrent.Future
+import scala.xml.SAXException
 
 class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
 
-  private val blockReturningOk = (_: ValidatedRequest[_]) => Future.successful(Ok)
-  private val UuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
-  private implicit val mockMaterialiser = mock[Materializer]
-  private implicit val timeout = Timeout(5L, SECONDS)
-  private val badRequestError =
-    """|<?xml version="1.0" encoding="UTF-8"?>
-       |<errorResponse>
-       |   <code>BAD_REQUEST</code>
-       |   <message>Bad Request</message>
-       |   <errors>
-       |      <error>
-       |         <code>xml_validation_error</code>
-       |         <message />
-       |      </error>
-       |   </errors>
-       |</errorResponse>
-    """.stripMargin
+  private implicit val forConversions = TestConversationIdRequest
+  private val saxException = new SAXException("Boom!")
+  private val expectedXmlSchemaErrorResult = ErrorResponse
+    .errorBadRequest("Payload is not valid according to schema")
+    .withErrors(ResponseContents("xml_validation_error", saxException.getMessage)).XmlResult.withConversationId
+  val mockGoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
+  val mockValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
 
-  private val internalServerError =
-    """<?xml version="1.0" encoding="UTF-8"?>
-      |<errorResponse>
-      |  <code>INTERNAL_SERVER_ERROR</code>
-      |  <message>Internal server error</message>
-      |</errorResponse>
-    """.stripMargin
-
-  private val requestData = RequestData(
-    XBadgeIdentifierHeaderValueAsString,
-    ConversationId.toString,
-    CorrelationId.toString,
-    dateTime = DateTime.now(),
-    requestedApiVersion = "1.0",
-    TestXClientId
-  )
-
-  trait SetUp {
-    val mockLogger = mock[ImportsLogger]
-    val mockGoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
-    val mockValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
-    val payloadValidationAction = new payloadValidationAction(mockGoodsArrivalXmlValidationService, mockValidateMovementXmlValidationService, mockLogger)
-    val request = FakeRequest().withXmlBody(NodeSeq.Empty)
-    implicit val validationRequest = ValidatedRequest[AnyContent](requestData, request)
-
-  }
+  val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
+  val goodsArrivalPayloadValidationAction = new PayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger) {}
+  val validateMovementPayloadValidationAction = new PayloadValidationAction(mockValidateMovementXmlValidationService, mockImportsLogger) {}
 
   val headersTable =
     Table(
-      ("description", "Type", "Auth Predicate", "Expected response"),
-      ("Validate Movement", ValidateMovement, ValidateMovementAuthPredicate, Ok),
-      ("Goods Arrival", GoodsArrival, GoodsArrivalAuthPredicate, Ok)
+      ("description", "xml service", "payload action"),
+      ("Validate Movement", mockGoodsArrivalXmlValidationService, goodsArrivalPayloadValidationAction),
+      ("Goods Arrival", mockValidateMovementXmlValidationService, validateMovementPayloadValidationAction)
     )
 
   "PayloadValidationAction" should  {
-    forAll(headersTable) { (description, msgType, predicate, okResult) =>
-      s"invoke action block for $description when valid xml is sent returns OK" in new SetUp() {
-        when(mockGoodsArrivalXmlValidationService.validate(NodeSeq.Empty)).thenReturn(Future.successful(()))
-        when(mockValidateMovementXmlValidationService.validate(NodeSeq.Empty)).thenReturn(Future.successful(()))
+    forAll(headersTable) { (description, xmlService, payloadAction) =>
 
-        val actualResult: Result = await(payloadValidationAction.validatePayload(msgType).invokeBlock(validationRequest, blockReturningOk))
+      s"return Right of ValidatedPayloadRequest when $description XML validation is OK" in {
+        when(xmlService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.successful(()))
 
-        actualResult shouldBe okResult
+        val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(payloadAction.refine(TestAuthorisedRequest))
+
+        actual shouldBe Right(TestCspValidatedPayloadRequest)
       }
 
-      s"return $BAD_REQUEST response for $description when invalid xml is sent" in new SetUp() {
+      s"return Left of error Result when $description XML is not well formed" in {
+        when(xmlService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(saxException))
 
-        when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
-        when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
+        val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(payloadAction.refine(TestAuthorisedRequest))
 
-        val actualResult: Result = await(payloadValidationAction.validatePayload(msgType).invokeBlock(validationRequest, blockReturningOk))
-
-        status(actualResult) shouldBe BAD_REQUEST
-        stringToXml(contentAsString(actualResult)) shouldBe stringToXml(badRequestError)
-        header(XConversationIdHeaderName, actualResult).get should fullyMatch regex UuidRegex
+        actual shouldBe Left(expectedXmlSchemaErrorResult)
       }
 
-      s"return $INTERNAL_SERVER_ERROR response for $description when invalid xml is sent" in new SetUp() {
+      s"return Left of error Result when $description XML validation fails" in {
+        val errorMessage = "Request body does not contain a well-formed XML document."
+        val errorNotWellFormed = ErrorResponse.errorBadRequest(errorMessage).XmlResult.withConversationId
+        val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(conversationId, FakeRequest().withTextBody("<foo><foo>"))
+          .toValidatedHeadersRequest(TestExtractedHeaders).toAuthorisedRequest
 
-        when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(TestData.emulatedServiceFailure))
-        when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(TestData.emulatedServiceFailure))
+        val actual = await(payloadAction.refine(authorisedRequestWithNonWellFormedXml))
 
-        val actualResult: Result = await(payloadValidationAction.validatePayload(msgType).invokeBlock(validationRequest, blockReturningOk))
+        actual shouldBe Left(errorNotWellFormed)
+      }
 
-        status(actualResult) shouldBe INTERNAL_SERVER_ERROR
-        stringToXml(contentAsString(actualResult)) shouldBe stringToXml(internalServerError)
-        header(XConversationIdHeaderName, actualResult).get should fullyMatch regex UuidRegex
+      s"propagates downstream errors by returning Left of $description error Result" in {
+        when(xmlService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(emulatedServiceFailure))
+
+        val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(payloadAction.refine(TestAuthorisedRequest))
+
+        actual shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
       }
     }
-  }
-
-  private def stringToXml(str: String): Node = {
-    Utility.trim(XML.loadString(str))
   }
 }

@@ -19,39 +19,41 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.http.MimeTypes
 import play.api.mvc.{Action, AnyContent, _}
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender}
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-abstract class ImportController(importsConfigService: ImportsConfigService,
-                                conversationIdAction: ConversationIdAction,
-                                messageSender: MessageSender,
+@Singleton
+class Common @Inject() (val importsConfigService: ImportsConfigService,
+                        val conversationIdAction: ConversationIdAction,
+                        val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
+                        val messageSender: MessageSender,
+                        val authConnector: AuthConnector,
+                        val logger: ImportsLogger)
+
+
+abstract class ImportController(common: Common,
                                 importsMessageType: ImportsMessageType,
-                                validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
-                                authAction: AuthAction,
-                                payloadValidationAction: PayloadValidationAction,
-                                logger: ImportsLogger,
-                                cdsLogger: CdsLogger
-                               ) extends BaseController {
+                                payloadValidationAction: PayloadValidationAction
+                               ) extends AuthAction(common.logger) {
 
   def process(): Action[AnyContent] =  (
     Action andThen
-    conversationIdAction andThen
-    validateAndExtractHeadersAction andThen
-    authAction andThen
+    common.conversationIdAction andThen
+    common.validateAndExtractHeadersAction andThen
+    Authenticate(common.authConnector, importsMessageType) andThen
     payloadValidationAction
     )
     .async(bodyParser = xmlOrEmptyBody) {
 
       implicit vpr: ValidatedPayloadRequest[AnyContent] =>
-      messageSender.send(importsMessageType) map {
+        common.messageSender.send(importsMessageType) map {
         case Right(_) =>
           Accepted.as(MimeTypes.XML).withConversationId
         case Left(errorResult) =>
@@ -70,23 +72,11 @@ abstract class ImportController(importsConfigService: ImportsConfigService,
 }
 
 @Singleton
-class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigService,
-                                       conversationIdAction: ConversationIdAction,
-                                       messageSender: MessageSender,
-                                       validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
-                                       authAction: AuthAction,
-                                       payloadValidationAction: PayloadValidationAction,
-                                       logger: ImportsLogger,
-                                       cdsLogger: CdsLogger)
-  extends ImportController(importsConfigService,
-                            conversationIdAction,
-                            messageSender,
-                            GoodsArrival,
-                            validateAndExtractHeadersAction,
-                            authAction,
-                            payloadValidationAction,
-                            logger,
-                            cdsLogger) {
+class GoodsArrivalController @Inject()(common: Common,
+                                       payloadValidationAction: GoodsArrivalPayloadValidationAction)
+  extends ImportController(common: Common,
+                           GoodsArrival,
+                           payloadValidationAction) {
 
   def post(): Action[AnyContent] = {
     super.process()
@@ -94,23 +84,11 @@ class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigServic
 }
 
 @Singleton
-class ValidateMovementController @Inject()(importsConfigService: ImportsConfigService,
-                                           conversationIdAction: ConversationIdAction,
-                                           messageSender: MessageSender,
-                                           validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
-                                           authAction: AuthAction,
-                                           payloadValidationAction: PayloadValidationAction,
-                                           logger: ImportsLogger,
-                                           cdsLogger: CdsLogger)
-  extends ImportController(importsConfigService,
-                            conversationIdAction,
-                            messageSender,
-                            ValidateMovement,
-                            validateAndExtractHeadersAction,
-                            authAction,
-                            payloadValidationAction,
-                            logger,
-                            cdsLogger) {
+class ValidateMovementController @Inject()(common: Common,
+                                           payloadValidationAction: ValidateMovementPayloadValidationAction)
+  extends ImportController(common: Common,
+                           ValidateMovement,
+                           payloadValidationAction) {
 
   def post(): Action[AnyContent] = {
     super.process()
