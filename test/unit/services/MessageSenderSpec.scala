@@ -50,7 +50,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
   private val wrappedValidXML = <wrapped></wrapped>
 
   trait SetUp {
-    protected val importsMessageType: ImportsMessageType = new GoodsArrival() //TODO set to value in table
+    protected val importsMessageType: ImportsMessageType = new GoodsArrival()
     protected val mockLogger: ImportsLogger = mock[ImportsLogger]
     protected val mockImportsConnector: ImportsConnector = mock[ImportsConnector]
     protected val mockApiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
@@ -65,7 +65,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       await(service.send(importsMessageType)(vpr, hc))
     }
 
-    when(mockPayloadDecorator.wrap(meq(TestXmlPayload), meq(fieldsId.value), meq(correlationIdValue), meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])).thenReturn(wrappedValidXML)
+    when(mockPayloadDecorator.wrap(meq(TestXmlPayload), meq(fieldsId.value), meq(CorrelationIdValue), meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])).thenReturn(wrappedValidXML)
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]])).thenReturn(mockHttpResponse)
     when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
@@ -96,7 +96,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     val result: Either[Result, Unit] = send()
 
     result shouldBe Right(())
-    verify(mockPayloadDecorator).wrap(meq(TestXmlPayload), meq(fieldsId.value), meq(correlationIdValue), meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])
+    verify(mockPayloadDecorator).wrap(meq(TestXmlPayload), meq(fieldsId.value), meq(CorrelationIdValue), meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])
     verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKey))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
   }
 

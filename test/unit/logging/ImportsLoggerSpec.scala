@@ -24,14 +24,14 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionB
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
 import uk.gov.hmrc.play.test.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
-import util.TestData.{TestExtractedHeaders, TestXmlPayload, conversationId, emulatedServiceFailure}
+import util.TestData.{TestExtractedHeaders, TestXmlPayload, ValidConversationId, emulatedServiceFailure}
 
 class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
   trait SetUp {
     val mockCdsLogger = mock[CdsLogger]
     val logger = new ImportsLogger(mockCdsLogger)
-    implicit val implicitVpr = ConversationIdRequest(conversationId, FakeRequest()
+    implicit val implicitVpr = ConversationIdRequest(ValidConversationId, FakeRequest()
       .withXmlBody(TestXmlPayload).withHeaders("Content-Type" -> "Some-Content-Type"))
       .toValidatedHeadersRequest(TestExtractedHeaders)
       .toAuthorisedRequest

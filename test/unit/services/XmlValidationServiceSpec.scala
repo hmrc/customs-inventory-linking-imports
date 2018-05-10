@@ -52,8 +52,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
     def otherElementName: String = TestData.otherElementName(importsMessageType)
 
     def xsdLocations: Seq[String] = importsMessageType match {
-      case _: GoodsArrival => goodsArrivalXsdLocations
-      case _: ValidateMovement => validateMovementsXsdLocations
+      case _: GoodsArrival => GoodsArrivalXsdLocations
+      case _: ValidateMovement => ValidateMovementsXsdLocations
     }
   }
 

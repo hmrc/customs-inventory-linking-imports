@@ -16,46 +16,78 @@
 
 package unit.controllers
 
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, ValidateMovementAuthAction}
+import org.scalatest.prop.TableDrivenPropertyChecks
+import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthProviders, Enrolment}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{GoodsArrivalAuthAction, ValidateMovementAuthAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ValidateMovement}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
-import util.AuthConnectorStubbing
-import util.TestData.{TestExtractedHeaders, conversationId, testFakeRequest}
+import util.TestData
+import util.TestData.{TestExtractedHeaders, testFakeRequest, emulatedServiceFailure, ValidConversationId}
 
-class AuthActionSpec extends UnitSpec with MockitoSugar {
+import scala.concurrent.{ExecutionContext, Future}
+
+class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
 
   private lazy val validatedHeadersRequest =
-    ConversationIdRequest(conversationId, testFakeRequest()).toValidatedHeadersRequest(TestExtractedHeaders)
+    ConversationIdRequest(ValidConversationId, testFakeRequest()).toValidatedHeadersRequest(TestExtractedHeaders)
+  private val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  private val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
 
-  trait SetUp extends AuthConnectorStubbing {
-    val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
-    val authAction: AuthAction = new ValidateMovementAuthAction(mockAuthConnector, new ValidateMovement(), mockImportsLogger)
+  private val authActionTypes = Table(
+    ("Message Name", "Enrolment", "Auth Action"),
+    ("Goods Arrival", Enrolment("write:customs-il-imports-arrival-notifications"), new GoodsArrivalAuthAction(mockAuthConnector, new GoodsArrival(), mockImportsLogger)),
+    ("Validate Movement", Enrolment("write:customs-il-imports-movement-validation"), new ValidateMovementAuthAction(mockAuthConnector, new ValidateMovement(), mockImportsLogger))
+  )
+
+  forAll(authActionTypes) { (messageName, enrolment, authAction) =>
+    "CspAuthAction" should {
+      s"Return Right of $messageName AuthorisedRequest CSP when authorised by auth API" in {
+        authoriseCsp(enrolment)
+
+        val actual = await(authAction.refine(validatedHeadersRequest))
+        actual shouldBe Right(validatedHeadersRequest.toAuthorisedRequest)
+        verifyCspAuthorisationCalled(enrolment, 1)
+      }
+
+//      s"propagate exceptional errors in $messageName CSP auth API call" in {
+//        authoriseCspError(Enrolment(""))
+//
+//        val caught = intercept[Throwable](await(authAction.refine(validatedHeadersRequest)))
+//
+//        caught shouldBe emulatedServiceFailure
+//        verifyCspAuthorisationCalled(enrolment, 1)
+//      }
+
+    }
   }
 
-//TODO add GA test
-  "CspAuthAction" should {
-    "Return Right of AuthorisedRequest CSP when authorised by auth API" in new SetUp {
-      authoriseCsp()
+  def authoriseCsp(apiScope: Enrolment): Unit = {
+    when(mockAuthConnector.authorise(ameq(cspAuthPredicate(apiScope)), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(())
+  }
 
-      private val actual = await(authAction.refine(validatedHeadersRequest))
-      actual shouldBe Right(validatedHeadersRequest.toAuthorisedRequest)
-      verifyCspAuthorisationCalled(1)
-    }
+  def cspAuthPredicate(apiScope: Enrolment): Predicate = {
+    apiScope and AuthProviders(PrivilegedApplication)
+  }
 
+  def verifyCspAuthorisationCalled(apiScope: Enrolment, numberOfTimes: Int): Future[Unit] = {
+    verify(mockAuthConnector, times(numberOfTimes))
+      .authorise(ameq(cspAuthPredicate(apiScope)), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext])
+  }
 
-//    "propagate exceptional errors in CSP auth API call" in new SetUp {
-//      authoriseCspError()
-//
-//      private val caught = intercept[Throwable](await(authAction.Authenticate(mockAuthConnector, ValidateMovement).refine(TestValidatedHeadersRequestNoBadge)))
-//
-//      caught shouldBe emulatedServiceFailure
-//      verifyCspAuthorisationCalled(1)
-//    }
-
+  def authoriseCspError(apiScope: Enrolment): Unit = {
+    when(mockAuthConnector.authorise(ameq(cspAuthPredicate(apiScope)), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(Future.failed(TestData.emulatedServiceFailure))
   }
 
 }

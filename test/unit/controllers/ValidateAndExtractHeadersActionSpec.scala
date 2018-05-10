@@ -42,7 +42,7 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
       ("description", "result of validation", "expected response"),
       ("Valid Headers", Right(TestExtractedHeaders), Right(TestValidatedHeadersRequest)),
       ("Invalid header", Left(ErrorContentTypeHeaderInvalid),
-        Left(ErrorContentTypeHeaderInvalid.XmlResult.withHeaders(XConversationIdHeaderName -> conversationIdValue)))
+        Left(ErrorContentTypeHeaderInvalid.XmlResult.withHeaders(XConversationIdHeaderName -> ConversationIdValue)))
     )
 
   "HeaderValidatorAction" should  {

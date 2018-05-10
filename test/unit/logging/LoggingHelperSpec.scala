@@ -29,12 +29,12 @@ import util.TestData._
 
 class LoggingHelperSpec extends UnitSpec with MockitoSugar {
 
-  private def expectedMessage(message: String) = s"[conversationId=${conversationId.toString}]" +
+  private def expectedMessage(message: String) = s"[conversationId=${ValidConversationId.toString}]" +
     s"[clientId=some-client-id][badgeIdentifier=BADGEID123] $message"
   private val requestMock = mock[Request[_]]
   private val conversationIdRequest =
     ConversationIdRequest(
-      conversationId,
+      ValidConversationId,
       FakeRequest().withHeaders(
         CONTENT_TYPE -> "A",
         ACCEPT -> "B",
@@ -43,7 +43,7 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
         "IGNORE" -> "IGNORE"
       )
     )
-  private val validatedHeadersRequest = ValidatedHeadersRequest(badgeIdentifier, conversationId, ClientId("some-client-id"), requestMock)
+  private val validatedHeadersRequest = ValidatedHeadersRequest(ValidBadgeIdentifier, ValidConversationId, ClientId("some-client-id"), requestMock)
 
   "LoggingHelper" should {
 
@@ -69,7 +69,7 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
     }
 
     "testFormatDebugFull" in {
-      LoggingHelper.formatDebugFull("Debug message.", conversationIdRequest) shouldBe s"[conversationId=$conversationIdValue] Debug message. headers=Map(Accept -> B, X-Client-ID -> D, Content-Type -> A, X-Conversation-ID -> C)"
+      LoggingHelper.formatDebugFull("Debug message.", conversationIdRequest) shouldBe s"[conversationId=$ConversationIdValue] Debug message. headers=Map(Accept -> B, X-Client-ID -> D, Content-Type -> A, X-Conversation-ID -> C)"
     }
   }
 

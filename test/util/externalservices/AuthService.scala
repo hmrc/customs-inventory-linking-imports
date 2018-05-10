@@ -52,7 +52,7 @@ trait AuthService {
     js
   }
 
-  def authServiceAuthorisesCSP(messageType: ImportsMessageType, bearerToken: String = TestData.cspBearerToken): Unit = {
+  def authServiceAuthorisesCSP(messageType: ImportsMessageType, bearerToken: String = TestData.CspBearerToken): Unit = {
     stubFor(post(authUrlMatcher)
       .withRequestBody(equalToJson(authRequestJson(predicateForMessageType(messageType))))
       .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
@@ -64,7 +64,7 @@ trait AuthService {
     )
   }
 
-  def authServiceUnAuthorisesScopeForCSP(messageType: ImportsMessageType, bearerToken: String = TestData.cspBearerToken): Unit = {
+  def authServiceUnAuthorisesScopeForCSP(messageType: ImportsMessageType, bearerToken: String = TestData.CspBearerToken): Unit = {
     stubFor(post(authUrlMatcher)
       .withRequestBody(equalToJson(authRequestJson(predicateForMessageType(messageType))))
       .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
@@ -76,7 +76,7 @@ trait AuthService {
     )
   }
 
-  def verifyAuthServiceCalledForCsp(bearerToken: String = TestData.cspBearerToken): Unit = {
+  def verifyAuthServiceCalledForCsp(bearerToken: String = TestData.CspBearerToken): Unit = {
     verify(1, postRequestedFor(authUrlMatcher)
       .withRequestBody(equalToJson(authRequestJson(cspAuthorisationPredicate)))
       .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))

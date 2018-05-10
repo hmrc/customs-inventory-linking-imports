@@ -23,7 +23,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData
-import util.TestData.conversationId
+import util.TestData.ValidConversationId
 
 class ConversationIdActionSpec extends UnitSpec with MockitoSugar {
 
@@ -31,7 +31,7 @@ class ConversationIdActionSpec extends UnitSpec with MockitoSugar {
     private val mockImportsLogger = mock[ImportsLogger]
     val request = FakeRequest()
     val conversationIdAction = new ConversationIdAction(TestData.stubUniqueIdsService, mockImportsLogger)
-    val expected = ConversationIdRequest(conversationId, request)
+    val expected = ConversationIdRequest(ValidConversationId, request)
   }
 
   "ConversationIdAction" should {

@@ -155,7 +155,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
         val headersCaptor: ArgumentCaptor[HeaderCarrier] = ArgumentCaptor.forClass(classOf[HeaderCarrier])
         verify(mockWsPost).POSTString(anyString, anyString, any[SeqOfHeader])(
           any[HttpReads[HttpResponse]](), headersCaptor.capture(), any[ExecutionContext])
-        headersCaptor.getValue.extraHeaders should contain("X-Conversation-ID" -> conversationIdValue)
+        headersCaptor.getValue.extraHeaders should contain("X-Conversation-ID" -> ConversationIdValue)
       }
 
       "prefix the config key with the prefix if passed" in {
