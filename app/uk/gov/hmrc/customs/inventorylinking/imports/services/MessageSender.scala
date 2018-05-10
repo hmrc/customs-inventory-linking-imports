@@ -82,10 +82,10 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
   }
 
-  private def preparePayload[A](xml: NodeSeq, clientId: FieldsId, correlationId: CorrelationId, importsMessageType: ImportsMessageType, dateTime: DateTime)
+  private def preparePayload[A](xml: NodeSeq, subscriptionFieldsId: FieldsId, correlationId: CorrelationId, importsMessageType: ImportsMessageType, dateTime: DateTime)
                                (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): NodeSeq = {
     logger.debug(s"preparePayload called")
-    payloadDecorator.wrap(xml, clientId.value, correlationId.toString, importsMessageType.wrapperRootElementLabel, dateTime)
+    payloadDecorator.wrap(xml, subscriptionFieldsId, correlationId, importsMessageType.wrapperRootElementLabel, dateTime)
   }
 
 }

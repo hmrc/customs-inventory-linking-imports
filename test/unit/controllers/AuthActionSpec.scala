@@ -17,7 +17,8 @@
 package unit.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito.{times, verify, when, reset}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
@@ -32,16 +33,21 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Validat
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData
-import util.TestData.{TestExtractedHeaders, testFakeRequest, emulatedServiceFailure, ValidConversationId}
+import util.TestData.{TestExtractedHeaders, ValidConversationId, emulatedServiceFailure, testFakeRequest}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
+class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
 
   private lazy val validatedHeadersRequest =
     ConversationIdRequest(ValidConversationId, testFakeRequest()).toValidatedHeadersRequest(TestExtractedHeaders)
   private val mockAuthConnector: AuthConnector = mock[AuthConnector]
   private val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
+
+
+  override protected def beforeEach(): Unit = {
+    reset(mockAuthConnector)
+  }
 
   private val authActionTypes = Table(
     ("Message Name", "Enrolment", "Auth Action"),
@@ -60,7 +66,7 @@ class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenProperty
       }
 
 //      s"propagate exceptional errors in $messageName CSP auth API call" in {
-//        authoriseCspError(Enrolment(""))
+//        authoriseCspError(enrolment)
 //
 //        val caught = intercept[Throwable](await(authAction.refine(validatedHeadersRequest)))
 //

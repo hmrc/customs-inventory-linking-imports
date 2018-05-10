@@ -19,7 +19,7 @@ package unit.services
 import java.util.UUID
 
 import org.joda.time.DateTime
-import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.Mockito.{verify, verifyZeroInteractions, when}
 import org.scalatest.Matchers
 import org.scalatest.mockito.MockitoSugar
@@ -30,7 +30,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionF
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{FieldsId => _, _}
+import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.services._
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
@@ -65,7 +65,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       await(service.send(importsMessageType)(vpr, hc))
     }
 
-    when(mockPayloadDecorator.wrap(meq(TestXmlPayload), meq(fieldsId.value), meq(CorrelationIdValue), meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])).thenReturn(wrappedValidXML)
+    when(mockPayloadDecorator.wrap(meq(TestXmlPayload), meq[String](fieldsIdString).asInstanceOf[FieldsId], meq[UUID](CorrelationIdUuid).asInstanceOf[CorrelationId], meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])).thenReturn(wrappedValidXML)
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]])).thenReturn(mockHttpResponse)
     when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
@@ -96,7 +96,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     val result: Either[Result, Unit] = send()
 
     result shouldBe Right(())
-    verify(mockPayloadDecorator).wrap(meq(TestXmlPayload), meq(fieldsId.value), meq(CorrelationIdValue), meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])
+    verify(mockPayloadDecorator).wrap(meq(TestXmlPayload), meq[String](fieldsIdString).asInstanceOf[FieldsId], meq[UUID](CorrelationIdUuid).asInstanceOf[CorrelationId], meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])
     verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKey))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
   }
 

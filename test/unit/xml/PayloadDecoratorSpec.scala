@@ -17,9 +17,9 @@
 package unit.xml
 
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{CorrelationId, FieldsId}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
+import util.ApiSubscriptionFieldsTestData.fieldsId
 import util.TestData
 import util.TestData._
 
@@ -32,7 +32,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val payloadWrapper = new PayloadDecorator
   private implicit val vpr = TestData.TestCspValidatedPayloadRequest
 
-  private def wrapPayload() = payloadWrapper.wrap(xml, FieldsId.toString, CorrelationId.toString, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
+  private def wrapPayload() = payloadWrapper.wrap(xml, fieldsId, ValidCorrelationId, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
 
   "PayloadWrapper" should {
 
@@ -70,7 +70,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "clientID"
 
-      rd.head.text shouldBe FieldsId.toString
+      rd.head.text shouldBe fieldsId.toString
     }
 
     "set the correlationID" in {
@@ -78,7 +78,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "correlationID"
 
-      rd.head.text shouldBe CorrelationId.toString
+      rd.head.text shouldBe ValidCorrelationId.toString
     }
 
     "set the badgeIdentifier" in {
