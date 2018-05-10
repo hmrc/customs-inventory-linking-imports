@@ -19,35 +19,33 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.http.MimeTypes
 import play.api.mvc.{Action, AnyContent, _}
-import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.MessageSender
+import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class Common @Inject() (val importsConfigService: ImportsConfigService,
-                        val conversationIdAction: ConversationIdAction,
+class Common @Inject() (val conversationIdAction: ConversationIdAction,
                         val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                         val messageSender: MessageSender,
-                        val authConnector: AuthConnector,
                         val logger: ImportsLogger)
-
 
 abstract class ImportController(common: Common,
                                 importsMessageType: ImportsMessageType,
+                                authAction: AuthAction,
                                 payloadValidationAction: PayloadValidationAction
-                               ) extends AuthAction(common.logger) {
+                               ) extends BaseController {
 
   def process(): Action[AnyContent] =  (
     Action andThen
     common.conversationIdAction andThen
     common.validateAndExtractHeadersAction andThen
-    Authenticate(common.authConnector, importsMessageType) andThen
+    authAction andThen
     payloadValidationAction
     )
     .async(bodyParser = xmlOrEmptyBody) {
@@ -61,21 +59,22 @@ abstract class ImportController(common: Common,
       }
   }
 
-
   private def xmlOrEmptyBody: BodyParser[AnyContent] = BodyParser(rq => parse.xml(rq).map {
     case Right(xml) =>
       Right(AnyContentAsXml(xml))
     case _ =>
       Right(AnyContentAsEmpty)
   })
-
 }
 
 @Singleton
 class GoodsArrivalController @Inject()(common: Common,
+                                       importsMessageType: GoodsArrival,
+                                       authAction: GoodsArrivalAuthAction,
                                        payloadValidationAction: GoodsArrivalPayloadValidationAction)
   extends ImportController(common: Common,
-                           GoodsArrival,
+                           importsMessageType,
+                           authAction,
                            payloadValidationAction) {
 
   def post(): Action[AnyContent] = {
@@ -85,9 +84,12 @@ class GoodsArrivalController @Inject()(common: Common,
 
 @Singleton
 class ValidateMovementController @Inject()(common: Common,
+                                           importsMessageType: ValidateMovement,
+                                           authAction: ValidateMovementAuthAction,
                                            payloadValidationAction: ValidateMovementPayloadValidationAction)
   extends ImportController(common: Common,
-                           ValidateMovement,
+                           importsMessageType,
+                           authAction,
                            payloadValidationAction) {
 
   def post(): Action[AnyContent] = {

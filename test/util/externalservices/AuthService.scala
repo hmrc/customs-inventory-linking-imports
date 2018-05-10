@@ -84,8 +84,8 @@ trait AuthService {
   }
 
   private def predicateForMessageType(messageType: ImportsMessageType) = messageType match {
-    case GoodsArrival => GoodsArrivalAuthPredicate
-    case ValidateMovement => ValidateMovementAuthPredicate
+    case _: GoodsArrival => GoodsArrivalAuthPredicate
+    case _: ValidateMovement => ValidateMovementAuthPredicate
   }
 
 }

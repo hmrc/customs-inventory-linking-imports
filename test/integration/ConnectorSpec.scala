@@ -82,8 +82,8 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
   }
 
   private val messageTypes = Table(("message type name", "xml", "message type", "url"),
-    ("Goods Arrival", ValidInventoryLinkingGoodsArrivalRequestXML, GoodsArrival, GoodsArrivalConnectorContext),
-    ("Validate Movement", ValidInventoryLinkingMovementRequestXML, ValidateMovement, ValidateMovementConnectorContext)
+    ("Goods Arrival", ValidInventoryLinkingGoodsArrivalRequestXML, new GoodsArrival(), GoodsArrivalConnectorContext),
+    ("Validate Movement", ValidInventoryLinkingMovementRequestXML, new ValidateMovement(), ValidateMovementConnectorContext)
   )
 
   forAll(messageTypes) { case (messageTypeName, xml, messageType, url) =>

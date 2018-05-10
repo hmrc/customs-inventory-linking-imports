@@ -18,17 +18,17 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
+import play.api.http.Status.UNAUTHORIZED
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.UnauthorizedCode
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsMessageType
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ValidatedHeadersRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -36,13 +36,18 @@ import scala.util.Left
 import scala.util.control.NonFatal
 
 @Singleton
-class AuthAction @Inject()(logger: ImportsLogger) extends BaseController {
+class GoodsArrivalAuthAction @Inject()(authConnector: AuthConnector, importsMessageType: GoodsArrival, logger: ImportsLogger)
+  extends AuthAction(authConnector, importsMessageType, logger)
+
+@Singleton
+class ValidateMovementAuthAction @Inject()(authConnector: AuthConnector, importsMessageType: ValidateMovement, logger: ImportsLogger)
+  extends AuthAction(authConnector, importsMessageType, logger)
+
+abstract class AuthAction @Inject()(override val authConnector: AuthConnector, importsMessageType: ImportsMessageType, logger: ImportsLogger)
+  extends ActionRefiner[ValidatedHeadersRequest, AuthorisedRequest] with AuthorisedFunctions  {
 
   private val errorResponseUnauthorisedGeneral =
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
-
-  case class Authenticate(override val authConnector: AuthConnector, importsMessageType: ImportsMessageType)
-    extends ActionRefiner[ValidatedHeadersRequest, AuthorisedRequest] with AuthorisedFunctions {
 
     override def refine[A](vhr: ValidatedHeadersRequest[A]): Future[Either[Result, AuthorisedRequest[A]]] = {
       implicit val implicitVhr = vhr
@@ -59,7 +64,4 @@ class AuthAction @Inject()(logger: ImportsLogger) extends BaseController {
           throw e
       }
     }
-
-  }
-
 }

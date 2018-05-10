@@ -96,13 +96,13 @@ object TestData {
   )
 
   def elementName(messageType: ImportsMessageType): String = messageType match {
-    case GoodsArrival => goodsArrivalXsdElementName
-    case ValidateMovement => validateMovementsXsdElementName
+    case _: GoodsArrival => goodsArrivalXsdElementName
+    case _: ValidateMovement => validateMovementsXsdElementName
   }
 
   def otherElementName(messageType: ImportsMessageType): String = messageType match {
-    case GoodsArrival => validateMovementsXsdElementName
-    case ValidateMovement => goodsArrivalXsdElementName
+    case _: GoodsArrival => validateMovementsXsdElementName
+    case _: ValidateMovement => goodsArrivalXsdElementName
   }
 
   val requestDateTime: DateTime = new DateTime(2017, 6, 8, 13, 55, 0, 0, DateTimeZone.UTC)

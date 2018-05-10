@@ -58,8 +58,8 @@ class ImportsServiceSpec extends AcceptanceTestSpec with Matchers with OptionVal
   }
 
   private val controllers = Table(("Message Type Description", "Imports Message Type", "request", "url"),
-    ("Goods Arrival", GoodsArrival, ValidGoodsArrivalRequest.fromCsp, GoodsArrivalConnectorContext),
-    ("Validate Movement", ValidateMovement, ValidValidateMovementRequest.fromCsp, ValidateMovementConnectorContext)
+    ("Goods Arrival", new GoodsArrival(), ValidGoodsArrivalRequest.fromCsp, GoodsArrivalConnectorContext),
+    ("Validate Movement", new ValidateMovement(), ValidValidateMovementRequest.fromCsp, ValidateMovementConnectorContext)
   )
 
   forAll(controllers) { case (messageTypeDesc, messageType, request, url) =>

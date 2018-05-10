@@ -50,7 +50,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
   private val wrappedValidXML = <wrapped></wrapped>
 
   trait SetUp {
-    protected val importsMessageType: ImportsMessageType = GoodsArrival //TODO set to value in table
+    protected val importsMessageType: ImportsMessageType = new GoodsArrival() //TODO set to value in table
     protected val mockLogger: ImportsLogger = mock[ImportsLogger]
     protected val mockImportsConnector: ImportsConnector = mock[ImportsConnector]
     protected val mockApiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]

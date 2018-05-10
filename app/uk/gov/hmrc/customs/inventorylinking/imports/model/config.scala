@@ -16,21 +16,24 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.model
 
+import javax.inject.Singleton
 import uk.gov.hmrc.auth.core.Enrolment
 
-trait ImportsMessageType {
+abstract class ImportsMessageType {
   def name: String
   def wrapperRootElementLabel: String
   def enrolment: Enrolment
 }
 
-case object GoodsArrival extends ImportsMessageType {
+@Singleton
+class GoodsArrival extends ImportsMessageType {
   val name = "goodsarrival"
   val wrapperRootElementLabel = "InventoryLinkingImportsInboundGoodsArrival"
   val enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
 }
 
-case object ValidateMovement extends ImportsMessageType {
+@Singleton
+class ValidateMovement extends ImportsMessageType {
   val name = "validatemovement"
   val wrapperRootElementLabel = "InventoryLinkingImportsInboundValidateMovementResponse"
   val enrolment = Enrolment("write:customs-il-imports-movement-validation")

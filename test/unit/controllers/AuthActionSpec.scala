@@ -17,7 +17,7 @@
 package unit.controllers
 
 import org.scalatest.mockito.MockitoSugar
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.AuthAction
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, ValidateMovementAuthAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
@@ -33,7 +33,7 @@ class AuthActionSpec extends UnitSpec with MockitoSugar {
 
   trait SetUp extends AuthConnectorStubbing {
     val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
-    val authAction: AuthAction = new AuthAction(mockImportsLogger)
+    val authAction: AuthAction = new ValidateMovementAuthAction(mockAuthConnector, new ValidateMovement(), mockImportsLogger)
   }
 
 //TODO add GA test
@@ -41,7 +41,7 @@ class AuthActionSpec extends UnitSpec with MockitoSugar {
     "Return Right of AuthorisedRequest CSP when authorised by auth API" in new SetUp {
       authoriseCsp()
 
-      private val actual = await(authAction.Authenticate(mockAuthConnector, ValidateMovement).refine(validatedHeadersRequest))
+      private val actual = await(authAction.refine(validatedHeadersRequest))
       actual shouldBe Right(validatedHeadersRequest.toAuthorisedRequest)
       verifyCspAuthorisationCalled(1)
     }

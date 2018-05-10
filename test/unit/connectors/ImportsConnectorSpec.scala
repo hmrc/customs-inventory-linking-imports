@@ -161,7 +161,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       "prefix the config key with the prefix if passed" in {
         returnResponseForRequest(Future.successful(mock[HttpResponse]))
 
-        await(connector.send(GoodsArrival, xml, date, correlationId))
+        await(connector.send(new GoodsArrival(), xml, date, correlationId))
 
         verify(mockServiceConfigProvider).getConfig("goodsarrival")
       }
@@ -200,7 +200,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   }
 
   private def awaitRequest = {
-    await(connector.send(GoodsArrival, xml, date, correlationId))
+    await(connector.send(new GoodsArrival(), xml, date, correlationId))
   }
 
   private def returnResponseForRequest(eventualResponse: Future[HttpResponse]) = {

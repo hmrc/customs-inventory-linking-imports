@@ -43,8 +43,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
     protected lazy val xsdPropertyPathLocation = s"xsd.locations.${importsMessageType.name}"
 
     protected def service: XmlValidationService = importsMessageType match {
-      case GoodsArrival => new GoodsArrivalXmlValidationService(mockConfiguration)
-      case ValidateMovement => new ValidateMovementXmlValidationService(mockConfiguration)
+      case _: GoodsArrival => new GoodsArrivalXmlValidationService(mockConfiguration)
+      case _: ValidateMovement => new ValidateMovementXmlValidationService(mockConfiguration)
     }
 
     def elementName: String = TestData.elementName(importsMessageType)
@@ -52,8 +52,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
     def otherElementName: String = TestData.otherElementName(importsMessageType)
 
     def xsdLocations: Seq[String] = importsMessageType match {
-      case GoodsArrival => goodsArrivalXsdLocations
-      case ValidateMovement => validateMovementsXsdLocations
+      case _: GoodsArrival => goodsArrivalXsdLocations
+      case _: ValidateMovement => validateMovementsXsdLocations
     }
   }
 
@@ -63,12 +63,12 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
       "Valid xml for other element",
       "Invalid xml with single error",
       "Invalid xml With multiple errors"),
-    (ValidateMovement,
+    (new ValidateMovement(),
       ValidInventoryLinkingMovementRequestXML,
       ValidInventoryLinkingGoodsArrivalRequestXML,
       InvalidInventoryLinkingMovementRequestXML,
       InvalidInventoryLinkingMovementRequestXMLWithMultipleErrors),
-    (GoodsArrival,
+    (new GoodsArrival(),
       ValidInventoryLinkingGoodsArrivalRequestXML,
       ValidInventoryLinkingMovementRequestXML,
       InvalidInventoryLinkingGoodsArrivalRequestXML,
