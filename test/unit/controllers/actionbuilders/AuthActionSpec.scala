@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package unit.controllers
+package unit.controllers.actionbuilders
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.Mockito.{times, verify, when, reset}
+import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -33,7 +33,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Validat
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData
-import util.TestData.{TestExtractedHeaders, ValidConversationId, emulatedServiceFailure, testFakeRequest}
+import util.TestData.{TestExtractedHeaders, ValidConversationId, testFakeRequest, emulatedServiceFailure}
 
 import scala.concurrent.{ExecutionContext, Future}
 

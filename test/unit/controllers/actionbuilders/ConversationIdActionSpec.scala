@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package unit.controllers
+package unit.controllers.actionbuilders
 
 import org.scalatest.mockito.MockitoSugar
 import play.api.test.FakeRequest

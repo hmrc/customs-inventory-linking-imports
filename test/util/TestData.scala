@@ -72,8 +72,8 @@ object TestData {
   lazy val ValidContentTypeHeader: (String, String) = CONTENT_TYPE -> (XML + "; charset=utf-8")
   lazy val ValidXClientIdHeader: (String, String) = XClientIdHeaderName -> ApiSubscriptionFieldsTestData.clientId.value
   lazy val ValidXBadgeIdentifierHeader: (String, String) = XBadgeIdentifierHeaderName -> ValidBadgeIdentifierValue
-  lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> ConversationId.toString
-  val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader)
+  lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> ValidConversationId.toString
+  val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader, XConversationIdHeader)
 
   val CspBearerToken = "CSP-Bearer-Token"
 
@@ -146,6 +146,7 @@ object TestData {
   val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeaders)
   val TestAuthorisedRequest = TestValidatedHeadersRequest.toAuthorisedRequest
   val TestCspValidatedPayloadRequest: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
+  val ValidRequest = TestFakeRequest.withHeaders(ValidHeaders.toSeq: _*)
 
   def testFakeRequest(badgeIdString: String = ValidBadgeIdentifier.value): FakeRequest[AnyContentAsXml] =
     FakeRequest().withXmlBody(TestXmlPayload)

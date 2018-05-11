@@ -43,3 +43,8 @@ sealed trait ApiVersion {
 object VersionOne extends ApiVersion{
   override val value: String = "1.0"
 }
+
+trait ImportsConfig {
+  val whiteListedCspApplicationIds: Seq[String]
+  val apiSubscriptionFieldsBaseUrl: String
+}

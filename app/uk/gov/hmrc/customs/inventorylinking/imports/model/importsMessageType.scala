@@ -38,8 +38,3 @@ class ValidateMovement extends ImportsMessageType {
   val wrapperRootElementLabel = "InventoryLinkingImportsInboundValidateMovementResponse"
   val enrolment = Enrolment("write:customs-il-imports-movement-validation")
 }
-
-trait ImportsConfig {
-  val whiteListedCspApplicationIds: Seq[String]
-  val apiSubscriptionFieldsBaseUrl: String
-}
