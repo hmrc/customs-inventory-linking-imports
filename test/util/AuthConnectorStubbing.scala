@@ -21,6 +21,7 @@ import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
@@ -28,28 +29,31 @@ import uk.gov.hmrc.play.test.UnitSpec
 import scala.concurrent.{ExecutionContext, Future}
 
 trait AuthConnectorStubbing extends UnitSpec with MockitoSugar {
-  val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  private val apiScope = "write:customs-il-imports-arrival-notifications"
-  private val cspAuthPredicate = Enrolment(apiScope) and AuthProviders(PrivilegedApplication)
 
-  def authoriseCsp(): Unit = {
-    when(mockAuthConnector.authorise(ameq(cspAuthPredicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+  val mockAuthConnector: AuthConnector = mock[AuthConnector]
+
+  def authoriseCsp(apiScope: Enrolment): Unit = {
+    when(mockAuthConnector.authorise(ameq(cspAuthPredicate(apiScope)), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(())
   }
 
-  def authoriseCspError(): Unit = {
-    when(mockAuthConnector.authorise(ameq(cspAuthPredicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(Future.failed(TestData.emulatedServiceFailure))
+  def cspAuthPredicate(apiScope: Enrolment): Predicate = {
+    apiScope and AuthProviders(PrivilegedApplication)
   }
 
-  def unauthoriseCsp(authException: AuthorisationException = new InsufficientEnrolments): Unit = {
-    when(mockAuthConnector.authorise(ameq(cspAuthPredicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+  def unauthoriseCsp(apiScope: Enrolment, authException: AuthorisationException = new InsufficientEnrolments): Unit = {
+    when(mockAuthConnector.authorise(ameq(cspAuthPredicate(apiScope)), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.failed(authException))
   }
 
-  def verifyCspAuthorisationCalled(numberOfTimes: Int): Future[Unit] = {
+  def verifyCspAuthorisationCalled(apiScope: Enrolment, numberOfTimes: Int): Future[Unit] = {
     verify(mockAuthConnector, times(numberOfTimes))
-      .authorise(ameq(cspAuthPredicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext])
+      .authorise(ameq(cspAuthPredicate(apiScope)), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext])
+  }
+
+  def authoriseCspError(apiScope: Enrolment): Unit = {
+    when(mockAuthConnector.authorise(ameq(cspAuthPredicate(apiScope)), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(Future.failed(TestData.emulatedServiceFailure))
   }
 
 }

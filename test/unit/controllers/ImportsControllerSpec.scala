@@ -56,6 +56,8 @@ class ImportsControllerSpec extends UnitSpec
     protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger), mockImportsLogger)
     protected val stubGoodsArrivalPayloadValidationAction: GoodsArrivalPayloadValidationAction = new GoodsArrivalPayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger)
 
+    protected val enrolment: Enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
+
     protected val controller: GoodsArrivalController = new GoodsArrivalController(mockCommon, mockGoodsArrival, stubGoodsArrivalAuthAction, stubGoodsArrivalPayloadValidationAction)
 
     protected def awaitSubmit(request: Request[AnyContent]): Result = {
@@ -79,16 +81,16 @@ class ImportsControllerSpec extends UnitSpec
     message = "Unauthorised request").XmlResult.withHeaders(XConversationIdHeader)
 
   "InventoryLinkingImportController" should {
-    "process CSP request when call is authorised for CSP" in new SetUp() {
-      authoriseCsp()
+    "process CSP request when call is authorised for CSP" in new SetUp {
+      authoriseCsp(enrolment)
 
       val result: Result = awaitSubmit(ValidRequest)
 
-      verifyCspAuthorisationCalled(numberOfTimes = 1)
+      verifyCspAuthorisationCalled(enrolment, numberOfTimes = 1)
     }
 
-    "respond with status 202 and conversationId in header for a processed valid CSP request" in new SetUp() {
-      authoriseCsp()
+    "respond with status 202 and conversationId in header for a processed valid CSP request" in new SetUp {
+      authoriseCsp(enrolment)
 
       val result: Future[Result] = submit(ValidRequest)
 
@@ -96,8 +98,8 @@ class ImportsControllerSpec extends UnitSpec
       header(XConversationIdHeaderName, result) shouldBe Some(ConversationIdValue)
     }
 
-    "return result 401 UNAUTHORISED and conversationId in header when call is unauthorised" in new SetUp() {
-      unauthoriseCsp()
+    "return result 401 UNAUTHORISED and conversationId in header when call is unauthorised" in new SetUp {
+      unauthoriseCsp(enrolment)
 
       val result: Future[Result] = submit(ValidRequest)
 
@@ -107,10 +109,10 @@ class ImportsControllerSpec extends UnitSpec
       verifyZeroInteractions(mockGoodsArrivalXmlValidationService)
     }
 
-    "return the error response returned from the Communication service" in new SetUp() {
+    "return the error response returned from the Communication service" in new SetUp {
       when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier]))
         .thenReturn(Future.successful(Left(mockResult)))
-      authoriseCsp()
+      authoriseCsp(enrolment)
 
       val result: Result = awaitSubmit(ValidRequest)
 
