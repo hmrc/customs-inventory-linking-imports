@@ -54,6 +54,7 @@ abstract class AuthAction @Inject()(override val authConnector: AuthConnector, i
       implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 
       authorised(importsMessageType.enrolment and AuthProviders(PrivilegedApplication)) {
+        logger.debug("Authorised as CSP")
         Future.successful(Right(vhr.toAuthorisedRequest))
       }.recover{
         case NonFatal(_: AuthorisationException) =>

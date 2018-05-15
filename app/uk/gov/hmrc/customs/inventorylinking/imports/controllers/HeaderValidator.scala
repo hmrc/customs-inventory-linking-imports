@@ -21,11 +21,11 @@ import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.mvc.Headers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorInternalServerError}
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorInternalServerError, errorBadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeadersImpl}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{BadgeIdentifier, ClientId}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{BadgeIdentifier, ClientId, HeaderConstants}
 
 @Singleton
 class HeaderValidator @Inject() (logger: ImportsLogger) {
@@ -34,6 +34,7 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
+  private lazy val errorResponseBadgeIdentifierHeaderMissing = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
 
   def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
     implicit val headers = conversationIdRequest.headers
@@ -44,7 +45,7 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
 
     def hasXClientId = validateHeader(XClientId, xClientIdRegex.findFirstIn(_).nonEmpty, ErrorInternalServerError)
 
-    def hasXBadgeIdentifier = validateHeader(XBadgeIdentifier, xBadgeIdentifierRegex.findFirstIn(_).nonEmpty, ErrorInternalServerError)
+    def hasXBadgeIdentifier = validateHeader(XBadgeIdentifier, xBadgeIdentifierRegex.findFirstIn(_).nonEmpty, errorResponseBadgeIdentifierHeaderMissing)
 
     val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
       accept <- hasAccept.right
@@ -65,19 +66,20 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   private def validateHeader[A](headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)
                                (implicit conversationIdRequest: ConversationIdRequest[A], h: Headers): Either[ErrorResponse, String] = {
     val left = Left(errorResponse)
-    def leftWithLog = {
-      logger.error(s"${errorResponse.message} ")
+    def leftWithLog(headerName: String) = {
+      logger.error(s"Error - header '$headerName' not present")
       left
     }
-    def leftWithLogContainingValue(value: String) = {
-      logger.error(s"${errorResponse.message}. header value = '$value'")
+    def leftWithLogContainingValue(headerName: String, value: String) = {
+      logger.error(s"Error - header '$headerName' value '$value' is not valid")
       left
     }
 
     h.get(headerName).fold[Either[ErrorResponse, String]]{
-      leftWithLog
+      leftWithLog(headerName)
     }{
-      v => if (rule(v)) Right(v) else leftWithLogContainingValue(v)
+      v =>
+        if (rule(v)) Right(v) else leftWithLogContainingValue(headerName, v)
     }
   }
 }

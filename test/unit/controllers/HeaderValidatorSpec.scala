@@ -45,12 +45,12 @@ class HeaderValidatorSpec extends UnitSpec with TableDrivenPropertyChecks with M
       ("Missing accept header", ValidHeaders - ACCEPT, Left(ErrorAcceptHeaderInvalid)),
       ("Missing content type header", ValidHeaders - CONTENT_TYPE, Left(ErrorContentTypeHeaderInvalid)),
       ("Missing X-Client-ID header", ValidHeaders - XClientIdHeaderName, Left(ErrorInternalServerError)),
-      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, Left(ErrorInternalServerError)),
+      ("Missing X-Badge-Identifier header", ValidHeaders - XBadgeIdentifierHeaderName, Left(ErrorResponseBadgeIdentifierHeaderMissing)),
       ("Invalid accept header", ValidHeaders + InvalidAcceptHeader, Left(ErrorAcceptHeaderInvalid)),
       ("Invalid content type header JSON header", ValidHeaders + InvalidContentTypeJsonHeader, Left(ErrorContentTypeHeaderInvalid)),
       ("Invalid content type XML without UTF-8 header", ValidHeaders + (CONTENT_TYPE -> "application/xml"), Left(ErrorContentTypeHeaderInvalid)),
       ("Invalid X-Client-ID header", ValidHeaders + InvalidXClientIdHeader, Left(ErrorInternalServerError)),
-      ("Invalid X-Badge-Identifier header", ValidHeaders + InvalidXBadgeIdentifier, Left(ErrorInternalServerError))
+      ("Invalid X-Badge-Identifier header", ValidHeaders + InvalidXBadgeIdentifier, Left(ErrorResponseBadgeIdentifierHeaderMissing))
     )
 
   "HeaderValidatorAction" should {

@@ -17,10 +17,10 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.customs.api.common.config.ServicesConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ApiSubscriptionKey}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
@@ -29,16 +29,11 @@ import scala.concurrent.Future
 
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
-                                               servicesConfig: ServicesConfig,
+                                               servicesConfig: ImportsConfigService,
                                                logger: ImportsLogger) {
 
-  private val service = "api-subscription-fields"
-  private val serviceContext = service + ".context"
-  private lazy val baseUrl = servicesConfig.baseUrl(service)
-  private lazy val context = servicesConfig.getConfString(serviceContext, throw new IllegalStateException(s"Configuration error - $serviceContext not found."))
-
   def getSubscriptionFields[A](apiSubsKey: ApiSubscriptionKey)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
-    val url = ApiSubscriptionFieldsPath.url(s"$baseUrl$context", apiSubsKey)
+    val url = ApiSubscriptionFieldsPath.url(servicesConfig.apiSubscriptionFieldsBaseUrl, apiSubsKey)
     get(url)
   }
 

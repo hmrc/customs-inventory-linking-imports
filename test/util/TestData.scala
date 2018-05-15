@@ -31,6 +31,8 @@ import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.{AuthProviders, Enrolment}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfig
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorBadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeadersImpl, ValidatedHeadersRequest, ValidatedPayloadRequest}
@@ -156,4 +158,6 @@ object TestData {
 
     def postTo(endpoint: String): FakeRequest[R] = fakeRequest.copyFakeRequest(method = POST, uri = endpoint)
   }
+
+  val ErrorResponseBadgeIdentifierHeaderMissing: ErrorResponse = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
 }

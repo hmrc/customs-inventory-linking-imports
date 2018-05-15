@@ -64,6 +64,7 @@ class ServiceLocatorConnectorSpec extends UnitSpec with MockitoSugar {
         .thenReturn(Future.successful(HttpResponse(OK)))
 
       await(connector.register) shouldBe true
+
       verify(mockHttpClient).POST(ameq("https://SERVICE-LOCATOR-HOST/registration"), ameq(registration),
         ameq(Seq(CONTENT_TYPE -> JSON)))(any[Writes[Registration]], any[HttpReads[HttpResponse]], any[HeaderCarrier], any[MdcLoggingExecutionContext])
       verify(connector.handlerOK).apply()
@@ -79,6 +80,7 @@ class ServiceLocatorConnectorSpec extends UnitSpec with MockitoSugar {
       ).thenReturn(Future.failed(serviceLocatorException))
 
       await(connector.register) shouldBe false
+
       verify(mockHttpClient).POST(ameq("https://SERVICE-LOCATOR-HOST/registration"), ameq(registration),
         ameq(Seq(CONTENT_TYPE -> JSON)))(any[Writes[Registration]], any[HttpReads[HttpResponse]], any[HeaderCarrier], any[MdcLoggingExecutionContext])
       verify(connector.handlerOK, never).apply()
