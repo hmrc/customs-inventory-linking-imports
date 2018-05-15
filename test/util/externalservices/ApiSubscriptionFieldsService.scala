@@ -16,45 +16,36 @@
 
 package util.externalservices
 
-import java.net.URLEncoder
-
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.test.Helpers.OK
-import util.ApiSubscriptionFieldsTestData._
-import util.WireMockRunner
-import util.externalservices.InventoryLinkingImportsExternalServicesConfig.ApiSubscriptionFieldsContext
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsPath.url
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionKey
+import util.{ApiSubscriptionFieldsTestData, WireMockRunner}
 
-trait ApiSubscriptionFieldsService extends WireMockRunner {
 
-  private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
-  private val version = "1.0"
-
-  def getSubscriptionFields(clientId: String): String = {
-    s"$ApiSubscriptionFieldsContext/application/$clientId/context/$apiContextEncoded/version/$version"
+trait ApiSubscriptionFieldsService extends WireMockRunner with ApiSubscriptionFieldsTestData {
+  private def apiSubsUrl(apiSubsKey: ApiSubscriptionKey) = url(InventoryLinkingImportsExternalServicesConfig.ApiSubscriptionFieldsContext, apiSubsKey)
+  private def urlMatchingRequestPath(apiSubs: ApiSubscriptionKey) = {
+    urlEqualTo(apiSubsUrl(apiSubs))
   }
 
-  private def apiSubsUrl(clientId: String): String = getSubscriptionFields(clientId)
+  def startApiSubscriptionFieldsService(apiSubsKey: ApiSubscriptionKey): Unit =
+    setupGetSubscriptionFieldsToReturn(OK, apiSubsKey)
 
-  private def urlMatchingRequestPath(clientId: String) = {
-    urlEqualTo(apiSubsUrl(clientId))
-  }
-
-  def startApiSubscriptionFieldsService(clientId: String): Unit = setupGetSubscriptionFieldsToReturn(OK, clientId)
-
-  def setupGetSubscriptionFieldsToReturn(status: Int = OK, clientId: String = TestXClientId): Unit = {
-    stubFor(get(urlMatchingRequestPath(clientId)).
+  def setupGetSubscriptionFieldsToReturn(status: Int = OK, apiSubsKey: ApiSubscriptionKey = apiSubscriptionKey): Unit = {
+    stubFor(get(urlMatchingRequestPath(apiSubsKey: ApiSubscriptionKey)).
       willReturn(
         aResponse()
-          .withBody(ResponseJsonString)
+          .withBody(responseJsonString)
           .withStatus(status))
     )
   }
 
-  def verifyGetSubscriptionFieldsCalled(clientId: String): Unit = {
-    verify(1, getRequestedFor(urlMatchingRequestPath(clientId)))
+  def verifyGetSubscriptionFieldsCalled(apiSubsKey: ApiSubscriptionKey = apiSubscriptionKey): Unit = {
+    verify(1, getRequestedFor(urlMatchingRequestPath(apiSubsKey: ApiSubscriptionKey)))
   }
 
-  def verifyGetSubscriptionFieldsNotCalled(clientId: String): Unit = {
-    verify(0, getRequestedFor(urlMatchingRequestPath(clientId)))
+  def verifyGetSubscriptionFieldsNotCalled(apiSubsKey: ApiSubscriptionKey = apiSubscriptionKey): Unit = {
+    verify(0, getRequestedFor(urlMatchingRequestPath(apiSubsKey: ApiSubscriptionKey)))
   }
 }

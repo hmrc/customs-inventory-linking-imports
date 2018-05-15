@@ -16,19 +16,38 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
-import javax.inject.Singleton
 import com.google.inject.Inject
-import play.api.mvc.AnyContent
+import javax.inject.Singleton
+import play.api.mvc.Request
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.HasConversationId
 
 @Singleton
 class ImportsLogger @Inject()(logger: CdsLogger) {
 
-  def debug(s: => String)(implicit validatedRequest: ValidatedRequest[AnyContent]): Unit = logger.debug(formatDebug(s, validatedRequest))
-  def debug(s: => String, e: => Throwable)(implicit validatedRequest: ValidatedRequest[AnyContent]): Unit = logger.debug(formatDebug(s, validatedRequest), e)
-  def info(s: => String)(implicit validatedRequest: ValidatedRequest[AnyContent]): Unit = logger.info(formatInfo(s, validatedRequest))
-  def warn(s: => String)(implicit validatedRequest: ValidatedRequest[AnyContent]): Unit = logger.warn(formatWarn(s, validatedRequest))
-  def error(s: => String)(implicit validatedRequest: ValidatedRequest[AnyContent]): Unit = logger.error(formatError(s, validatedRequest))
+  def debug(s: => String)(implicit r: HasConversationId): Unit =
+    logger.debug(formatDebug(s, r))
+
+  def debug(s: => String, e: => Throwable)(implicit r: HasConversationId): Unit =
+    logger.debug(formatDebug(s, r), e)
+
+  //called once at the start of the request processing pipeline
+  def debugFull(s: => String)(implicit r: HasConversationId with Request[_]): Unit =
+    logger.debug(formatDebugFull(s, r))
+
+  def info(s: => String)(implicit r: HasConversationId): Unit =
+    logger.info(formatInfo(s, r))
+
+  def warn(s: => String)(implicit r: HasConversationId): Unit =
+    logger.warn(formatWarn(s, r))
+
+  def error(s: => String, e: => Throwable)(implicit r: HasConversationId): Unit =
+    logger.error(formatError(s, r), e)
+
+  def error(s: => String)(implicit r: HasConversationId): Unit =
+    logger.error(formatError(s, r))
+
+  def errorWithoutRequestContext(s: => String): Unit =
+    logger.error(s)
 }

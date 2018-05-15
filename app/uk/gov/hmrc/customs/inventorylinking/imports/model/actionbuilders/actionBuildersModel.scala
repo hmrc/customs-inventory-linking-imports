@@ -1,0 +1,119 @@
+/*
+ * Copyright 2018 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders
+
+import play.api.mvc.{Request, Result, WrappedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
+import uk.gov.hmrc.customs.inventorylinking.imports.model._
+
+import scala.xml.NodeSeq
+
+object ActionBuilderModelHelper {
+
+  implicit class AddConversationId(result: Result) {
+    def withConversationId(implicit c: HasConversationId): Result = {
+      result.withHeaders(XConversationId -> c.conversationId.toString)
+    }
+  }
+
+  implicit class CorrelationIdsRequestOps[A](cir: ConversationIdRequest[A]) {
+    def toValidatedHeadersRequest(eh: ExtractedHeaders): ValidatedHeadersRequest[A] = ValidatedHeadersRequest(
+      eh.badgeIdentifier,
+      cir.conversationId,
+      eh.clientId,
+      cir.request
+    )
+  }
+
+  implicit class ValidatedHeadersRequestOps[A](vhr: ValidatedHeadersRequest[A]) {
+
+    def toAuthorisedRequest: AuthorisedRequest[A] = AuthorisedRequest(
+      vhr.badgeIdentifier,
+      vhr.conversationId,
+      vhr.clientId,
+      vhr.request
+    )
+  }
+
+  implicit class AuthorisedRequestOps[A](ar: AuthorisedRequest[A]) {
+    def toValidatedPayloadRequest(xmlBody: NodeSeq): ValidatedPayloadRequest[A] = ValidatedPayloadRequest(
+      ar.badgeIdentifier,
+      ar.conversationId,
+      ar.clientId,
+      xmlBody,
+      ar.request
+    )
+  }
+
+}
+
+trait HasConversationId {
+  val conversationId: ConversationId
+}
+
+trait ExtractedHeaders {
+  val badgeIdentifier: BadgeIdentifier
+  val clientId: ClientId
+}
+
+trait HasXmlBody {
+  val xmlBody: NodeSeq
+}
+
+case class ExtractedHeadersImpl(
+  badgeIdentifier: BadgeIdentifier,
+  clientId: ClientId
+) extends ExtractedHeaders
+
+/*
+ * We need multiple WrappedRequest classes to reflect additions to context during the request processing pipeline.
+ *
+ * There is some repetition in the WrappedRequest classes, but the benefit is we get a flat structure for our data
+ * items, reducing the number of case classes and making their use much more convenient, rather than deeply nested stuff
+ * eg `r.badgeIdentifier` vs `r.requestData.badgeIdentifier`
+ */
+
+// Available after ConversationIdAction action builder
+case class ConversationIdRequest[A](
+  conversationId: ConversationId,
+  request: Request[A]
+) extends WrappedRequest[A](request) with HasConversationId
+
+// Available after ValidatedHeadersAction builder
+case class ValidatedHeadersRequest[A](
+  badgeIdentifier: BadgeIdentifier,
+  conversationId: ConversationId,
+  clientId: ClientId,
+  request: Request[A]
+) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders
+
+// Available after Authorise action builder
+case class AuthorisedRequest[A](
+  badgeIdentifier: BadgeIdentifier,
+  conversationId: ConversationId,
+  clientId: ClientId,
+  request: Request[A]
+) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders
+
+// Available after ValidatedPayloadAction builder
+case class ValidatedPayloadRequest[A](
+  badgeIdentifier: BadgeIdentifier,
+  conversationId: ConversationId,
+  clientId: ClientId,
+  xmlBody: NodeSeq,
+  request: Request[A]
+) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders with HasXmlBody

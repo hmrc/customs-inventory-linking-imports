@@ -16,201 +16,108 @@
 
 package unit.controllers
 
-import java.util.UUID
-import java.util.concurrent.TimeUnit.SECONDS
-
-import akka.stream.Materializer
-import akka.util.Timeout
-import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.Mockito.{reset, verifyZeroInteractions, when}
-import org.scalatest.BeforeAndAfterEach
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.prop.TableDrivenPropertyChecks
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import org.xml.sax.SAXException
-import play.api.http.HeaderNames.{ACCEPT, CONTENT_TYPE}
-import play.api.http.MimeTypes
-import play.api.http.Status.{ACCEPTED, BAD_REQUEST, INTERNAL_SERVER_ERROR}
+import org.scalatest.{BeforeAndAfterEach, Matchers}
 import play.api.mvc._
-import play.api.test.FakeRequest
-import play.api.test.Helpers.{UNAUTHORIZED, contentAsString, header}
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.EmptyRetrieval
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, InsufficientEnrolments}
-import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers._
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, PayloadValidationAction, ValidateAndExtractHeadersAction}
+import play.api.test.Helpers._
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders._
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{Common, GoodsArrivalController, HeaderValidator}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsMessageType, _}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ImportsConfigService, MessageSender, ValidateMovementXmlValidationService}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, MessageSender}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.test.UnitSpec
-import util.ApiSubscriptionFieldsTestData
+import util.AuthConnectorStubbing
 import util.TestData._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Node, NodeSeq, Utility, XML}
+import scala.xml.NodeSeq
 
-class ImportsControllerSpec extends UnitSpec with GuiceOneAppPerSuite with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
+class ImportsControllerSpec extends UnitSpec
+  with Matchers with MockitoSugar with BeforeAndAfterEach {
 
-  private val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  private val mockServiceConfigProvider: ServiceConfigProvider = mock[ServiceConfigProvider]
-  private val badgeIdentifier = "BADGE1"
-  private val mockMessageSender: MessageSender = mock[MessageSender]
-  private val configuration = mock[ImportsConfigService]
-  private implicit val mockMaterializer = mock[Materializer]
-  private implicit val timeout = Timeout(5L, SECONDS)
-  private val request: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(outgoingBody).
-    withHeaders(
-      ACCEPT -> AcceptHeaderValue,
-      CONTENT_TYPE -> (MimeTypes.XML + "; charset=utf-8"),
-      XClientIdHeaderName -> ApiSubscriptionFieldsTestData.TestXClientId,
-      XBadgeIdentifierHeaderName -> badgeIdentifier)
+  trait SetUp extends AuthConnectorStubbing {
 
-  private val logger = mock[ImportsLogger]
-  private val cdsLogger = mock[CdsLogger]
-  private val importsLogger = mock[ImportsLogger]
-  private val validateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(cdsLogger), importsLogger)
-  private val authAction = new AuthAction(mockAuthConnector, importsLogger)
+    override val mockAuthConnector: AuthConnector = mock[AuthConnector]
+    protected val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
+    protected val mockMessageSender: MessageSender = mock[MessageSender]
+    protected val mockResult: Result = mock[Result]
+    protected val mockGoodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
+    protected val mockGoodsArrival: GoodsArrival = mock[GoodsArrival]
+    protected val mockCommon: Common = mock[Common]
 
-  private val mockGoodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
-  private val mockValidateMovementXmlValidationService: ValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
+    protected val stubConversationIdAction: ConversationIdAction = new ConversationIdAction(stubUniqueIdsService, mockImportsLogger)
+    protected val stubGoodsArrivalAuthAction = new GoodsArrivalAuthAction(mockAuthConnector, mockGoodsArrival, mockImportsLogger)
+    protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger), mockImportsLogger)
+    protected val stubGoodsArrivalPayloadValidationAction: GoodsArrivalPayloadValidationAction = new GoodsArrivalPayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger)
 
-  private val payloadValidationAction = new PayloadValidationAction(mockGoodsArrivalXmlValidationService, mockValidateMovementXmlValidationService, logger)
+    protected val enrolment: Enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
 
-  private val validateMovementController: ValidateMovementController = new ValidateMovementController(configuration, mockMessageSender, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger)
-  private val goodsArrivalController: GoodsArrivalController = new GoodsArrivalController(configuration, mockMessageSender, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger)
-  private val UuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[34][0-9a-fA-F]{3}-[89ab][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    protected val controller: GoodsArrivalController = new GoodsArrivalController(mockCommon, mockGoodsArrival, stubGoodsArrivalAuthAction, stubGoodsArrivalPayloadValidationAction)
 
-  private implicit val headerCarrier: HeaderCarrier = mock[HeaderCarrier]
-  private val requestData: RequestData = createRequestData
-  private implicit val validatedRequestt: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
-
-  private val defaultUuid: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
-
-  private val internalServerError =
-    """<?xml version="1.0" encoding="UTF-8"?>
-      |<errorResponse>
-      |  <code>INTERNAL_SERVER_ERROR</code>
-      |  <message>Internal server error</message>
-      |</errorResponse>
-    """.stripMargin
-
-  private val unAuthorisedError =
-    """<errorResponse>
-      |    <code>UNAUTHORIZED</code>
-      |    <message>Unauthorised request</message>
-      |</errorResponse>""".stripMargin
-
-  override protected def beforeEach() {
-    reset(mockServiceConfigProvider, mockMessageSender)
-  }
-
-  private val controllers = Table(("Message Type Name", "Imports Message Type", "Auth Predicate", "controller post"),
-    ("Goods Arrival", GoodsArrival, GoodsArrivalAuthPredicate, goodsArrivalController.post()),
-    ("Validate Movement", ValidateMovement, ValidateMovementAuthPredicate, validateMovementController.post())
-  )
-
-  forAll(controllers) { case (messageTypeName, importsMessageType,  authPredicate, controller) =>
-
-    "POST valid declaration" when {
-
-      "message is sent successfully" should {
-        s"return 202 ACCEPTED for $messageTypeName" in {
-
-          authoriseCsp(authPredicate)
-          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(HttpResponse(ACCEPTED)))
-          when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
-          when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
-
-          val result = await(controller.apply(request))
-
-          status(result) shouldBe ACCEPTED
-        }
-
-        s"return X-Conversation-Id header for $messageTypeName" in {
-
-          authoriseCsp(authPredicate)
-          when(mockMessageSender.send(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(HttpResponse(ACCEPTED)))
-          when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
-          when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
-
-          val result = await(controller.apply(request))
-
-          result.header.headers.getOrElse("X-Conversation-ID", defaultUuid) shouldNot be(defaultUuid)
-        }
-      }
-
-      "called by unauthorised CSP" should {
-        s"return result 401 UNAUTHORISED for $messageTypeName" in {
-          unauthoriseCsp(authPredicate)
-
-          val result: Result = await(controller.apply(request))
-
-          status(result) shouldBe UNAUTHORIZED
-          stringToXml(contentAsString(result)) shouldBe stringToXml(unAuthorisedError)
-          header(XConversationIdHeaderName, result).get should fullyMatch regex UuidRegex
-          verifyZeroInteractions(mockMessageSender)
-        }
-      }
-
-      s"message fails due to backend service error for $messageTypeName" should {
-        "return 500 Internal Server Error" in {
-
-          authoriseCsp(authPredicate)
-          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(emulatedServiceFailure))
-          when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
-          when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
-
-          val result = await(controller.apply(request))
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-        }
-
-        s"return X-Conversation-Id header for $messageTypeName" in {
-
-          authoriseCsp(authPredicate)
-          when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(emulatedServiceFailure))
-          when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
-          when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.successful(()))
-
-          val result = await(controller.apply(request))
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          stringToXml(contentAsString(result)) shouldBe stringToXml(internalServerError)
-          header(XConversationIdHeaderName, result).get should fullyMatch regex UuidRegex
-
-        }
-      }
+    protected def awaitSubmit(request: Request[AnyContent]): Result = {
+      await(controller.post().apply(request))
     }
 
-    s"POST invalid declaration for $messageTypeName" should {
-      "return bad request" in {
+    protected def submit(request: Request[AnyContent]): Future[Result] = {
+      controller.post().apply(request)
+    }
 
-        authoriseCsp(authPredicate)
-        when(mockMessageSender.send(ameq(importsMessageType))(any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
-        when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
-        when(mockValidateMovementXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext], any[ValidatedRequest[AnyContent]])).thenReturn(Future.failed(new SAXException()))
+    when(mockCommon.conversationIdAction).thenReturn(stubConversationIdAction)
+    when(mockCommon.validateAndExtractHeadersAction).thenReturn(stubValidateAndExtractHeadersAction)
+    when(mockCommon.messageSender).thenReturn(mockMessageSender)
 
-        val result = await(controller.apply(request))
+    when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(Future.successful(()))
+    when(mockMessageSender.send(any[GoodsArrival])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(Right(())))
+    when(mockGoodsArrival.enrolment).thenReturn(Enrolment("write:customs-il-imports-arrival-notifications"))
+  }
 
-        status(result) shouldBe BAD_REQUEST
-      }
+  private val errorResultUnauthorised = ErrorResponse(UNAUTHORIZED, errorCode = "UNAUTHORIZED",
+    message = "Unauthorised request").XmlResult.withHeaders(XConversationIdHeader)
+
+  "InventoryLinkingImportController" should {
+    "process CSP request when call is authorised for CSP" in new SetUp {
+      authoriseCsp(enrolment)
+
+      val result: Result = awaitSubmit(ValidRequest)
+
+      verifyCspAuthorisationCalled(enrolment, numberOfTimes = 1)
+    }
+
+    "respond with status 202 and conversationId in header for a processed valid CSP request" in new SetUp {
+      authoriseCsp(enrolment)
+
+      val result: Future[Result] = submit(ValidRequest)
+
+      status(result) shouldBe ACCEPTED
+      header(XConversationIdHeaderName, result) shouldBe Some(ConversationIdValue)
+    }
+
+    "return result 401 UNAUTHORISED and conversationId in header when call is unauthorised" in new SetUp {
+      unauthoriseCsp(enrolment)
+
+      val result: Future[Result] = submit(ValidRequest)
+
+      await(result) shouldBe errorResultUnauthorised
+      header(XConversationIdHeaderName, result) shouldBe Some(ConversationIdValue)
+      verifyZeroInteractions(mockMessageSender)
+      verifyZeroInteractions(mockGoodsArrivalXmlValidationService)
+    }
+
+    "return the error response returned from the Communication service" in new SetUp {
+      when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier]))
+        .thenReturn(Future.successful(Left(mockResult)))
+      authoriseCsp(enrolment)
+
+      val result: Result = awaitSubmit(ValidRequest)
+
+      result shouldBe mockResult
     }
   }
 
-  private def stringToXml(str: String): Node = {
-    Utility.trim(XML.loadString(str))
-  }
-
-  private def authoriseCsp(predicate: Predicate): Unit = {
-    when(mockAuthConnector.authorise(ameq(predicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(())
-  }
-
-  private def unauthoriseCsp(predicate: Predicate, authException: AuthorisationException = new InsufficientEnrolments): Unit = {
-    when(mockAuthConnector.authorise(ameq(predicate), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(Future.failed(authException))
-  }
 }

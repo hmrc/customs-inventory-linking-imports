@@ -16,35 +16,31 @@
 
 package integration
 
-import java.util.UUID
-
-import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.{AnyContent, Headers}
 import play.api.test.Helpers._
-import play.api.{Application, mvc}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionFieldsResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.http._
-import util.ApiSubscriptionFieldsTestData._
 import util.ExternalServicesConfig.{Host, Port}
 import util.TestData._
+import util._
 import util.externalservices.{ApiSubscriptionFieldsService, InventoryLinkingImportsExternalServicesConfig}
 
 import scala.concurrent.Future
 
 class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar
-  with BeforeAndAfterAll with ApiSubscriptionFieldsService {
+  with BeforeAndAfterAll with ApiSubscriptionFieldsService with ApiSubscriptionFieldsTestData {
 
   private lazy val connector = app.injector.instanceOf[ApiSubscriptionFieldsConnector]
 
-  private val request: mvc.Request[AnyContent] = mock[mvc.Request[AnyContent]]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private lazy val requestData: RequestData = createRequestData
-  private implicit lazy val validatedRequest: ValidatedRequest[AnyContent] = ValidatedRequest[AnyContent](requestData, request)
+
+  private implicit val vpr = TestData.TestCspValidatedPayloadRequest
 
   override protected def beforeAll() {
     startMockServer()
@@ -59,7 +55,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
   }
 
   override implicit lazy val app: Application =
-    GuiceApplicationBuilder().configure(Map(
+    GuiceApplicationBuilder(overrides = Seq(TestModule.asGuiceableModule)).configure(Map(
       "microservice.services.api-subscription-fields.host" -> Host,
       "microservice.services.api-subscription-fields.port" -> Port,
       "microservice.services.api-subscription-fields.context" -> InventoryLinkingImportsExternalServicesConfig.ApiSubscriptionFieldsContext
@@ -67,15 +63,13 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   "ApiSubscriptionFieldsConnector" should {
 
-    when(request.headers).thenReturn(Headers("X-Client-ID" -> TestXClientId))
-
     "make a correct request" in {
       setupGetSubscriptionFieldsToReturn()
 
       val response = await(getApiSubscriptionFields)
 
-      response shouldBe FieldsId
-      verifyGetSubscriptionFieldsCalled(validatedRequest.requestData.clientId)
+      response shouldBe apiSubscriptionFieldsResponse
+      verifyGetSubscriptionFieldsCalled()
     }
 
     "return a failed future when external service returns 404" in {
@@ -107,7 +101,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   }
 
-  private def getApiSubscriptionFields: Future[UUID] = {
-    connector.getClientSubscriptionId()
+  private def getApiSubscriptionFields(implicit vpr: ValidatedPayloadRequest[_]): Future[ApiSubscriptionFieldsResponse] = {
+    connector.getSubscriptionFields(apiSubscriptionKey)
   }
 }

@@ -17,68 +17,65 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
-
-import play.api.mvc.{Action, AnyContent, Result, _}
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{AuthAction, PayloadValidationAction, ValidateAndExtractHeadersAction}
+import play.api.http.MimeTypes
+import play.api.mvc.{Action, AnyContent, _}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.XConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, MessageSender}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.services.MessageSender
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.control.NonFatal
 
-abstract class ImportController(importsConfigService: ImportsConfigService,
-                                messageSender: MessageSender,
+@Singleton
+class Common @Inject() (val conversationIdAction: ConversationIdAction,
+                        val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
+                        val messageSender: MessageSender,
+                        val logger: ImportsLogger)
+
+abstract class ImportController(common: Common,
                                 importsMessageType: ImportsMessageType,
-                                validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                                 authAction: AuthAction,
-                                payloadValidationAction: PayloadValidationAction,
-                                logger: ImportsLogger,
-                                cdsLogger: CdsLogger
+                                payloadValidationAction: PayloadValidationAction
                                ) extends BaseController {
 
   def process(): Action[AnyContent] =  (
     Action andThen
-    validateAndExtractHeadersAction andThen
-    authAction.authAction(importsMessageType) andThen
-    payloadValidationAction.validatePayload(importsMessageType)).async(bodyParser = xmlOrEmptyBody)  {
-    implicit validatedRequest: ValidatedRequest[AnyContent] =>
+    common.conversationIdAction andThen
+    common.validateAndExtractHeadersAction andThen
+    authAction andThen
+    payloadValidationAction
+    )
+    .async(bodyParser = xmlOrEmptyBody) {
 
-      messageSender.send(importsMessageType)
-        .map(_ => Accepted)
-        .recoverWith {
-          case NonFatal(e) =>
-            logger.error(s"An error occurred while processing request.")
-            logger.debug(s"An error occurred while processing request ", e)
-            Future.successful(ErrorResponse.ErrorInternalServerError.XmlResult)
-        }.map(x => addConversationIdHeader(x, validatedRequest.requestData.conversationId))
+      implicit vpr: ValidatedPayloadRequest[AnyContent] =>
+        common.messageSender.send(importsMessageType) map {
+        case Right(_) =>
+          Accepted.as(MimeTypes.XML).withConversationId
+        case Left(errorResult) =>
+          errorResult
+      }
   }
-
 
   private def xmlOrEmptyBody: BodyParser[AnyContent] = BodyParser(rq => parse.xml(rq).map {
-    case Right(xml) => Right(AnyContentAsXml(xml))
-    case _ => Right(AnyContentAsEmpty)
+    case Right(xml) =>
+      Right(AnyContentAsXml(xml))
+    case _ =>
+      Right(AnyContentAsEmpty)
   })
-
-  private def addConversationIdHeader(r: Result, conversationId: String) = {
-    r.withHeaders(XConversationId -> conversationId)
-  }
 }
 
 @Singleton
-class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigService,
-                                       messageSender: MessageSender,
-                                       validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
-                                       authAction: AuthAction,
-                                       payloadValidationAction: PayloadValidationAction,
-                                       logger: ImportsLogger,
-                                       cdsLogger: CdsLogger)
-  extends ImportController(importsConfigService, messageSender, GoodsArrival, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger) {
+class GoodsArrivalController @Inject()(common: Common,
+                                       importsMessageType: GoodsArrival,
+                                       authAction: GoodsArrivalAuthAction,
+                                       payloadValidationAction: GoodsArrivalPayloadValidationAction)
+  extends ImportController(common: Common,
+                           importsMessageType,
+                           authAction,
+                           payloadValidationAction) {
 
   def post(): Action[AnyContent] = {
     super.process()
@@ -86,14 +83,14 @@ class GoodsArrivalController @Inject()(importsConfigService: ImportsConfigServic
 }
 
 @Singleton
-class ValidateMovementController @Inject()(importsConfigService: ImportsConfigService,
-                                           messageSender: MessageSender,
-                                           validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
-                                           authAction: AuthAction,
-                                           payloadValidationAction: PayloadValidationAction,
-                                           logger: ImportsLogger,
-                                           cdsLogger: CdsLogger)
-  extends ImportController(importsConfigService, messageSender, ValidateMovement, validateAndExtractHeadersAction, authAction, payloadValidationAction, logger, cdsLogger) {
+class ValidateMovementController @Inject()(common: Common,
+                                           importsMessageType: ValidateMovement,
+                                           authAction: ValidateMovementAuthAction,
+                                           payloadValidationAction: ValidateMovementPayloadValidationAction)
+  extends ImportController(common: Common,
+                           importsMessageType,
+                           authAction,
+                           payloadValidationAction) {
 
   def post(): Action[AnyContent] = {
     super.process()

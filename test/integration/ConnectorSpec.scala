@@ -16,24 +16,29 @@
 
 package integration
 
-import org.joda.time.{DateTime, DateTimeZone}
+import java.util.UUID
+
+import org.joda.time.DateTime
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.{AnyContent, Request}
 import play.api.test.Helpers._
-import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, OutgoingRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{RequestData, ValidatedRequest}
-import uk.gov.hmrc.http.{BadGatewayException, BadRequestException, NotFoundException, Upstream5xxResponse}
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
+import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.logging.Authorization
 import util.ExternalServicesConfig.{AuthToken, Host, Port}
 import util.TestData
-import util.TestData.outgoingBody
+import util.TestData.mockUuidService
+import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig.{GoodsArrivalConnectorContext, ValidateMovementConnectorContext}
 import util.externalservices.InventoryLinkingImportsService
+
+import scala.xml.NodeSeq
 
 
 class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar
@@ -51,13 +56,14 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
       "microservice.services.goodsarrival.bearer-token" -> AuthToken
     )).build()
 
-  private val requestData = mock[RequestData]
-  private val requestMock = mock[Request[AnyContent]]
-  private implicit val validatedRequest = ValidatedRequest[AnyContent](requestData, requestMock)
   private lazy val connector = app.injector.instanceOf[ImportsConnector]
-  private lazy val serviceConfigProvider = app.injector.instanceOf[ServiceConfigProvider]
-  private val validateMovementRequest = OutgoingRequest(serviceConfigProvider.getConfig("validatemovement"), outgoingBody, validatedRequest)
-  private val goodsArrivalRequest = OutgoingRequest(serviceConfigProvider.getConfig("goodsarrival"), outgoingBody, validatedRequest)
+
+  private val incomingBearerToken = "some_client's_bearer_token"
+  private val incomingAuthToken = s"Bearer $incomingBearerToken"
+  private val correlationId = UUID.randomUUID()
+  private implicit val vpr = TestData.TestCspValidatedPayloadRequest
+
+  private implicit val hc: HeaderCarrier = HeaderCarrier(authorization = Some(Authorization(incomingAuthToken)))
 
   override protected def beforeAll() {
     startMockServer()
@@ -68,61 +74,60 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
   }
 
   override protected def beforeEach(): Unit = {
-    when(requestData.conversationId).thenReturn("conv-id")
-    when(requestData.clientId).thenReturn("")
-    when(requestData.requestedApiVersion).thenReturn("1.23")
+    when(mockUuidService.uuid()).thenReturn(correlationId)
   }
 
   override protected def afterAll() {
     stopMockServer()
   }
 
-  private val messageTypes = Table(("Message Type", "request", "url"),
-    ("Goods Arrival", goodsArrivalRequest, GoodsArrivalConnectorContext),
-    ("Validate Movement", validateMovementRequest, ValidateMovementConnectorContext)
+  private val messageTypes = Table(("message type name", "xml", "message type", "url"),
+    ("Goods Arrival", ValidInventoryLinkingGoodsArrivalRequestXML, new GoodsArrival(), GoodsArrivalConnectorContext),
+    ("Validate Movement", ValidInventoryLinkingMovementRequestXML, new ValidateMovement(), ValidateMovementConnectorContext)
   )
 
-  forAll(messageTypes) { case (messageType, request, url) =>
+  forAll(messageTypes) { case (messageTypeName, xml, messageType, url) =>
 
     "ImportsConnector" should {
 
-      when(requestData.dateTime).thenReturn(DateTime.now(DateTimeZone.UTC))
-      when(requestData.conversationId).thenReturn(TestData.ConversationId.toString)
-      when(requestData.correlationId).thenReturn(TestData.CorrelationId.toString)
-
-      s"make a correct request for $messageType" in {
+      s"make a correct request for $messageTypeName" in {
         setupBackendServiceToReturn(url, ACCEPTED)
 
-        await(connector.post(request))
+        await(sendValidXml(messageType, xml))
 
-        verifyImportsConnectorServiceWasCalledWith(url, requestBody = "<payload>payload</payload>")
+        verifyImportsConnectorServiceWasCalledWith(url, requestBody = xml.toString())
       }
 
-      s"return a failed future when $messageType service returns 404" in {
+      s"return a failed future when $messageTypeName service returns 404" in {
         setupBackendServiceToReturn(url, NOT_FOUND)
 
-        intercept[RuntimeException](await(connector.post(request))).getCause.getClass shouldBe classOf[NotFoundException]
+        intercept[RuntimeException](await(sendValidXml(messageType, xml))).getCause.getClass shouldBe classOf[NotFoundException]
       }
 
-      s"return a failed future when $messageType service returns 400" in {
+      s"return a failed future when $messageTypeName service returns 400" in {
         setupBackendServiceToReturn(url, BAD_REQUEST)
 
-        intercept[RuntimeException](await(connector.post(request))).getCause.getClass shouldBe classOf[BadRequestException]
+        intercept[RuntimeException](await(sendValidXml(messageType, xml))).getCause.getClass shouldBe classOf[BadRequestException]
       }
 
-      s"return a failed future when $messageType service returns 500" in {
+      s"return a failed future when $messageTypeName service returns 500" in {
         setupBackendServiceToReturn(url, INTERNAL_SERVER_ERROR)
 
-        intercept[Upstream5xxResponse](await(connector.post(request)))
+        intercept[Upstream5xxResponse](await(sendValidXml(messageType, xml)))
       }
 
-      s"return a failed future when failed to connect the $messageType service" in {
+      s"return a failed future when failed to connect the $messageTypeName service" in {
         stopMockServer()
 
-        intercept[RuntimeException](await(connector.post(request))).getCause.getClass shouldBe classOf[BadGatewayException]
+        intercept[RuntimeException](await(sendValidXml(messageType, xml))).getCause.getClass shouldBe classOf[BadGatewayException]
 
         startMockServer()
       }
     }
   }
+
+  private def sendValidXml(importsMessageType: ImportsMessageType, xml:NodeSeq)(implicit vpr: ValidatedPayloadRequest[_]) = {
+    connector.send(importsMessageType, xml, new DateTime(), correlationId)
+  }
+
 }

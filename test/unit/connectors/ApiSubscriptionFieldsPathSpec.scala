@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.model
+package unit.connectors
 
-import org.joda.time.DateTime
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsPath
+import uk.gov.hmrc.play.test.UnitSpec
+import util.ApiSubscriptionFieldsTestData
 
-case class RequestData(
-  badgeIdentifier: String,
-  conversationId: String,
-  correlationId: String,
-  dateTime: DateTime,
-  requestedApiVersion: String,
-  clientId: String
-)
+class ApiSubscriptionFieldsPathSpec extends UnitSpec with ApiSubscriptionFieldsTestData {
+
+  "ApiSubscriptionFieldsPath" should {
+    "construct path" in {
+      ApiSubscriptionFieldsPath.url("/some-context", apiSubscriptionKey) shouldBe "/some-context/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
+    }
+  }
+}

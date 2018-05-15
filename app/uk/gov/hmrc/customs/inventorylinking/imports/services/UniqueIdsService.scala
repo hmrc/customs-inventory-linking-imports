@@ -14,9 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports
+package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-package object model {
+import com.google.inject.Singleton
+import javax.inject.Inject
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, CorrelationId}
 
-  type SeqOfHeader = Seq[(String, String)]
+
+@Singleton
+class UniqueIdsService @Inject()(uuidService: UuidService) {
+
+  def conversation: ConversationId = ConversationId(uuidService.uuid())
+
+  def correlation: CorrelationId = CorrelationId(uuidService.uuid())
+
 }

@@ -71,7 +71,7 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
     s"""<?xml version="1.0" encoding="UTF-8"?>
        |<errorResponse>
        |    <code>BAD_REQUEST</code>
-       |    <message>Bad Request</message>
+       |    <message>Payload is not valid according to schema</message>
        |    <errors>
        |        <error>
        |            <code>xml_validation_error</code>
@@ -87,26 +87,14 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
     """<?xml version="1.0" encoding="UTF-8"?>
       |<errorResponse>
       |  <code>BAD_REQUEST</code>
-      |  <message>Bad Request</message>
-      |  <errors>
-      |    <error>
-      |      <code>xml_validation_error</code>
-      |      <message>Premature end of file.</message>
-      |    </error>
-      |  </errors>
+      |  <message>Request body does not contain a well-formed XML document.</message>
       |</errorResponse>""".stripMargin
 
   private val nonXmlPayloadError =
     """<?xml version="1.0" encoding="UTF-8"?>
       |<errorResponse>
       |  <code>BAD_REQUEST</code>
-      |  <message>Bad Request</message>
-      |  <errors>
-      |    <error>
-      |      <code>xml_validation_error</code>
-      |      <message>Premature end of file.</message>
-      |    </error>
-      |  </errors>
+      |  <message>Request body does not contain a well-formed XML document.</message>
       |</errorResponse>""".stripMargin
 
   private val unAuthorisedError =
@@ -123,13 +111,13 @@ class ImportsServiceUnhappyPathSpec extends AcceptanceTestSpec
         "Invalid Request With Malformed Xml",
         "non XML"),
       ("Goods Arrival",
-        GoodsArrival,
+        new GoodsArrival(),
         ValidGoodsArrivalRequest,
         invalidRequests.goodsArrival.invalidRequest,
         invalidRequests.goodsArrival.invalidRequestWithMalformedXml,
         invalidRequests.goodsArrival.invalidRequestWithNonXml),
       ("Validate Movement",
-        ValidateMovement,
+        new ValidateMovement(),
         ValidValidateMovementRequest,
         invalidRequests.validateMovement.invalidRequest,
         invalidRequests.validateMovement.invalidRequestWithMalformedXml,

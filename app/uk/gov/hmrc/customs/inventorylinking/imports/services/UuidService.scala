@@ -16,22 +16,13 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import uk.gov.hmrc.customs.api.common.controllers.ResponseContents
+import java.util.UUID
 
-import scala.xml.SAXException
+import com.google.inject.Singleton
 
-object XmlValidationErrorsMapper {
+@Singleton
+class UuidService {
 
-  def toResponseContents(saxe: SAXException): Seq[ResponseContents] = {
-    @annotation.tailrec
-    def loop(thr: Exception, acc: List[ResponseContents]): List[ResponseContents] = {
-      val newAcc = ResponseContents("xml_validation_error", thr.getMessage) :: acc
-      thr match {
-        case saxError: SAXException if Option(saxError.getException).isDefined => loop(saxError.getException, newAcc)
-        case _ => newAcc
-      }
-    }
+  def uuid(): UUID = UUID.randomUUID()
 
-    loop(saxe, Nil)
-  }
 }

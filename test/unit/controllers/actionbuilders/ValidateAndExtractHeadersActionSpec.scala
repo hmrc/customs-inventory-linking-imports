@@ -14,31 +14,22 @@
  * limitations under the License.
  */
 
-package unit.controllers
+package unit.controllers.actionbuilders
 
-import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
-import play.api.mvc.Results._
-import play.api.mvc.{AnyContent, Request, Result}
-import play.api.test.FakeRequest
+import play.api.mvc.{AnyContent, Result}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.ErrorContentTypeHeaderInvalid
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.ValidateAndExtractHeadersAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ValidatedRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedHeadersRequest}
 import uk.gov.hmrc.play.test.UnitSpec
-import util.ApiSubscriptionFieldsTestData._
 import util.TestData._
-import util.XMLTestData
-
-import scala.concurrent.Future
 
 class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
-
-  val blockReturningOk = (_: ValidatedRequest[_]) => Future.successful(Ok)
 
   trait SetUp {
     val mockLogger = mock[ImportsLogger]
@@ -48,21 +39,19 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
 
   val headersTable =
     Table(
-      ("description", "ValidationResult", "Expected response"),
-      ("Valid Headers", Right(TestExtractedHeaders), Ok),
-      ("Invalid header", Left(ErrorContentTypeHeaderInvalid), ErrorContentTypeHeaderInvalid.XmlResult)
+      ("description", "result of validation", "expected response"),
+      ("Valid Headers", Right(TestExtractedHeaders), Right(TestValidatedHeadersRequest)),
+      ("Invalid header", Left(ErrorContentTypeHeaderInvalid),
+        Left(ErrorContentTypeHeaderInvalid.XmlResult.withHeaders(XConversationIdHeaderName -> ConversationIdValue)))
     )
 
   "HeaderValidatorAction" should  {
     forAll(headersTable) { (description, validationResult, expectedResult) =>
       s"$description" in new SetUp() {
-        val request = FakeRequest().withXmlBody(XMLTestData.ValidInventoryLinkingMovementRequestXML).withHeaders(
-          XBadgeIdentifier -> XBadgeIdentifierHeaderValueAsString,
-          XClientId -> TestXClientId
-        )
-        when(mockHeaderValidator.validateHeaders(any[Request[AnyContent]])).thenReturn(validationResult)
+        val conversationIdRequest = TestConversationIdRequest
+        when(mockHeaderValidator.validateHeaders(any[ConversationIdRequest[AnyContent]])).thenReturn(validationResult)
 
-        val actualResult: Result = await(actionBuilderValidator.invokeBlock(request, blockReturningOk))
+        val actualResult: Either[Result, ValidatedHeadersRequest[_]] = await(actionBuilderValidator.refine(conversationIdRequest))
 
         actualResult shouldBe expectedResult
       }

@@ -16,6 +16,5 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.model
 
-import play.api.mvc.{Request, WrappedRequest}
+case class ApiSubscriptionKey(clientId: ClientId, context: String, version: ApiVersion)
 
-case class ValidatedRequest[A](requestData: RequestData, request: Request[A]) extends WrappedRequest[A](request)
