@@ -2,7 +2,6 @@ import sbt._
 
 object AppDependencies {
 
-  private val bootstrapPlay25Version = "1.5.0"
   private val xmlResolverVersion = "1.2"
   private val hmrcTestVersion = "3.0.0"
   private val scalaTestVersion = "3.0.5"
@@ -10,10 +9,8 @@ object AppDependencies {
   private val mockitoVersion = "2.18.3"
   private val pegdownVersion = "1.6.0"
   private val wireMockVersion = "2.17.0"
-  private val customsApiCommonVersion = "1.25.0"
+  private val customsApiCommonVersion = "1.26.0"
   private val testScope = "test,it"
-
-  val bootstrapPlay25 = "uk.gov.hmrc" %% "bootstrap-play-25" % bootstrapPlay25Version
 
   val xmlResolver = "xml-resolver" % "xml-resolver" % xmlResolverVersion
 
