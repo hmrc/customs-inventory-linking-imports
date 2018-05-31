@@ -19,7 +19,7 @@ lazy val allResolvers = resolvers ++= Seq(
   Resolver.jcenterRepo
 )
 
-val compileDependencies = Seq(bootstrapPlay25, xmlResolver, customsApiCommon)
+val compileDependencies = Seq(xmlResolver, customsApiCommon)
 
 val testDependencies = Seq(hmrcTest, scalaTest, pegDown, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
 
