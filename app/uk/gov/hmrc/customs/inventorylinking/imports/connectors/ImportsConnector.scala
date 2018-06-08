@@ -20,17 +20,21 @@ import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
+import play.api.Configuration
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.http.MimeTypes.XML
+import uk.gov.hmrc.circuitbreaker.{CircuitBreakerConfig, UsingCircuitBreaker}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsMessageType
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
+import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.play.bootstrap.config.AppName
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -39,13 +43,16 @@ import scala.xml.NodeSeq
 @Singleton
 class ImportsConnector @Inject()(http: HttpClient,
                                  logger: ImportsLogger,
-                                 serviceConfigProvider: ServiceConfigProvider) {
+                                 serviceConfigProvider: ServiceConfigProvider,
+                                 config: ImportsConfigService,
+                                 override val configuration: Configuration
+                                 ) extends UsingCircuitBreaker with AppName {
 
   def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
     implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = getHeaders(date, correlationId, vpr.conversationId.uuid), authorization = Some(Authorization(bearerToken)))
-    post(xml, config.url)
+    withCircuitBreaker(post(xml, config.url))
   }
 
   private def getHeaders(date: DateTime, correlationId: UUID, conversationId: UUID) = {
@@ -69,6 +76,19 @@ class ImportsConnector @Inject()(http: HttpClient,
           logger.error(s"Call to backend failed. url=$url")
           Future.failed(e)
       }
+  }
+
+  override protected def circuitBreakerConfig: CircuitBreakerConfig =
+    CircuitBreakerConfig(
+      serviceName = appName,
+      numberOfCallsToTriggerStateChange = config.importsCircuitBreakerConfig.numberOfCallsToTriggerStateChange,
+      unavailablePeriodDuration = config.importsCircuitBreakerConfig.unavailablePeriodDurationInMillis,
+      unstablePeriodDuration = config.importsCircuitBreakerConfig.unstablePeriodDurationInMillis
+    )
+
+  override protected def breakOnException(t: Throwable): Boolean = t match {
+    case _: BadRequestException | _: NotFoundException | _: Upstream4xxResponse => false
+    case _ => true
   }
 
 }
