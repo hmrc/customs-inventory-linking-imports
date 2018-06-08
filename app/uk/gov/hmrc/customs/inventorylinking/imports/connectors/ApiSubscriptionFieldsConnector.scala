@@ -33,7 +33,7 @@ class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
                                                logger: ImportsLogger) {
 
   def getSubscriptionFields[A](apiSubsKey: ApiSubscriptionKey)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
-    val url = ApiSubscriptionFieldsPath.url(servicesConfig.apiSubscriptionFieldsBaseUrl, apiSubsKey)
+    val url = ApiSubscriptionFieldsPath.url(servicesConfig.importsConfig.apiSubscriptionFieldsBaseUrl, apiSubsKey)
     get(url)
   }
 

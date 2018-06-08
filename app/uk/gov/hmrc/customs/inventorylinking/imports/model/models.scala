@@ -44,7 +44,12 @@ object VersionOne extends ApiVersion{
   override val value: String = "1.0"
 }
 
-trait ImportsConfig {
-  val whiteListedCspApplicationIds: Seq[String]
-  val apiSubscriptionFieldsBaseUrl: String
-}
+case class ImportsConfig (
+  whiteListedCspApplicationIds: Seq[String],
+  apiSubscriptionFieldsBaseUrl: String
+)
+
+case class ImportsCircuitBreakerConfig(numberOfCallsToTriggerStateChange: Int,
+                                       unavailablePeriodDurationInMillis: Int,
+                                       unstablePeriodDurationInMillis: Int)
+

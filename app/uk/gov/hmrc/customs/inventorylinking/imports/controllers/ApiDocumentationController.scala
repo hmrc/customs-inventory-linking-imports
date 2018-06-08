@@ -28,6 +28,6 @@ import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 class ApiDocumentationController @Inject()(httpErrorHandler: HttpErrorHandler, importsConfigService: ImportsConfigService) extends DocumentationController(httpErrorHandler) {
 
   def definition(): Action[AnyContent] = Action {
-    Ok(txt.definition(importsConfigService.whiteListedCspApplicationIds)).withHeaders(CONTENT_TYPE -> JSON)
+    Ok(txt.definition(importsConfigService.importsConfig.whiteListedCspApplicationIds)).withHeaders(CONTENT_TYPE -> JSON)
   }
 }

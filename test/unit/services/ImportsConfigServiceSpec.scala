@@ -20,8 +20,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.mockito.MockitoSugar
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.customs.api.common.config.{ConfigValidationNelAdaptor, ServicesConfig}
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsConfig
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.play.test.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
@@ -34,34 +33,44 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
       |microservice.services.api-subscription-fields.host=some-host
       |microservice.services.api-subscription-fields.port=1111
       |microservice.services.api-subscription-fields.context=/some-context
+      |circuitBreaker.numberOfCallsToTriggerStateChange=5
+      |circuitBreaker.unavailablePeriodDurationInMillis=1000
+      |circuitBreaker.unstablePeriodDurationInMillis=1000
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
 
   private val validServicesConfiguration = Configuration(validAppConfig)
   private val emptyServicesConfiguration = Configuration(emptyAppConfig)
-  private val mockCdsLogger = mock[CdsLogger]
+  private val mockImportsLogger = mock[ImportsLogger]
 
-  private def customsConfigService(conf: Configuration): ImportsConfig =
-    new ImportsConfigService(new ConfigValidationNelAdaptor(testServicesConfig(conf), conf), mockCdsLogger)
+  private def customsConfigService(conf: Configuration) =
+    new ImportsConfigService(new ConfigValidationNelAdaptor(testServicesConfig(conf), conf), mockImportsLogger)
 
   "ImportsConfigService" should {
     "return config as object model when configuration is valid" in {
       val configService = customsConfigService(validServicesConfiguration)
 
-      configService.whiteListedCspApplicationIds shouldBe Seq("someId-1", "someId-2")
-      configService.apiSubscriptionFieldsBaseUrl shouldBe "http://some-host:1111/some-context"
+      configService.importsConfig.whiteListedCspApplicationIds shouldBe Seq("someId-1", "someId-2")
+      configService.importsConfig.apiSubscriptionFieldsBaseUrl shouldBe "http://some-host:1111/some-context"
+      configService.importsCircuitBreakerConfig.numberOfCallsToTriggerStateChange shouldBe 5
+      configService.importsCircuitBreakerConfig.unavailablePeriodDurationInMillis shouldBe 1000
+      configService.importsCircuitBreakerConfig.unstablePeriodDurationInMillis shouldBe 1000
     }
 
     "throw an exception when configuration is invalid, that contains AGGREGATED error messages" in {
       val expectedErrorMessage =
-        "\nCould not find config api-subscription-fields.host" +
-        "\nService configuration not found for key: api-subscription-fields.context"
+        """
+          |Could not find config api-subscription-fields.host
+          |Service configuration not found for key: api-subscription-fields.context
+          |Could not find config key 'circuitBreaker.numberOfCallsToTriggerStateChange'
+          |Could not find config key 'circuitBreaker.unavailablePeriodDurationInMillis'
+          |Could not find config key 'circuitBreaker.unstablePeriodDurationInMillis'""".stripMargin
 
       val caught = intercept[IllegalStateException](customsConfigService(emptyServicesConfiguration))
 
       caught.getMessage shouldBe expectedErrorMessage
-      PassByNameVerifier(mockCdsLogger, "error")
+      PassByNameVerifier(mockImportsLogger, "errorWithoutRequestContext")
         .withByNameParam[String](expectedErrorMessage)
         .verify()
     }
