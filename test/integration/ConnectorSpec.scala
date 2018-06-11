@@ -26,6 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
+import uk.gov.hmrc.circuitbreaker.UnhealthyServiceException
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
@@ -44,8 +45,15 @@ import scala.xml.NodeSeq
 class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar
   with InventoryLinkingImportsService with TableDrivenPropertyChecks {
 
+  private val numberOfCallsToTriggerStateChange = 5
+  private val unstablePeriodDurationInMillis = 200
+  private val unavailablePeriodDurationInMillis = 250
+
   override implicit lazy val app: Application =
     new GuiceApplicationBuilder().configure(Map(
+      "circuitBreaker.numberOfCallsToTriggerStateChange" -> numberOfCallsToTriggerStateChange,
+      "circuitBreaker.unstablePeriodDurationInMillis" -> unstablePeriodDurationInMillis,
+      "circuitBreaker.unavailablePeriodDurationInMillis" -> unavailablePeriodDurationInMillis,
       "microservice.services.validatemovement.host" -> Host,
       "microservice.services.validatemovement.port" -> Port,
       "microservice.services.validatemovement.context" -> ValidateMovementConnectorContext,
@@ -88,7 +96,7 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
 
   forAll(messageTypes) { case (messageTypeName, xml, messageType, url) =>
 
-    "ImportsConnector" should {
+    s"ImportsConnector for $messageTypeName" should {
 
       s"make a correct request for $messageTypeName" in {
         setupBackendServiceToReturn(url, ACCEPTED)
@@ -116,13 +124,42 @@ class ConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with Mo
         intercept[Upstream5xxResponse](await(sendValidXml(messageType, xml)))
       }
 
-      s"return a failed future when failed to connect the $messageTypeName service" in {
+      s"cause circuit breaker to trip after specified number of failures for $messageTypeName" in {
+        Thread.sleep(unavailablePeriodDurationInMillis)
+
+        setupBackendServiceToReturn(url, INTERNAL_SERVER_ERROR)
+
+        1 to numberOfCallsToTriggerStateChange foreach { _ =>
+          val k = intercept[Upstream5xxResponse](await(sendValidXml(messageType, xml)))
+          k.reportAs shouldBe BAD_GATEWAY
+        }
+
+        1 to 3 foreach { _ =>
+          val k = intercept[UnhealthyServiceException](await(sendValidXml(messageType, xml)))
+          k.getMessage shouldBe "customs-inventory-linking-imports"
+        }
+
+        resetMockServer()
+        setupBackendServiceToReturn(url, ACCEPTED)
+
+        Thread.sleep(unavailablePeriodDurationInMillis)
+
+        1 to 5 foreach { _ =>
+          resetMockServer()
+          setupBackendServiceToReturn(url, ACCEPTED)
+          await(sendValidXml(messageType, xml))
+          verifyImportsConnectorServiceWasCalledWith(url, requestBody = xml.toString())
+        }
+      }
+
+      s"return a failed future when connection with backend service fails for $messageTypeName" in {
         stopMockServer()
 
         intercept[RuntimeException](await(sendValidXml(messageType, xml))).getCause.getClass shouldBe classOf[BadGatewayException]
 
         startMockServer()
       }
+
     }
   }
 

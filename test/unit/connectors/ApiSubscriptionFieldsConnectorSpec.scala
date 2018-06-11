@@ -24,7 +24,7 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionFieldsResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ImportsConfig}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -46,14 +46,16 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val vpr = TestData.TestCspValidatedPayloadRequest
 
-  private val importsConfigService: ImportsConfigService = mock[ImportsConfigService]
+  private val mockImportsConfigService: ImportsConfigService = mock[ImportsConfigService]
+  private val mockImportsConfig: ImportsConfig = mock[ImportsConfig]
   private val connector = connectorWithConfig(validConfig)
 
   private val httpException = new NotFoundException("Emulated 404 response from a web call")
   private val expectedUrl = s"http://$Host:$Port$ApiSubscriptionFieldsContext/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
 
   override protected def beforeEach() {
-    when(importsConfigService.apiSubscriptionFieldsBaseUrl).thenReturn(s"http://$Host:$Port$ApiSubscriptionFieldsContext")
+    when(mockImportsConfigService.importsConfig).thenReturn(mockImportsConfig)
+    when(mockImportsConfigService.importsConfig.apiSubscriptionFieldsBaseUrl).thenReturn(s"http://$Host:$Port$ApiSubscriptionFieldsContext")
     reset(mockLogger, mockWSGetImpl)
   }
 
@@ -101,6 +103,6 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
       (any[HttpReads[ApiSubscriptionFieldsResponse]](), any[HeaderCarrier](), any[ExecutionContext])).thenReturn(eventualResponse)
   }
 
-  private def connectorWithConfig(config: Config) = new ApiSubscriptionFieldsConnector(mockWSGetImpl, importsConfigService, mockLogger)
+  private def connectorWithConfig(config: Config) = new ApiSubscriptionFieldsConnector(mockWSGetImpl, mockImportsConfigService, mockLogger)
 
 }

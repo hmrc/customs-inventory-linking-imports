@@ -25,12 +25,14 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
+import play.api.Configuration
 import play.api.http.HeaderNames
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, SeqOfHeader}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig, SeqOfHeader}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.test.UnitSpec
@@ -43,8 +45,11 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private val mockWsPost = mock[HttpClient]
   private val mockLogger = mock[ImportsLogger]
   private val mockServiceConfigProvider = mock[ServiceConfigProvider]
+  private val mockImportsConfigService = mock[ImportsConfigService]
+  private val mockImportsCircuitBreakerConfig = mock[ImportsCircuitBreakerConfig]
+  private val mockConfiguration = mock[Configuration]
 
-  private val connector = new ImportsConnector(mockWsPost, mockLogger, mockServiceConfigProvider)
+  private val connector = new ImportsConnector(mockWsPost, mockLogger, mockServiceConfigProvider, mockImportsConfigService, mockConfiguration)
 
   private val goodsArrivalConfig = ServiceConfig("some-ga-url", Some("ga-bearer-token"), "ga-default")
 
@@ -55,8 +60,10 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private implicit val vpr = TestCspValidatedPayloadRequest
 
   override protected def beforeEach() {
-    reset(mockWsPost, mockLogger, mockServiceConfigProvider)
+    reset(mockWsPost, mockLogger, mockServiceConfigProvider, mockConfiguration)
     when(mockServiceConfigProvider.getConfig("goodsarrival")).thenReturn(goodsArrivalConfig)
+    when(mockImportsConfigService.importsCircuitBreakerConfig).thenReturn(mockImportsCircuitBreakerConfig)
+    when(mockConfiguration.getString("appName")).thenReturn(Some("an-app-name"))
   }
 
   private val year = 2017
@@ -70,7 +77,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
 
   private val correlationId = UUID.randomUUID()
 
-  "MdgWcoDeclarationConnector" can {
+  "ImportsConnector" can {
 
     "when making a successful request" should {
 
