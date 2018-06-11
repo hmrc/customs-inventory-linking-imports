@@ -34,8 +34,8 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
       |microservice.services.api-subscription-fields.port=1111
       |microservice.services.api-subscription-fields.context=/some-context
       |circuitBreaker.numberOfCallsToTriggerStateChange=5
-      |circuitBreaker.unavailablePeriodDurationInMillis=1000
       |circuitBreaker.unstablePeriodDurationInMillis=1000
+      |circuitBreaker.unavailablePeriodDurationInMillis=1000
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")

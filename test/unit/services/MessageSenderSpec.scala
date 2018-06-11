@@ -121,7 +121,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     result shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
   }
 
-  "return Left of internal error Result when MDG circuit breaker trips" in new SetUp() {
+  "return Left of internal error Result when backend circuit breaker trips" in new SetUp() {
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]])).thenReturn(Future.failed(new UnhealthyServiceException("wco-declaration")))
 
     val result: Either[Result, Unit] = send()
