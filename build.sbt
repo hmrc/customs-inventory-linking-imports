@@ -23,7 +23,7 @@ val compileDependencies = Seq(xmlResolver, customsApiCommon, circuitBreaker)
 
 val testDependencies = Seq(hmrcTest, scalaTest, pegDown, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
 
-lazy val AcceptanceTest = config("acceptance") extend Test
+lazy val AcceptanceTest = config("component") extend Test
 lazy val CdsIntegrationTest = config("it") extend Test
 
 val testConfig = Seq(AcceptanceTest, CdsIntegrationTest, Test)
@@ -72,22 +72,22 @@ lazy val unitTestSettings =
 lazy val integrationTestSettings =
   inConfig(CdsIntegrationTest)(Defaults.testTasks) ++
     Seq(
-      testOptions in CdsIntegrationTest := Seq(Tests.Filters(Seq(onPackageName("integration"), onPackageName("acceptance")))),
+      testOptions in CdsIntegrationTest := Seq(Tests.Filters(Seq(onPackageName("integration"), onPackageName("component")))),
       testOptions in CdsIntegrationTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
       fork in CdsIntegrationTest := false,
       parallelExecution in CdsIntegrationTest := false,
       addTestReportOption(CdsIntegrationTest, "int-test-reports"),
-      testGrouping in CdsIntegrationTest := forkedJvmPerTestConfig((definedTests in Test).value, "integration", "acceptance")
+      testGrouping in CdsIntegrationTest := forkedJvmPerTestConfig((definedTests in Test).value, "integration", "component")
     )
 
 lazy val acceptanceTestSettings =
   inConfig(AcceptanceTest)(Defaults.testTasks) ++
     Seq(
-      testOptions in AcceptanceTest := Seq(Tests.Filter(onPackageName("acceptance"))),
+      testOptions in AcceptanceTest := Seq(Tests.Filter(onPackageName("component"))),
       testOptions in AcceptanceTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
       fork in AcceptanceTest := false,
       parallelExecution in AcceptanceTest := false,
-      addTestReportOption(AcceptanceTest, "acceptance-reports")
+      addTestReportOption(AcceptanceTest, "component-reports")
     )
 
 

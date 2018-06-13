@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package acceptance
+package component
 
 import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite

@@ -35,10 +35,10 @@ class Common @Inject() (val conversationIdAction: ConversationIdAction,
                         val messageSender: MessageSender,
                         val logger: ImportsLogger)
 
-abstract class ImportController(common: Common,
-                                importsMessageType: ImportsMessageType,
-                                authAction: AuthAction,
-                                payloadValidationAction: PayloadValidationAction
+abstract class ImportController( val common: Common,
+                                 val importsMessageType: ImportsMessageType,
+                                 val authAction: AuthAction,
+                                 val payloadValidationAction: PayloadValidationAction
                                ) extends BaseController {
 
   def process(): Action[AnyContent] =  (

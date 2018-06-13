@@ -29,12 +29,12 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
   private val xml: NodeSeq = <node1></node1>
 
-  private val payloadWrapper = new PayloadDecorator
+  private val payloadDecorator = new PayloadDecorator
   private implicit val vpr = TestData.TestCspValidatedPayloadRequest
 
-  private def wrapPayload() = payloadWrapper.wrap(xml, fieldsId, ValidCorrelationId, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
+  private def wrapPayload() = payloadDecorator.wrap(xml, fieldsId, ValidCorrelationId, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
 
-  "PayloadWrapper" should {
+  "PayloadDecorator" should {
 
     "set the root element label" in {
       val result = wrapPayload()

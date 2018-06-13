@@ -36,62 +36,96 @@ import scala.xml.SAXException
 
 class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
 
-  private implicit val forConversions = TestConversationIdRequest
-  private val saxException = new SAXException("Boom!")
-  private val expectedXmlSchemaErrorResult = ErrorResponse
-    .errorBadRequest("Payload is not valid according to schema")
-    .withErrors(ResponseContents("xml_validation_error", saxException.getMessage)).XmlResult.withConversationId
-  val mockGoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
-  val mockValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
+  trait SetUp{
+    implicit val forConversions: ConversationIdRequest[AnyContentAsXml] = TestConversationIdRequest
+    val saxException = new SAXException("Boom!")
 
-  val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
-  val goodsArrivalPayloadValidationAction = new PayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger) {}
-  val validateMovementPayloadValidationAction = new PayloadValidationAction(mockValidateMovementXmlValidationService, mockImportsLogger) {}
+    val expectedXmlSchemaErrorResult: Result = ErrorResponse
+      .errorBadRequest("Payload is not valid according to schema")
+      .withErrors(ResponseContents("xml_validation_error", saxException.getMessage)).XmlResult.withConversationId
 
-  val headersTable =
-    Table(
-      ("description", "xml service", "payload action"),
-      ("Validate Movement", mockGoodsArrivalXmlValidationService, goodsArrivalPayloadValidationAction),
-      ("Goods Arrival", mockValidateMovementXmlValidationService, validateMovementPayloadValidationAction)
-    )
+    val errorNotWellFormedResult: Result = ErrorResponse
+      .errorBadRequest("Request body does not contain a well-formed XML document.")
+      .XmlResult.withConversationId
 
-  "PayloadValidationAction" should  {
-    forAll(headersTable) { (description, xmlService, payloadAction) =>
+    val mockGoodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
+    val mockValidateMovementXmlValidationService: ValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
 
-      s"return Right of ValidatedPayloadRequest when $description XML validation is OK" in {
-        when(xmlService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.successful(()))
+    val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
+    val goodsArrivalPayloadValidationAction: PayloadValidationAction = new PayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger) {}
+    val validateMovementPayloadValidationAction: PayloadValidationAction = new PayloadValidationAction(mockValidateMovementXmlValidationService, mockImportsLogger) {}
+  }
 
-        val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(payloadAction.refine(TestAuthorisedRequest))
+  "PayloadValidationAction for Validate Movement" should {
+      "return a ValidatedPayloadRequest when XML validation is OK" in new SetUp {
+        when(mockValidateMovementXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.successful(()))
+
+        private val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(validateMovementPayloadValidationAction.refine(TestAuthorisedRequest))
 
         actual shouldBe Right(TestCspValidatedPayloadRequest)
       }
 
-      s"return Left of error Result when $description XML is not well formed" in {
-        when(xmlService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(saxException))
+      "return 400 error response when XML validation fails" in new SetUp {
+        when(mockValidateMovementXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(saxException))
 
-        val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(payloadAction.refine(TestAuthorisedRequest))
+        private val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(validateMovementPayloadValidationAction.refine(TestAuthorisedRequest))
 
         actual shouldBe Left(expectedXmlSchemaErrorResult)
       }
 
-      s"return Left of error Result when $description XML validation fails" in {
-        val errorMessage = "Request body does not contain a well-formed XML document."
-        val errorNotWellFormed = ErrorResponse.errorBadRequest(errorMessage).XmlResult.withConversationId
-        val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, FakeRequest().withTextBody("<foo><foo>"))
-          .toValidatedHeadersRequest(TestExtractedHeaders).toAuthorisedRequest
+    "return 400 error response when XML is not well formed" in new SetUp {
+      private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, FakeRequest().withTextBody("<foo><foo>"))
+        .toValidatedHeadersRequest(TestExtractedHeaders).toAuthorisedRequest
 
-        val actual = await(payloadAction.refine(authorisedRequestWithNonWellFormedXml))
+      private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNonWellFormedXml))
 
-        actual shouldBe Left(errorNotWellFormed)
-      }
+      actual shouldBe Left(errorNotWellFormedResult)
+    }
 
-      s"propagates downstream errors by returning Left of $description error Result" in {
-        when(xmlService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(emulatedServiceFailure))
 
-        val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(payloadAction.refine(TestAuthorisedRequest))
+    "propagates downstream errors by returning a 500 error response" in new SetUp {
+      when(mockValidateMovementXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(emulatedServiceFailure))
 
-        actual shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
-      }
+      val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(validateMovementPayloadValidationAction.refine(TestAuthorisedRequest))
+
+      actual shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
     }
   }
+
+  "PayloadValidationAction for Goods Arrival" should {
+    "return a ValidatedPayloadRequest when XML validation is OK" in new SetUp {
+      when(mockGoodsArrivalXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.successful(()))
+
+      private val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(goodsArrivalPayloadValidationAction.refine(TestAuthorisedRequest))
+
+      actual shouldBe Right(TestCspValidatedPayloadRequest)
+    }
+
+    "return 400 error response when XML validation fails" in new SetUp {
+      when(mockGoodsArrivalXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(saxException))
+
+      private val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(goodsArrivalPayloadValidationAction.refine(TestAuthorisedRequest))
+
+      actual shouldBe Left(expectedXmlSchemaErrorResult)
+    }
+
+    "return 400 error response when XML is not well formed" in new SetUp {
+      private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, FakeRequest().withTextBody("<foo><foo>"))
+        .toValidatedHeadersRequest(TestExtractedHeaders).toAuthorisedRequest
+
+      private val actual = await(goodsArrivalPayloadValidationAction.refine(authorisedRequestWithNonWellFormedXml))
+
+      actual shouldBe Left(errorNotWellFormedResult)
+    }
+
+
+    "propagates downstream errors by returning a 500 error response" in new SetUp {
+      when(mockGoodsArrivalXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(emulatedServiceFailure))
+
+      val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(goodsArrivalPayloadValidationAction.refine(TestAuthorisedRequest))
+
+      actual shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+    }
+  }
+
 }
