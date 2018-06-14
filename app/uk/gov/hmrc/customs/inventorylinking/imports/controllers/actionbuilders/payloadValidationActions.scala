@@ -36,7 +36,7 @@ class GoodsArrivalPayloadValidationAction @Inject() (xmlValidationService: Goods
 @Singleton
 class ValidateMovementPayloadValidationAction @Inject() (xmlValidationService: ValidateMovementXmlValidationService, logger: ImportsLogger) extends PayloadValidationAction(xmlValidationService, logger)
 
-abstract class PayloadValidationAction @Inject()(xmlValidationService: XmlValidationService, logger: ImportsLogger) extends ActionRefiner[AuthorisedRequest, ValidatedPayloadRequest] {
+abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlValidationService, val logger: ImportsLogger) extends ActionRefiner[AuthorisedRequest, ValidatedPayloadRequest] {
 
   override def refine[A](ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
     implicit val implicitAr = ar

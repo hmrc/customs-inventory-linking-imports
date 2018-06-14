@@ -63,7 +63,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   "ApiSubscriptionFieldsConnector" should {
 
-    "make a correct request" in {
+    "return a ApiSubscriptionFieldsResponse when api subscription endpoint call is successful" in {
       setupGetSubscriptionFieldsToReturn()
 
       val response = await(getApiSubscriptionFields)
@@ -72,28 +72,32 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
       verifyGetSubscriptionFieldsCalled()
     }
 
-    "return a failed future when external service returns 404" in {
+    "correctly propagate NotFoundException when external service returns 404" in {
       setupGetSubscriptionFieldsToReturn(NOT_FOUND)
 
       intercept[RuntimeException](await(getApiSubscriptionFields)).getCause.getClass shouldBe classOf[NotFoundException]
+      verifyGetSubscriptionFieldsCalled()
     }
 
-    "return a failed future when external service returns 400" in {
+    "correctly propagate BadRequestException when external service returns 400" in {
       setupGetSubscriptionFieldsToReturn(BAD_REQUEST)
       intercept[RuntimeException](await(getApiSubscriptionFields)).getCause.getClass shouldBe classOf[BadRequestException]
+      verifyGetSubscriptionFieldsCalled()
     }
 
-    "return a failed future when external service returns any 4xx response other than 400" in {
+    "correctly propagate Upstream4xxResponse when external service returns any 4xx response other than 400" in {
       setupGetSubscriptionFieldsToReturn(FORBIDDEN)
       intercept[Upstream4xxResponse](await(getApiSubscriptionFields))
+      verifyGetSubscriptionFieldsCalled()
     }
 
-    "return a failed future when external service returns 500" in {
+    "correctly propagate Upstream5xxResponse when external service returns 500" in {
       setupGetSubscriptionFieldsToReturn(INTERNAL_SERVER_ERROR)
       intercept[Upstream5xxResponse](await(getApiSubscriptionFields))
+      verifyGetSubscriptionFieldsCalled()
     }
 
-    "return a failed future when fail to connect the external service" in {
+    "correctly propagate Exception when failed to connect the external service" in {
       stopMockServer()
       intercept[RuntimeException](await(getApiSubscriptionFields)).getCause.getClass shouldBe classOf[BadGatewayException]
       startMockServer()

@@ -84,7 +84,7 @@ class ImportsControllerSpec extends UnitSpec
     "process CSP request when call is authorised for CSP" in new SetUp {
       authoriseCsp(enrolment)
 
-      val result: Result = awaitSubmit(ValidRequest)
+      awaitSubmit(ValidRequest)
 
       verifyCspAuthorisationCalled(enrolment, numberOfTimes = 1)
     }
@@ -114,9 +114,7 @@ class ImportsControllerSpec extends UnitSpec
         .thenReturn(Future.successful(Left(mockResult)))
       authoriseCsp(enrolment)
 
-      val result: Result = awaitSubmit(ValidRequest)
-
-      result shouldBe mockResult
+      awaitSubmit(ValidRequest) shouldBe mockResult
     }
   }
 

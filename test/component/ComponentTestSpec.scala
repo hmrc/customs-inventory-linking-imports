@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package acceptance
+package component
 
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FeatureSpec, GivenWhenThen}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -25,7 +25,7 @@ import util.externalservices.InventoryLinkingImportsExternalServicesConfig
 
 import scala.xml.{Node, Utility, XML}
 
-trait AcceptanceTestSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
+trait ComponentTestSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with BeforeAndAfterAll with BeforeAndAfterEach {
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(

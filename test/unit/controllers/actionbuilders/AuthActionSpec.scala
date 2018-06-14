@@ -46,15 +46,12 @@ class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenProperty
     reset(mockAuthenticationConnector)
   }
 
-  private val authActionTypes = Table(
-    ("Message Name", "Enrolment", "Auth Action"),
-    ("Goods Arrival", Enrolment("write:customs-il-imports-arrival-notifications"), new GoodsArrivalAuthAction(mockAuthenticationConnector, new GoodsArrival(), mockImportsLogger)),
-    ("Validate Movement", Enrolment("write:customs-il-imports-movement-validation"), new ValidateMovementAuthAction(mockAuthenticationConnector, new ValidateMovement(), mockImportsLogger))
-  )
+  "CspAuthAction" can {
+    "for Goods Arrival" should {
+      val enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
+      val authAction = new GoodsArrivalAuthAction(mockAuthenticationConnector, new GoodsArrival(), mockImportsLogger)
 
-  forAll(authActionTypes) { (messageName, enrolment, authAction) =>
-    "CspAuthAction" should {
-      s"Return Right of $messageName AuthorisedRequest CSP when authorised by auth API" in new SetUp {
+      "return AuthorisedRequest for CSP when authorised by auth API" in new SetUp {
         authoriseCsp(enrolment)
 
         private val actual = await(authAction.refine(validatedHeadersRequest))
@@ -62,7 +59,28 @@ class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenProperty
         verifyCspAuthorisationCalled(enrolment, 1)
       }
 
-      s"return Left of $messageName AuthorisedRequest CSP when not authorised by auth API" in new SetUp {
+      "return ErrorResponse with ConversationId when not authorised by auth API" in new SetUp {
+        authoriseCspError(enrolment)
+
+        private val actual = await(authAction.refine(validatedHeadersRequest))
+        actual shouldBe Left(ErrorInternalServerError.XmlResult.withHeaders(HeaderConstants.XConversationId -> ConversationIdValue))
+        verifyCspAuthorisationCalled(enrolment, 1)
+      }
+    }
+
+    "for Validate Movement" should {
+      val enrolment = Enrolment("write:customs-il-imports-movement-validation")
+      val authAction = new ValidateMovementAuthAction(mockAuthenticationConnector, new ValidateMovement(), mockImportsLogger)
+
+      "return AuthorisedRequest for CSP when authorised by auth API" in new SetUp {
+        authoriseCsp(enrolment)
+
+        private val actual = await(authAction.refine(validatedHeadersRequest))
+        actual shouldBe Right(validatedHeadersRequest.toAuthorisedRequest)
+        verifyCspAuthorisationCalled(enrolment, 1)
+      }
+
+      "return ErrorResponse with ConversationId when not authorised by auth API" in new SetUp {
         authoriseCspError(enrolment)
 
         private val actual = await(authAction.refine(validatedHeadersRequest))

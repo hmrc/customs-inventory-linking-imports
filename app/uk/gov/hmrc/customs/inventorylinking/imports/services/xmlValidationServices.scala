@@ -22,12 +22,8 @@ import play.api.Configuration
 
 @Singleton
 class GoodsArrivalXmlValidationService @Inject()(configuration: Configuration)
-  extends XmlValidationService(configuration) {
-  override protected val schemaPropertyName: String = "xsd.locations.goodsarrival"
-}
+  extends XmlValidationService(configuration, "xsd.locations.goodsarrival")
 
 @Singleton
 class ValidateMovementXmlValidationService @Inject()(configuration: Configuration)
-  extends XmlValidationService(configuration) {
-  override protected val schemaPropertyName: String = "xsd.locations.validatemovement"
-}
+  extends XmlValidationService(configuration, "xsd.locations.validatemovement")
