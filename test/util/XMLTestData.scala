@@ -16,9 +16,20 @@
 
 package util
 
+import java.util.UUID
+
+import org.joda.time.{DateTime, DateTimeZone}
+
 import scala.xml.Elem
 
 object XMLTestData {
+
+  val declarantEoriValue = "ZZ123456789000"
+  val conversationIdValue = UUID.randomUUID().toString
+  val correlationId = UUID.randomUUID().toString
+  val clientId = UUID.randomUUID().toString
+  val dateTime = DateTime.now(DateTimeZone.UTC)
+  val dateTimeFormat = "YYYY-MM-dd'T'HH:mm:ss'Z'"
 
   val InvalidInventoryLinkingMovementRequestXML: Elem =
     <InventoryLinkingImportsValidateMovementResponse foo="bar" xmlns="http://gov.uk/customs/inventoryLinkingImport/v1"> <!--invalid-->

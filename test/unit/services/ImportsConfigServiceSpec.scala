@@ -18,7 +18,7 @@ package unit.services
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.mockito.MockitoSugar
-import play.api.{Configuration, Environment, Mode}
+import play.api.{Configuration, Environment}
 import uk.gov.hmrc.customs.api.common.config.{ConfigValidationNelAdaptor, ServicesConfig}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
@@ -77,7 +77,7 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
   }
 
   private def testServicesConfig(configuration: Configuration) = new ServicesConfig(configuration, mock[Environment]) {
-    override val mode: Mode.Value = play.api.Mode.Test
+    override val mode = play.api.Mode.Test
   }
 
 }

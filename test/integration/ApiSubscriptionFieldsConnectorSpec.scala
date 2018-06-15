@@ -21,7 +21,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionFieldsResponse
@@ -41,7 +40,7 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
+  private implicit val vpr = TestData.TestCspValidatedPayloadRequest
 
   override protected def beforeAll() {
     startMockServer()

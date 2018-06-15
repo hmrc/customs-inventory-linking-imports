@@ -39,7 +39,7 @@ class ValidateMovementPayloadValidationAction @Inject() (xmlValidationService: V
 abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlValidationService, val logger: ImportsLogger) extends ActionRefiner[AuthorisedRequest, ValidatedPayloadRequest] {
 
   override def refine[A](ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
-    implicit val implicitAr: AuthorisedRequest[A] = ar
+    implicit val implicitAr = ar
 
     validateXml
   }

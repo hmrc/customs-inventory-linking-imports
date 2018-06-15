@@ -35,7 +35,7 @@ import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorBadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeadersImpl, ValidatedHeadersRequest, ValidatedPayloadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{UniqueIdsService, UuidService}
 import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 
@@ -65,10 +65,10 @@ object TestData {
 
   val TestExtractedHeaders = ExtractedHeadersImpl(ValidBadgeIdentifier, ApiSubscriptionFieldsTestData.clientId)
 
-  lazy val InvalidAcceptHeader: (String, String) = ACCEPT -> JSON
-  lazy val InvalidContentTypeJsonHeader: (String, String) = CONTENT_TYPE -> JSON
-  lazy val InvalidXClientIdHeader: (String, String) = XClientIdHeaderName -> "This is not a UUID"
-  lazy val InvalidXBadgeIdentifier: (String, String) = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
+  lazy val InvalidAcceptHeader = ACCEPT -> JSON
+  lazy val InvalidContentTypeJsonHeader = CONTENT_TYPE -> JSON
+  lazy val InvalidXClientIdHeader = XClientIdHeaderName -> "This is not a UUID"
+  lazy val InvalidXBadgeIdentifier = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
 
   lazy val ValidAcceptHeader: (String, String) = ACCEPT -> AcceptHeaderValue
   lazy val ValidContentTypeHeader: (String, String) = CONTENT_TYPE -> (XML + "; charset=utf-8")
@@ -117,11 +117,11 @@ object TestData {
   type EmulatedServiceFailure = UnsupportedOperationException
   val emulatedServiceFailure = new EmulatedServiceFailure("Emulated service failure.")
 
-  val ValidValidateMovementRequest: FakeRequest[AnyContentAsXml] = FakeRequest("POST", "/movement-validation")
+  val ValidValidateMovementRequest = FakeRequest("POST", "/movement-validation")
     .withXmlBody(ValidInventoryLinkingMovementRequestXML)
     .withHeaders(ValidHeaders.toSeq: _*)
 
-  val ValidGoodsArrivalRequest: FakeRequest[AnyContentAsXml] = FakeRequest("POST", "/arrival-notifications")
+  val ValidGoodsArrivalRequest = FakeRequest("POST", "/arrival-notifications")
     .withXmlBody(ValidInventoryLinkingGoodsArrivalRequestXML)
     .withHeaders(ValidHeaders.toSeq: _*)
 
@@ -137,7 +137,7 @@ object TestData {
   }
 
   val mockUuidService: UuidService = MockitoSugar.mock[UuidService]
-  val stubUniqueIdsService: UniqueIdsService = new UniqueIdsService(mockUuidService) {
+  val stubUniqueIdsService = new UniqueIdsService(mockUuidService) {
     override def conversation: ConversationId = ValidConversationId
     override def correlation: CorrelationId = ValidCorrelationId
   }
@@ -146,9 +146,9 @@ object TestData {
   val TestFakeRequest: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(TestXmlPayload)
   val TestConversationIdRequest = ConversationIdRequest(ValidConversationId, TestFakeRequest)
   val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeaders)
-  val TestAuthorisedRequest: AuthorisedRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest
+  val TestAuthorisedRequest = TestValidatedHeadersRequest.toAuthorisedRequest
   val TestCspValidatedPayloadRequest: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
-  val ValidRequest: FakeRequest[AnyContentAsXml] = TestFakeRequest.withHeaders(ValidHeaders.toSeq: _*)
+  val ValidRequest = TestFakeRequest.withHeaders(ValidHeaders.toSeq: _*)
 
   def testFakeRequest(badgeIdString: String = ValidBadgeIdentifier.value): FakeRequest[AnyContentAsXml] =
     FakeRequest().withXmlBody(TestXmlPayload)

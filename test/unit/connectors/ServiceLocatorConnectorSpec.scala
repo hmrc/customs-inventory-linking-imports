@@ -40,10 +40,10 @@ class ServiceLocatorConnectorSpec extends UnitSpec with MockitoSugar {
   trait Setup {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val serviceLocatorException = new RuntimeException
-    val mockServicesConfig: ServicesConfig = mock[ServicesConfig]
-    val mockHttpClient: HttpClient = mock[HttpClient]
+    val mockServicesConfig = mock[ServicesConfig]
+    val mockHttpClient = mock[HttpClient]
 
-    lazy val connector: ServiceLocatorConnector = new ServiceLocatorConnector(mockServicesConfig, mockHttpClient) {
+    lazy val connector = new ServiceLocatorConnector(mockServicesConfig, mockHttpClient) {
       override val appUrl: String = APP_URL
       override val appName: String = APP_NAME
       override val serviceUrl: String = "https://SERVICE-LOCATOR-HOST"
