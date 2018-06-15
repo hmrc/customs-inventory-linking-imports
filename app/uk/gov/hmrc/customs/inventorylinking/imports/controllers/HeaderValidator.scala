@@ -37,7 +37,7 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   private lazy val errorResponseBadgeIdentifierHeaderMissing = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
 
   def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
-    implicit val headers = conversationIdRequest.headers
+    implicit val headers: Headers = conversationIdRequest.headers
 
     def hasAccept = validateHeader(ACCEPT, validAcceptHeaders.contains(_), ErrorAcceptHeaderInvalid)
 

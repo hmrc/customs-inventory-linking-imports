@@ -17,6 +17,8 @@
 package unit.xml
 
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.AnyContentAsXml
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
 import util.ApiSubscriptionFieldsTestData.fieldsId
@@ -30,7 +32,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val xml: NodeSeq = <node1></node1>
 
   private val payloadDecorator = new PayloadDecorator
-  private implicit val vpr = TestData.TestCspValidatedPayloadRequest
+  private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
   private def wrapPayload() = payloadDecorator.wrap(xml, fieldsId, ValidCorrelationId, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
 

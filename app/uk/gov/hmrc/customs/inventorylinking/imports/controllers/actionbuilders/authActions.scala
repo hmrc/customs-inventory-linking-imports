@@ -50,7 +50,7 @@ abstract class AuthAction @Inject()(override val authConnector: AuthConnector, i
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
 
     override def refine[A](vhr: ValidatedHeadersRequest[A]): Future[Either[Result, AuthorisedRequest[A]]] = {
-      implicit val implicitVhr = vhr
+      implicit val implicitVhr: ValidatedHeadersRequest[A] = vhr
       implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 
       authorised(importsMessageType.enrolment and AuthProviders(PrivilegedApplication)) {

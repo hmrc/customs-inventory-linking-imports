@@ -27,10 +27,12 @@ import org.scalatest.concurrent.Eventually
 import org.scalatest.mockito.MockitoSugar
 import play.api.Configuration
 import play.api.http.HeaderNames
+import play.api.mvc.AnyContentAsXml
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig, SeqOfHeader}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
@@ -57,7 +59,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
   private val httpException = new NotFoundException("Emulated 404 response from a web call")
-  private implicit val vpr = TestCspValidatedPayloadRequest
+  private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
 
   override protected def beforeEach() {
     reset(mockWsPost, mockLogger, mockServiceConfigProvider, mockConfiguration)

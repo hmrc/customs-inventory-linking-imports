@@ -34,7 +34,7 @@ import scala.concurrent.Future
 class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: ImportsLogger) extends ActionRefiner[ConversationIdRequest, ValidatedHeadersRequest] {
 
   override def refine[A](cr: ConversationIdRequest[A]): Future[Either[Result, ValidatedHeadersRequest[A]]] = Future.successful {
-    implicit val id = cr
+    implicit val id: ConversationIdRequest[A] = cr
 
     validator.validateHeaders(cr) match {
       case Left(result) => Left(result.XmlResult.withConversationId)
