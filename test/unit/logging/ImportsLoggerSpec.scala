@@ -17,11 +17,12 @@
 package unit.logging
 
 import org.scalatest.mockito.MockitoSugar
+import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ConversationIdRequest}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
 import util.TestData.{TestExtractedHeaders, TestXmlPayload, ValidConversationId, emulatedServiceFailure}
@@ -29,9 +30,9 @@ import util.TestData.{TestExtractedHeaders, TestXmlPayload, ValidConversationId,
 class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
   trait SetUp {
-    val mockCdsLogger = mock[CdsLogger]
+    val mockCdsLogger: CdsLogger = mock[CdsLogger]
     val logger = new ImportsLogger(mockCdsLogger)
-    implicit val implicitVpr = ConversationIdRequest(ValidConversationId, FakeRequest()
+    implicit val implicitVpr: AuthorisedRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, FakeRequest()
       .withXmlBody(TestXmlPayload).withHeaders("Content-Type" -> "Some-Content-Type"))
       .toValidatedHeadersRequest(TestExtractedHeaders)
       .toAuthorisedRequest

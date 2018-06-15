@@ -16,11 +16,10 @@
 
 package unit.controllers.actionbuilders
 
-import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
-import play.api.http.HeaderNames.{CONTENT_TYPE, _}
-import play.api.mvc.{AnyContent, Headers}
+import play.api.http.HeaderNames.CONTENT_TYPE
+import play.api.mvc.AnyContent
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
@@ -34,10 +33,10 @@ import util.TestData._
 class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks with MockitoSugar {
 
   trait SetUp {
-    val loggerMock = mock[ImportsLogger]
+    val loggerMock: ImportsLogger = mock[ImportsLogger]
     val validator = new HeaderValidator(loggerMock)
-    val validatedRequest = mock[ValidatedHeadersRequest[AnyContent]]
-    val request = mock[ConversationIdRequest[AnyContent]]
+    val validatedRequest: ValidatedHeadersRequest[AnyContent] = mock[ValidatedHeadersRequest[AnyContent]]
+    val request: ConversationIdRequest[AnyContent] = mock[ConversationIdRequest[AnyContent]]
 
     def validate(c: ConversationIdRequest[_]): Either[ErrorResponse, ExtractedHeaders] = {
       validator.validateHeaders(c)
