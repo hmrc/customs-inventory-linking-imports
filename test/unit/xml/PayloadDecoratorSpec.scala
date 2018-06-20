@@ -72,7 +72,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       val rd = result \\ "clientID"
 
-      rd.head.text shouldBe fieldsId.toString
+      rd.head.text shouldBe fieldsId.value
     }
 
     "set the correlationID" in {

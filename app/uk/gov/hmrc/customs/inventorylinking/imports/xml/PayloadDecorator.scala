@@ -35,7 +35,7 @@ class PayloadDecorator {
     xmlns:n1="http://gov.uk/customs/inventoryLinkingImport/v1"
     xsi:schemaLocation="http://gov.uk/customs/inventoryLinkingImport/v1request_schema.xsd">
       <n1:requestCommon>
-        <n1:clientID>{ clientId.toString }</n1:clientID>
+        <n1:clientID>{ clientId.value }</n1:clientID>
         <n1:conversationID>{ vpr.conversationId.toString}</n1:conversationID>
         <n1:correlationID>{ correlationId.toString }</n1:correlationID>
         <n1:badgeIdentifier>{ vpr.badgeIdentifier.value }</n1:badgeIdentifier>
