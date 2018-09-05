@@ -15,10 +15,22 @@ It is assumed that the underlying backend process is asynchronous, and that the 
 ## Seeding Data in `api-subscription-fields` for local end to end testing
 
 Make sure the `api-subscription-fields` service is running on port `9650`. Then run the below curl command.
- - Note that the UUID `6372609a-f550-11e7-8c3f-9a214cf093aa` is the application clientId.
+ - Note that the UUID `d8f027b1-e280-4794-b4fa-4d6a47ca0a67` is the application clientId.
+ - api context value `customs%2Finventory-linking-imports` is hardcoded in `MessageSender`, please make sure you use it in PUT request
+ 
+```
+curl -v -X PUT "http://localhost:9650/field/application/d8f027b1-e280-4794-b4fa-4d6a47ca0a67/context/customs%2Finventory-linking-imports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "https://postman-echo.com/post", "securityToken" : "securityToken" } }''
+```
+
+## Sample request for local testing
 
 ```
-curl -v -X PUT "http://localhost:9650/field/application/6372609a-f550-11e7-8c3f-9a214cf093aa/context/customs%2Finventory-linking%2Fexports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "https://postman-echo.com/post", "securityToken" : "securityToken" } }'
+curl -v -X POST -H 'Accept: application/vnd.hmrc.1.0+xml' -H 'Content-Type: application/xml; charset=UTF-8' -H 'Authorization: Bearer CSP' -H 'X-Badge-Identifier: BADGEID123' -H 'X-Client-ID: d8f027b1-e280-4794-b4fa-4d6a47ca0a67' -d ' <inventoryLinkingImportsGoodsArrival xmlns="http://gov.uk/customs/inventoryLinkingImport/v1">
+ <entryNumber>string</entryNumber>
+ <entryVersionNumber>3</entryVersionNumber>
+ <inventoryConsignmentReference>string</inventoryConsignmentReference>
+ <transportNationality>st</transportNationality>
+ </inventoryLinkingImportsGoodsArrival>' 'http://localhost:9824/arrival-notifications'
 ```
 
 # Switching service endpoints
