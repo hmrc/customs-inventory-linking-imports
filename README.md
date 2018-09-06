@@ -18,46 +18,13 @@ Make sure the `api-subscription-fields` service is running on port `9650`. Then 
  - Note that the UUID `6372609a-f550-11e7-8c3f-9a214cf093aa` is the application clientId.
 
 ```
-curl -v -X PUT "http://localhost:9650/field/application/6372609a-f550-11e7-8c3f-9a214cf093aa/context/customs%2Finventory-linking-imports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "http://localhost:9826/customs-notifications-receiver-stub/pushnotifications", "securityToken" : "securityToken" } }'
+curl -v -X PUT "http://localhost:9650/field/application/6372609a-f550-11e7-8c3f-9a214cf093aa/context/customs%2Finventory-linking%2Fexports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "https://postman-echo.com/post", "securityToken" : "securityToken" } }'
 ```
 
-This will generate a MongoDb record in the `notifications` collection in the `api-subscription-fields` database:
+### Seeding data for the `customs-notifications-receiver-stub` dummy callback endpoint
 
-```json
-{
-    "_id" : ObjectId("5b8fab9b9bb4d54201571201"),
-    "apiContext" : "customs/inventory-linking-imports",
-    "apiVersion" : "1.0",
-    "clientId" : "6372609a-f550-11e7-8c3f-9a214cf093aa",
-    "fields" : {
-        "callbackUrl" : "http://localhost:9826/customs-notifications-receiver-stub/pushnotifications",
-        "securityToken" : "securityToken"
-    },
-    "fieldsId" : "f369eb7e-e6bf-42c6-9902-3c70705684e8"
-}
-```
-
-Note if you want to use the `customs-notifications-receiver-stub` to receive notifications in a MongoDB database you will then have to update the `securityToken` 
-field in the database with `fieldsId` value.
-This is because the `customs-notifications-receiver-stub` reads the authorisation header in order to extract the client subscription fields id. So after 
-doing this the above record will look like:
-
-```json
-{
-    "_id" : ObjectId("5b8fab9b9bb4d54201571201"),
-    "apiContext" : "customs/inventory-linking-imports",
-    "apiVersion" : "1.0",
-    "clientId" : "6372609a-f550-11e7-8c3f-9a214cf093aa",
-    "fields" : {
-        "callbackUrl" : "http://localhost:9826/customs-notifications-receiver-stub/pushnotifications",
-        "securityToken" : "f369eb7e-e6bf-42c6-9902-3c70705684e8"
-    },
-    "fieldsId" : "f369eb7e-e6bf-42c6-9902-3c70705684e8"
-}
-```
-
-Please see the readme for the `customs-notifications-receiver-stub` service for a description of CRUD endpoints that it offers.
-
+This endpoint can be used for the `callbackUrl` field above. For more information on how it can be used and seeded please 
+see the [README](https://github.com/hmrc/customs-notifications-receiver-stub/blob/master/README.md)   
 
 # Switching service endpoints
 
