@@ -21,6 +21,11 @@ Make sure the `api-subscription-fields` service is running on port `9650`. Then 
 curl -v -X PUT "http://localhost:9650/field/application/6372609a-f550-11e7-8c3f-9a214cf093aa/context/customs%2Finventory-linking%2Fexports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "https://postman-echo.com/post", "securityToken" : "securityToken" } }'
 ```
 
+### Seeding data for the `customs-notifications-receiver-stub` dummy callback endpoint
+
+This endpoint can be used for the `callbackUrl` field above. For more information on how it can be used and seeded please 
+see the [README](https://github.com/hmrc/customs-notifications-receiver-stub/blob/master/README.md)   
+
 # Switching service endpoints
 
 Dynamic switching of service endpoints has been implemented for inventory linking imports connector. To configure dynamic
