@@ -2,18 +2,15 @@ import sbt._
 
 object AppDependencies {
 
-  private val xmlResolverVersion = "1.2"
   private val hmrcTestVersion = "3.0.0"
   private val scalaTestVersion = "3.0.5"
   private val scalatestplusVersion = "2.0.1"
-  private val mockitoVersion = "2.18.3"
+  private val mockitoVersion = "2.21.0"
   private val pegdownVersion = "1.6.0"
-  private val wireMockVersion = "2.17.0"
-  private val customsApiCommonVersion = "1.27.0"
+  private val wireMockVersion = "2.18.0"
+  private val customsApiCommonVersion = "1.28.0"
   private val circuitBreakerVersion = "3.2.0"
   private val testScope = "test,it"
-
-  val xmlResolver = "xml-resolver" % "xml-resolver" % xmlResolverVersion
 
   val hmrcTest = "uk.gov.hmrc" %% "hmrctest" % hmrcTestVersion % testScope
 
