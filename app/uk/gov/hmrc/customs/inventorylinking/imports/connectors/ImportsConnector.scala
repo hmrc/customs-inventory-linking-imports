@@ -17,8 +17,8 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import java.util.UUID
-
 import javax.inject.{Inject, Singleton}
+
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.http.HeaderNames._
@@ -28,13 +28,13 @@ import uk.gov.hmrc.circuitbreaker.{CircuitBreakerConfig, UsingCircuitBreaker}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsMessageType
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, ImportsMessageType}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
-import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.config.AppName
+import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -51,11 +51,11 @@ class ImportsConnector @Inject()(http: HttpClient,
   def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = getHeaders(date, correlationId, vpr.conversationId.uuid), authorization = Some(Authorization(bearerToken)))
+    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = getHeaders(date, correlationId, vpr.conversationId), authorization = Some(Authorization(bearerToken)))
     withCircuitBreaker(post(xml, config.url))
   }
 
-  private def getHeaders(date: DateTime, correlationId: UUID, conversationId: UUID) = {
+  private def getHeaders(date: DateTime, correlationId: UUID, conversationId: ConversationId) = {
     Seq(
       (ACCEPT, MimeTypes.XML),
       (CONTENT_TYPE, s"$XML; charset=UTF-8"),

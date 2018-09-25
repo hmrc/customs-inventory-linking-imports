@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import com.google.inject.Singleton
 import javax.inject.Inject
+
+import com.google.inject.Singleton
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, CorrelationId}
 
 
@@ -25,7 +26,6 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, Corre
 class UniqueIdsService @Inject()(uuidService: UuidService) {
 
   def conversation: ConversationId = ConversationId(uuidService.uuid())
-
   def correlation: CorrelationId = CorrelationId(uuidService.uuid())
 
 }

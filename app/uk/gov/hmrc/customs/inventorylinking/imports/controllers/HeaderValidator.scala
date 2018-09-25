@@ -17,15 +17,16 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
+
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.mvc.Headers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorInternalServerError, errorBadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, XBadgeIdentifier, XClientId, XCorrelationId}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeadersImpl}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{BadgeIdentifier, ClientId, HeaderConstants}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{BadgeIdentifier, ClientId, CorrelationIdHeader, HeaderConstants}
 
 @Singleton
 class HeaderValidator @Inject() (logger: ImportsLogger) {
@@ -34,7 +35,9 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
+  private lazy val xCorrelationIdRegex = "^.{1,36}$".r
   private lazy val errorResponseBadgeIdentifierHeaderMissing = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
+  private lazy val errorResponseCorrelationIdHeaderMissing = errorBadRequest(s"${HeaderConstants.XCorrelationId} header is missing or invalid")
 
   def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
     implicit val headers: Headers = conversationIdRequest.headers
@@ -47,18 +50,22 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
 
     def hasXBadgeIdentifier = validateHeader(XBadgeIdentifier, xBadgeIdentifierRegex.findFirstIn(_).nonEmpty, errorResponseBadgeIdentifierHeaderMissing)
 
+    def hasXCorrelationId = validateHeader(XCorrelationId, xCorrelationIdRegex.findFirstIn(_).nonEmpty, errorResponseCorrelationIdHeaderMissing)
+
     val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
       accept <- hasAccept.right
       contentType <- hasContentType.right
       xClientId <- hasXClientId.right
       xBadgeIdentifier <- hasXBadgeIdentifier.right
+      xCorrelationId <- hasXCorrelationId.right
     } yield {
       logger.debug(
         s"$ACCEPT header passed validation: $accept\n"
       + s"$CONTENT_TYPE header passed validation: $contentType\n"
       + s"$XClientId header passed validation: $xClientId\n"
-      + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier")
-      ExtractedHeadersImpl(BadgeIdentifier(xBadgeIdentifier), ClientId(xClientId))
+      + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier"
+      + s"$XCorrelationId header passed validation: $xCorrelationId")
+      ExtractedHeadersImpl(BadgeIdentifier(xBadgeIdentifier), ClientId(xClientId), CorrelationIdHeader(xCorrelationId))
     }
     theResult
   }

@@ -56,6 +56,9 @@ object TestData {
   val CorrelationIdUuid: UUID = UUID.fromString(CorrelationIdValue)
   val ValidCorrelationId = CorrelationId(CorrelationIdUuid)
 
+  val CorrelationIdHeaderValue = "ABC123"
+  val ValidCorrelationIdHeader = CorrelationIdHeader(CorrelationIdHeaderValue )
+
   val ValidBadgeIdentifierValue = "BADGEID123"
   val InvalidBadgeIdentifierValue = "INVALIDBADGEID123456789"
   val ValidBadgeIdentifier: BadgeIdentifier = BadgeIdentifier(ValidBadgeIdentifierValue)
@@ -63,19 +66,21 @@ object TestData {
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
-  val TestExtractedHeaders = ExtractedHeadersImpl(ValidBadgeIdentifier, ApiSubscriptionFieldsTestData.clientId)
+  val TestExtractedHeaders = ExtractedHeadersImpl(ValidBadgeIdentifier, ApiSubscriptionFieldsTestData.clientId, ValidCorrelationIdHeader)
 
   lazy val InvalidAcceptHeader: (String, String) = ACCEPT -> JSON
   lazy val InvalidContentTypeJsonHeader: (String, String) = CONTENT_TYPE -> JSON
   lazy val InvalidXClientIdHeader: (String, String) = XClientIdHeaderName -> "This is not a UUID"
   lazy val InvalidXBadgeIdentifier: (String, String) = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
+  lazy val InvalidXCorrelationId: (String, String) = XCorrelationIdHeaderName -> "This is longer than 34 characters so is too long"
 
   lazy val ValidAcceptHeader: (String, String) = ACCEPT -> AcceptHeaderValue
   lazy val ValidContentTypeHeader: (String, String) = CONTENT_TYPE -> (XML + "; charset=utf-8")
   lazy val ValidXClientIdHeader: (String, String) = XClientIdHeaderName -> ApiSubscriptionFieldsTestData.clientId.value
   lazy val ValidXBadgeIdentifierHeader: (String, String) = XBadgeIdentifierHeaderName -> ValidBadgeIdentifierValue
   lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> ValidConversationId.toString
-  val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader, XConversationIdHeader)
+  lazy val XCorrelationIdHeader: (String, String) = XCorrelationIdHeaderName -> CorrelationIdHeaderValue.toString
+  val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader, XConversationIdHeader, XCorrelationIdHeader)
 
   val CspBearerToken = "CSP-Bearer-Token"
 
@@ -160,4 +165,5 @@ object TestData {
   }
 
   val ErrorResponseBadgeIdentifierHeaderMissing: ErrorResponse = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
+  val ErrorResponseCorrelationIdHeaderMissing: ErrorResponse = errorBadRequest(s"${HeaderConstants.XCorrelationId} header is missing or invalid")
 }

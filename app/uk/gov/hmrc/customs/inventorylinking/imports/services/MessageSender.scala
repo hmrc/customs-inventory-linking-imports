@@ -76,7 +76,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                             (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, Unit]] = {
     val dateTime = dateTimeProvider.nowUtc()
     val correlationId = uniqueIdsService.correlation
-    val xmlToSend = preparePayload(vpr.xmlBody, subscriptionFieldsId: FieldsId, correlationId, importsMessageType, dateTime)
+    val xmlToSend = preparePayload(vpr.xmlBody, subscriptionFieldsId: FieldsId, vpr.correlationIdHeader, importsMessageType, dateTime)
 
     connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map(_ => Right(())).recover{
       case _: UnhealthyServiceException =>
@@ -88,10 +88,9 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
   }
 
-  private def preparePayload[A](xml: NodeSeq, subscriptionFieldsId: FieldsId, correlationId: CorrelationId, importsMessageType: ImportsMessageType, dateTime: DateTime)
+  private def preparePayload[A](xml: NodeSeq, subscriptionFieldsId: FieldsId, correlationIdHeader: CorrelationIdHeader, importsMessageType: ImportsMessageType, dateTime: DateTime)
                                (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): NodeSeq = {
     logger.debug(s"preparePayload called")
-    payloadDecorator.wrap(xml, subscriptionFieldsId, correlationId, importsMessageType.wrapperRootElementLabel, dateTime)
+    payloadDecorator.wrap(xml, subscriptionFieldsId, correlationIdHeader, importsMessageType.wrapperRootElementLabel, dateTime)
   }
-
 }
