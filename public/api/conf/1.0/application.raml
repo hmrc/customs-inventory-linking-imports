@@ -43,6 +43,11 @@ documentation:
           type: string
           required: true
           example: DHL123
+        X-Correlation-ID:
+          description: Alpha-numeric, maximum length is 36. Specifies the correlation id sent in the movement validation request. Returning the request correlation id in the movement validation response permits backend reconciliation of request and response.
+          type: string
+          required: true
+          example: ABC123
 
       (annotations.scope): "write:customs-il-imports-movement-validation"
       securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-il-imports-movement-validation" ] } ]

@@ -34,6 +34,7 @@ object ActionBuilderModelHelper {
     def toValidatedHeadersRequest(eh: ExtractedHeaders): ValidatedHeadersRequest[A] = ValidatedHeadersRequest(
       eh.badgeIdentifier,
       cir.conversationId,
+      eh.correlationIdHeader,
       eh.clientId,
       cir.request
     )
@@ -44,6 +45,7 @@ object ActionBuilderModelHelper {
     def toAuthorisedRequest: AuthorisedRequest[A] = AuthorisedRequest(
       vhr.badgeIdentifier,
       vhr.conversationId,
+      vhr.correlationIdHeader,
       vhr.clientId,
       vhr.request
     )
@@ -53,6 +55,7 @@ object ActionBuilderModelHelper {
     def toValidatedPayloadRequest(xmlBody: NodeSeq): ValidatedPayloadRequest[A] = ValidatedPayloadRequest(
       ar.badgeIdentifier,
       ar.conversationId,
+      ar.correlationIdHeader,
       ar.clientId,
       xmlBody,
       ar.request
@@ -68,6 +71,7 @@ trait HasConversationId {
 trait ExtractedHeaders {
   val badgeIdentifier: BadgeIdentifier
   val clientId: ClientId
+  val correlationIdHeader: CorrelationIdHeader
 }
 
 trait HasXmlBody {
@@ -76,7 +80,8 @@ trait HasXmlBody {
 
 case class ExtractedHeadersImpl(
   badgeIdentifier: BadgeIdentifier,
-  clientId: ClientId
+  clientId: ClientId,
+  correlationIdHeader: CorrelationIdHeader
 ) extends ExtractedHeaders
 
 /*
@@ -95,25 +100,28 @@ case class ConversationIdRequest[A](
 
 // Available after ValidatedHeadersAction builder
 case class ValidatedHeadersRequest[A](
-  badgeIdentifier: BadgeIdentifier,
-  conversationId: ConversationId,
-  clientId: ClientId,
-  request: Request[A]
+                                       badgeIdentifier: BadgeIdentifier,
+                                       conversationId: ConversationId,
+                                       correlationIdHeader: CorrelationIdHeader,
+                                       clientId: ClientId,
+                                       request: Request[A]
 ) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders
 
 // Available after Authorise action builder
 case class AuthorisedRequest[A](
-  badgeIdentifier: BadgeIdentifier,
-  conversationId: ConversationId,
-  clientId: ClientId,
-  request: Request[A]
+                                 badgeIdentifier: BadgeIdentifier,
+                                 conversationId: ConversationId,
+                                 correlationIdHeader: CorrelationIdHeader,
+                                 clientId: ClientId,
+                                 request: Request[A]
 ) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders
 
 // Available after ValidatedPayloadAction builder
 case class ValidatedPayloadRequest[A](
-  badgeIdentifier: BadgeIdentifier,
-  conversationId: ConversationId,
-  clientId: ClientId,
-  xmlBody: NodeSeq,
-  request: Request[A]
+                                       badgeIdentifier: BadgeIdentifier,
+                                       conversationId: ConversationId,
+                                       correlationIdHeader: CorrelationIdHeader,
+                                       clientId: ClientId,
+                                       xmlBody: NodeSeq,
+                                       request: Request[A]
 ) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders with HasXmlBody

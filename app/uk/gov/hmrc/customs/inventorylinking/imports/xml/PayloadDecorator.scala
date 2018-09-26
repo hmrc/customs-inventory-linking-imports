@@ -18,15 +18,15 @@ package uk.gov.hmrc.customs.inventorylinking.imports.xml
 
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{CorrelationId, FieldsId}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{CorrelationIdHeader, FieldsId}
 
 import scala.xml.NodeSeq
 
 class PayloadDecorator {
   def wrap[A](xml: NodeSeq,
               clientId: FieldsId,
-              correlationId: CorrelationId,
+              correlationId: CorrelationIdHeader,
               wrapperRootElementLabel: String,
               dateTime: DateTime)(implicit vpr: ValidatedPayloadRequest[A]): NodeSeq =
 

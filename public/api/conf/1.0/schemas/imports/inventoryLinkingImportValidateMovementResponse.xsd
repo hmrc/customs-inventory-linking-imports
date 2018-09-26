@@ -5,6 +5,8 @@
 	<!-- Inventory Linking imports Validate Movement Response                                            -->
 	<!--CSPs perform a link between the ICR and the MRN and respond with a positive or negative response.-->
 	<!-- =============================================================================================== -->
+	<!-- Added new field cdsCorrelationId 20/09/2018 -->
+	<!-- Removed new field cdsCorrelationId 21/09/2018 -->
 	<xs:element name="InventoryLinkingImportsValidateMovementResponse">
 		<xs:annotation>
 			<xs:documentation>Inventory Linking Imports Validate Movement Response
