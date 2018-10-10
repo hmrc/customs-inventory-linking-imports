@@ -6,6 +6,7 @@ import sbt.Tests.{Group, SubProcess}
 import sbt.{Resolver, _}
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, targetJvm}
 import uk.gov.hmrc.PublishingSettings._
+import uk.gov.hmrc.SbtArtifactory
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 
 import language.postfixOps
@@ -41,6 +42,7 @@ lazy val allTest = Seq(testAll := (test in AcceptanceTest)
 lazy val microservice = (project in file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
+  .enablePlugins(SbtArtifactory)
   .enablePlugins(SbtDistributablesPlugin)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .configs(testConfig: _*)
@@ -54,7 +56,7 @@ lazy val microservice = (project in file("."))
     allTest,
     scoverageSettings,
     allResolvers
-  )
+  ).settings(majorVersion := 0)
 
 def onPackageName(rootPackage: String): String => Boolean = {
   testName => testName startsWith rootPackage
