@@ -1,7 +1,5 @@
 # customs-inventory-linking-imports
 
-[![Build Status](https://travis-ci.org/hmrc/customs-inventory-linking-imports.svg)](https://travis-ci.org/hmrc/customs-inventory-linking-imports) [ ![Download](https://api.bintray.com/packages/hmrc/releases/customs-inventory-linking-imports/images/download.svg) ](https://bintray.com/hmrc/releases/customs-inventory-linking-imports/_latestVersion)
-
 This service offers an interface for submitting custom inventory linking import declarations.
 
 The objective of the Customs Inventory Linking Imports API is as below:
