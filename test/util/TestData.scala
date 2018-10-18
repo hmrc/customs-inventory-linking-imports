@@ -56,7 +56,7 @@ object TestData {
   val CorrelationIdUuid: UUID = UUID.fromString(CorrelationIdValue)
   val ValidCorrelationId = CorrelationId(CorrelationIdUuid)
 
-  val CorrelationIdHeaderValue = "ABC123"
+  val CorrelationIdHeaderValue = "abCabC123u"
   val ValidCorrelationIdHeader = CorrelationIdHeader(CorrelationIdHeaderValue )
 
   val ValidBadgeIdentifierValue = "BADGEID123"
@@ -72,7 +72,8 @@ object TestData {
   lazy val InvalidContentTypeJsonHeader: (String, String) = CONTENT_TYPE -> JSON
   lazy val InvalidXClientIdHeader: (String, String) = XClientIdHeaderName -> "This is not a UUID"
   lazy val InvalidXBadgeIdentifier: (String, String) = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
-  lazy val InvalidXCorrelationId: (String, String) = XCorrelationIdHeaderName -> "This is longer than 34 characters so is too long"
+  lazy val InvalidXCorrelationIdTooLong: (String, String) = XCorrelationIdHeaderName -> "Thisiisslongerrthann34ccharactersssooisttoollong"
+  lazy val InvalidXCorrelationIdNonAlphanumeric: (String, String) = XCorrelationIdHeaderName -> "Illegal-char!acter"
 
   lazy val ValidAcceptHeader: (String, String) = ACCEPT -> AcceptHeaderValue
   lazy val ValidContentTypeHeader: (String, String) = CONTENT_TYPE -> (XML + "; charset=utf-8")

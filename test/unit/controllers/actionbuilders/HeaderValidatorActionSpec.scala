@@ -83,8 +83,11 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       "be unsuccessful for a valid request with Invalid X-Badge-Identifier header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidXBadgeIdentifier)) shouldBe Left(ErrorResponseBadgeIdentifierHeaderMissing)
       }
-      "be unsuccessful for a valid request with Invalid X-Correlation-ID header" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + InvalidXCorrelationId)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
+      "be unsuccessful for a valid request with Invalid X-Correlation-ID header (too long)" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders + InvalidXCorrelationIdTooLong)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
+      }
+      "be unsuccessful for a valid request with Invalid X-Correlation-ID header (contains ! character)" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders + InvalidXCorrelationIdNonAlphanumeric)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
       }
     }
   }
