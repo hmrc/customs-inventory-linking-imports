@@ -68,6 +68,9 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       "be unsuccessful for a valid request with missing X-Correlation-ID header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders - XCorrelationIdHeaderName)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
       }
+      "be unsuccessful for a valid request with missing X-Submitter-Identifier header" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders - XSubmitterIdentifierHeaderName)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
+      }
       "be unsuccessful for a valid request with Invalid accept header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidAcceptHeader)) shouldBe Left(ErrorAcceptHeaderInvalid)
       }
@@ -88,6 +91,12 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       }
       "be unsuccessful for a valid request with Invalid X-Correlation-ID header (contains ! character)" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidXCorrelationIdNonAlphanumeric)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
+      }
+      "be unsuccessful for a valid request with an invalid X-Submitter-Identifier with non alphanumeric characters" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierNonAlphanumeric)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
+      }
+      "be unsuccessful for a valid request with an invalid X-Submitter-Identifier header greater than 17 characters" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierLongerThan17)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
       }
     }
   }
