@@ -63,6 +63,9 @@ object TestData {
   val SubmitterIdentifierHeaderValue = "xsubmitterid123"
   val ValidSubmitterIdentifierHeader = SubmitterIdentifier(SubmitterIdentifierHeaderValue)
 
+  val AuthenticatedEoriValue = "RASHADMUGHAL"
+  val ValidAuthenticatedEori = AuthenticatedEori(AuthenticatedEoriValue)
+
   val ValidBadgeIdentifierValue = "BADGEID123"
   val InvalidBadgeIdentifierValue = "INVALIDBADGEID123456789"
   val ValidBadgeIdentifier: BadgeIdentifier = BadgeIdentifier(ValidBadgeIdentifierValue)
@@ -80,6 +83,7 @@ object TestData {
   lazy val InvalidXCorrelationIdNonAlphanumeric: (String, String) = XCorrelationIdHeaderName -> "Illegal-char!acter"
   lazy val InvalidXSubmitterIdentifierNonAlphanumeric: (String, String) = XSubmitterIdentifierHeaderName -> "Illegal-char!acter"
   lazy val InvalidXSubmitterIdentifierLongerThan17: (String, String) = XSubmitterIdentifierHeaderName -> "12345678901234567890"
+  lazy val InvalidXSubmitterIdentifierEmpty: (String, String) = XSubmitterIdentifierHeaderName -> ""
 
   lazy val ValidAcceptHeader: (String, String) = ACCEPT -> AcceptHeaderValue
   lazy val ValidContentTypeHeader: (String, String) = CONTENT_TYPE -> (XML + "; charset=utf-8")

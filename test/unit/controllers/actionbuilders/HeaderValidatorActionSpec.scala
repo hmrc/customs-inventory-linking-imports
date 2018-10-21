@@ -98,6 +98,9 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       "be unsuccessful for a valid request with an invalid X-Submitter-Identifier header greater than 17 characters" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierLongerThan17)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
       }
+      "be unsuccessful for a valid request with an invalid X-Submitter-Identifier header that is empty" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierEmpty)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
+      }
     }
   }
 

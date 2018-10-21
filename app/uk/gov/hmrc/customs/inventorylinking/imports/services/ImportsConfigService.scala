@@ -30,14 +30,14 @@ class ImportsConfigService @Inject() (configValidationNel: ConfigValidationNelAd
   private val root = configValidationNel.root
   private val whiteListedCspApplicationIds = root.stringSeq("api.access.version-1.0.whitelistedApplicationIds")
   private val apiSubscriptionFieldsService = configValidationNel.service("api-subscription-fields")
-
   private val numberOfCallsToTriggerStateChangeNel = root.int("circuitBreaker.numberOfCallsToTriggerStateChange")
   private val unavailablePeriodDurationInMillisNel = root.int("circuitBreaker.unavailablePeriodDurationInMillis")
   private val unstablePeriodDurationInMillisNel = root.int("circuitBreaker.unstablePeriodDurationInMillis")
   private val apiSubscriptionFieldsServiceUrlNel = apiSubscriptionFieldsService.serviceUrl
+  private val authenticatedEoriNel = root.string("authenticatedEori")
 
   private val validatedImportsConfig: ValidationNel[String, ImportsConfig] = (
-    whiteListedCspApplicationIds |@| apiSubscriptionFieldsServiceUrlNel
+    whiteListedCspApplicationIds |@| apiSubscriptionFieldsServiceUrlNel |@| authenticatedEoriNel
   )(ImportsConfig.apply)
 
   private val validatedImportsCircuitBreakerConfig: ValidationNel[String, ImportsCircuitBreakerConfig] = (
