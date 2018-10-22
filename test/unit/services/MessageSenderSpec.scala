@@ -69,7 +69,16 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       await(service.send(importsMessageType)(vpr, hc))
     }
 
-    when(mockPayloadDecorator.wrap(meq(TestXmlPayload), meq[String](fieldsIdString).asInstanceOf[FieldsId], meq[String](CorrelationIdHeaderValue).asInstanceOf[CorrelationIdHeader], meq[String](AuthenticatedEoriValue).asInstanceOf[AuthenticatedEori], meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])).thenReturn(wrappedValidXML)
+    when(mockPayloadDecorator.wrap(
+      meq(TestXmlPayload),
+      meq[String](fieldsIdString).asInstanceOf[FieldsId],
+      meq[String](CorrelationIdHeaderValue).asInstanceOf[CorrelationIdHeader],
+      meq[String](AuthenticatedEoriValue).asInstanceOf[AuthenticatedEori],
+      meq(importsMessageType.wrapperRootElementLabel),
+      any[DateTime]
+    )(any[ValidatedPayloadRequest[_]])
+    ).thenReturn(wrappedValidXML)
+
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]])).thenReturn(mockHttpResponse)
     when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
