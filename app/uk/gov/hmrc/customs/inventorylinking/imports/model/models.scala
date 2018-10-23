@@ -32,6 +32,14 @@ case class CorrelationIdHeader(value: String) extends AnyVal {
   override def toString: String = value.toString
 }
 
+case class SubmitterIdentifier(value: String) extends AnyVal {
+  override def toString: String = value.toString
+}
+
+case class AuthenticatedEori(value: String) extends AnyVal {
+  override def toString: String = value.toString
+}
+
 case class CorrelationId(uuid: UUID) extends AnyVal {
   override def toString: String = uuid.toString
 }
@@ -50,7 +58,8 @@ object VersionOne extends ApiVersion{
 
 case class ImportsConfig (
   whiteListedCspApplicationIds: Seq[String],
-  apiSubscriptionFieldsBaseUrl: String
+  apiSubscriptionFieldsBaseUrl: String,
+  authenticatedEori: String
 )
 
 case class ImportsCircuitBreakerConfig(numberOfCallsToTriggerStateChange: Int,

@@ -36,6 +36,7 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
       |circuitBreaker.numberOfCallsToTriggerStateChange=5
       |circuitBreaker.unstablePeriodDurationInMillis=1000
       |circuitBreaker.unavailablePeriodDurationInMillis=1000
+      |authenticatedEori=RASHADMUGHAL
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
@@ -53,6 +54,7 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
 
       configService.importsConfig.whiteListedCspApplicationIds shouldBe Seq("someId-1", "someId-2")
       configService.importsConfig.apiSubscriptionFieldsBaseUrl shouldBe "http://some-host:1111/some-context"
+      configService.importsConfig.authenticatedEori shouldBe "RASHADMUGHAL"
       configService.importsCircuitBreakerConfig.numberOfCallsToTriggerStateChange shouldBe 5
       configService.importsCircuitBreakerConfig.unavailablePeriodDurationInMillis shouldBe 1000
       configService.importsCircuitBreakerConfig.unstablePeriodDurationInMillis shouldBe 1000
@@ -63,6 +65,7 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
         """
           |Could not find config api-subscription-fields.host
           |Service configuration not found for key: api-subscription-fields.context
+          |Could not find config key 'authenticatedEori'
           |Could not find config key 'circuitBreaker.numberOfCallsToTriggerStateChange'
           |Could not find config key 'circuitBreaker.unavailablePeriodDurationInMillis'
           |Could not find config key 'circuitBreaker.unstablePeriodDurationInMillis'""".stripMargin

@@ -19,7 +19,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.xml
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{CorrelationIdHeader, FieldsId}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{AuthenticatedEori, CorrelationIdHeader, FieldsId}
 
 import scala.xml.NodeSeq
 
@@ -27,6 +27,7 @@ class PayloadDecorator {
   def wrap[A](xml: NodeSeq,
               clientId: FieldsId,
               correlationId: CorrelationIdHeader,
+              authenticatedEori: AuthenticatedEori,
               wrapperRootElementLabel: String,
               dateTime: DateTime)(implicit vpr: ValidatedPayloadRequest[A]): NodeSeq =
 
@@ -40,6 +41,8 @@ class PayloadDecorator {
         <n1:correlationID>{ correlationId.toString }</n1:correlationID>
         <n1:badgeIdentifier>{ vpr.badgeIdentifier.value }</n1:badgeIdentifier>
         <n1:dateTimeStamp>{ dateTime.toString(ISODateTimeFormat.dateTimeNoMillis) }</n1:dateTimeStamp>
+        <n1:submitterID>{ vpr.submitterIdentifier.value }</n1:submitterID>
+        <n1:authenticatedpartyID>{ authenticatedEori.value }</n1:authenticatedpartyID>
       </n1:requestCommon>
       <n1:requestDetail>
         { xml }
