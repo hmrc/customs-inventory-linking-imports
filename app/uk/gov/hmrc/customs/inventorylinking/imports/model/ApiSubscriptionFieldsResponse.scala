@@ -18,16 +18,16 @@ package uk.gov.hmrc.customs.inventorylinking.imports.model
 
 import java.util.UUID
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
 case class ApiSubscriptionFieldsResponse(fieldsId: UUID, fields: ApiSubscriptionFieldsResponseFields)
 
 case class ApiSubscriptionFieldsResponseFields(authenticatedEori: Option[String])
 
 object ApiSubscriptionFieldsResponse {
-  implicit val format: OFormat[ApiSubscriptionFieldsResponse] = Json.format[ApiSubscriptionFieldsResponse]
+  implicit val format: Format[ApiSubscriptionFieldsResponse] = Json.format[ApiSubscriptionFieldsResponse]
 }
 
 object ApiSubscriptionFieldsResponseFields {
-  implicit val format: OFormat[ApiSubscriptionFieldsResponseFields] = Json.format[ApiSubscriptionFieldsResponseFields]
+  implicit val format: Format[ApiSubscriptionFieldsResponseFields] = Json.format[ApiSubscriptionFieldsResponseFields]
 }
