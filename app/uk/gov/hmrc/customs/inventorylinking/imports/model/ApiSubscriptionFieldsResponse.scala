@@ -20,8 +20,14 @@ import java.util.UUID
 
 import play.api.libs.json.{Json, OFormat}
 
-case class ApiSubscriptionFieldsResponse(fieldsId: UUID)
+case class ApiSubscriptionFieldsResponse(fieldsId: UUID, fields: ApiSubscriptionFieldsResponseFields)
+
+case class ApiSubscriptionFieldsResponseFields(authenticatedEori: Option[String])
 
 object ApiSubscriptionFieldsResponse {
   implicit val format: OFormat[ApiSubscriptionFieldsResponse] = Json.format[ApiSubscriptionFieldsResponse]
+}
+
+object ApiSubscriptionFieldsResponseFields {
+  implicit val format: OFormat[ApiSubscriptionFieldsResponseFields] = Json.format[ApiSubscriptionFieldsResponseFields]
 }

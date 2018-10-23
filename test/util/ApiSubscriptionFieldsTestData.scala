@@ -33,7 +33,9 @@ trait ApiSubscriptionFieldsTestData {
   val apiVersion = "1.0"
   val apiSubscriptionKey = ApiSubscriptionKey(clientId, apiContext, VersionOne)
   val apiSubscriptionKeyWithEncodedContext: ApiSubscriptionKey = apiSubscriptionKey.copy(context = apiContextEncoded)
-  val apiSubscriptionFieldsResponse = ApiSubscriptionFieldsResponse(UUID.fromString(fieldsIdString))
+  val authenticatedEori = "RASHADMUGHAL"
+  val apiSubscriptionFieldsResponse = ApiSubscriptionFieldsResponse(UUID.fromString(fieldsIdString), ApiSubscriptionFieldsResponseFields(Some(authenticatedEori)))
+  val apiSubscriptionFieldsResponseWithoutAuthenticatedEori = ApiSubscriptionFieldsResponse(UUID.fromString(fieldsIdString), ApiSubscriptionFieldsResponseFields(None))
   val responseJsonString: String =
     s"""{
        |  "clientId": "afsdknbw34ty4hebdv",
@@ -42,7 +44,8 @@ trait ApiSubscriptionFieldsTestData {
        |  "fieldsId":"$fieldsIdString",
        |  "fields":{
        |    "callback-id":"http://localhost",
-       |    "token":"abc123"
+       |    "token":"abc123",
+       |    "authenticatedEori": "$authenticatedEori"
        |  }
        |}""".stripMargin
 

@@ -18,23 +18,23 @@ package unit.xml
 
 import org.scalatest.mockito.MockitoSugar
 import play.api.mvc.AnyContentAsXml
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionFieldsResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.play.test.UnitSpec
-import util.ApiSubscriptionFieldsTestData.fieldsId
-import util.TestData
 import util.TestData._
+import util.{ApiSubscriptionFieldsTestData, TestData}
 
 import scala.xml.NodeSeq
 
-class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
+class PayloadDecoratorSpec extends UnitSpec with MockitoSugar with ApiSubscriptionFieldsTestData {
 
   private val xml: NodeSeq = <node1></node1>
 
   private val payloadDecorator = new PayloadDecorator
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
-  private def wrapPayload() = payloadDecorator.wrap(xml, fieldsId, ValidCorrelationIdHeader, ValidAuthenticatedEori, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
+  private def wrapPayload(apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse = apiSubscriptionFieldsResponse) = payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, ValidCorrelationIdHeader, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
 
   "PayloadDecorator" should {
 
@@ -107,5 +107,12 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
       rd.head.text shouldBe AuthenticatedEoriValue
     }
 
+    "not set the authenticatedpartyID when not present" in {
+      val result = wrapPayload(apiSubscriptionFieldsResponseWithoutAuthenticatedEori)
+
+      val rd = result \\ "authenticatedpartyID"
+
+      rd shouldBe NodeSeq.Empty
+    }
   }
 }

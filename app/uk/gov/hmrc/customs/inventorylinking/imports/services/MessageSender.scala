@@ -53,18 +53,18 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
   def send[A](importsMessageType: ImportsMessageType)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, Unit]] = {
 
     futureApiSubFieldsId(vpr.clientId) flatMap {
-      case Right(sfId) =>
-        callBackend(importsMessageType, sfId)
+      case Right(asfr) =>
+        callBackend(importsMessageType, asfr)
       case Left(result) =>
         Future.successful(Left(result))
     }
   }
 
   private def futureApiSubFieldsId[A](c: ClientId)
-                                     (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, FieldsId]] = {
+                                     (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, ApiSubscriptionFieldsResponse]] = {
     (apiSubscriptionFieldsConnector.getSubscriptionFields(ApiSubscriptionKey(c, apiContextEncoded, VersionOne)) map {
       response: ApiSubscriptionFieldsResponse =>
-        Right(FieldsId(response.fieldsId.toString))
+        Right(response)
     }).recover {
       case NonFatal(e) =>
         logger.error(s"Subscriptions fields lookup call failed: ${e.getMessage}", e)
@@ -73,12 +73,11 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
   }
 
   private def callBackend[A](importsMessageType: ImportsMessageType,
-                             subscriptionFieldsId: FieldsId)
+                             apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse)
                             (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, Unit]] = {
     val dateTime = dateTimeProvider.nowUtc()
     val correlationId = uniqueIdsService.correlation
-    val authenticatedEori = AuthenticatedEori(importsConfigService.importsConfig.authenticatedEori)
-    val xmlToSend = preparePayload(vpr.xmlBody, subscriptionFieldsId: FieldsId, vpr.correlationIdHeader, authenticatedEori, importsMessageType, dateTime)
+    val xmlToSend = preparePayload(vpr.xmlBody, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, vpr.correlationIdHeader, importsMessageType, dateTime)
 
     connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map(_ => Right(())).recover{
       case _: UnhealthyServiceException =>
@@ -90,9 +89,9 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
   }
 
-  private def preparePayload[A](xml: NodeSeq, subscriptionFieldsId: FieldsId, correlationIdHeader: CorrelationIdHeader, authenticatedEori: AuthenticatedEori, importsMessageType: ImportsMessageType, dateTime: DateTime)
+  private def preparePayload[A](xml: NodeSeq, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, correlationIdHeader: CorrelationIdHeader, importsMessageType: ImportsMessageType, dateTime: DateTime)
                                (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): NodeSeq = {
     logger.debug(s"preparePayload called")
-    payloadDecorator.wrap(xml, subscriptionFieldsId, correlationIdHeader, authenticatedEori, importsMessageType.wrapperRootElementLabel, dateTime)
+    payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, correlationIdHeader, importsMessageType.wrapperRootElementLabel, dateTime)
   }
 }
