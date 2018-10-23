@@ -79,12 +79,6 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |            "description": "The full value of Authorization HTTP header that will be used when notifying you.",
           |            "type": "SecureToken",
           |            "hint": "For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk"
-          |          },
-          |          {
-          |            "name": "authenticatedEori",
-          |            "description": "Autheticated EORI value",
-          |            "type": "String",
-          |            "hint": "For example: SOMEAUTHEORI"
           |          }
           |        ]
           |      }
