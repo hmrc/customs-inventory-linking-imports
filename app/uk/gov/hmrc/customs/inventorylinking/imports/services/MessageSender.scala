@@ -44,7 +44,8 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               connector: ImportsConnector,
                               dateTimeProvider: DateTimeService,
                               uniqueIdsService: UniqueIdsService,
-                              logger: ImportsLogger) {
+                              logger: ImportsLogger,
+                              importsConfigService: ImportsConfigService) {
 
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
   private val errorResponseServiceUnavailable = errorInternalServerError("This service is currently unavailable")
@@ -76,7 +77,8 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                             (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, Unit]] = {
     val dateTime = dateTimeProvider.nowUtc()
     val correlationId = uniqueIdsService.correlation
-    val xmlToSend = preparePayload(vpr.xmlBody, subscriptionFieldsId: FieldsId, vpr.correlationIdHeader, importsMessageType, dateTime)
+    val authenticatedEori = AuthenticatedEori(importsConfigService.importsConfig.authenticatedEori)
+    val xmlToSend = preparePayload(vpr.xmlBody, subscriptionFieldsId: FieldsId, vpr.correlationIdHeader, authenticatedEori, importsMessageType, dateTime)
 
     connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map(_ => Right(())).recover{
       case _: UnhealthyServiceException =>
@@ -88,9 +90,9 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
   }
 
-  private def preparePayload[A](xml: NodeSeq, subscriptionFieldsId: FieldsId, correlationIdHeader: CorrelationIdHeader, importsMessageType: ImportsMessageType, dateTime: DateTime)
+  private def preparePayload[A](xml: NodeSeq, subscriptionFieldsId: FieldsId, correlationIdHeader: CorrelationIdHeader, authenticatedEori: AuthenticatedEori, importsMessageType: ImportsMessageType, dateTime: DateTime)
                                (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): NodeSeq = {
     logger.debug(s"preparePayload called")
-    payloadDecorator.wrap(xml, subscriptionFieldsId, correlationIdHeader, importsMessageType.wrapperRootElementLabel, dateTime)
+    payloadDecorator.wrap(xml, subscriptionFieldsId, correlationIdHeader, authenticatedEori, importsMessageType.wrapperRootElementLabel, dateTime)
   }
 }

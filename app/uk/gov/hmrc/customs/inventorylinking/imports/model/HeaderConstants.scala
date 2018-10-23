@@ -23,6 +23,7 @@ object HeaderConstants {
   val XForwardedHost: String = "X-Forwarded-Host"
   val XCorrelationId: String = "X-Correlation-ID"
   val XBadgeIdentifier: String = "X-Badge-Identifier"
+  val XSubmitterIdentifier: String = "X-Submitter-Identifier"
 
   val Version1AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
 }

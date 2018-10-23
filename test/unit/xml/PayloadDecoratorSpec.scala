@@ -34,7 +34,7 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
   private val payloadDecorator = new PayloadDecorator
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
-  private def wrapPayload() = payloadDecorator.wrap(xml, fieldsId, ValidCorrelationIdHeader, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
+  private def wrapPayload() = payloadDecorator.wrap(xml, fieldsId, ValidCorrelationIdHeader, ValidAuthenticatedEori, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
 
   "PayloadDecorator" should {
 
@@ -90,5 +90,22 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar {
 
       rd.head.text shouldBe ValidBadgeIdentifierValue
     }
+
+    "set the submitterID" in {
+      val result = wrapPayload()
+
+      val rd = result \\ "submitterID"
+
+      rd.head.text shouldBe SubmitterIdentifierHeaderValue
+    }
+
+    "set the authenticatedpartyID" in {
+      val result = wrapPayload()
+
+      val rd = result \\ "authenticatedpartyID"
+
+      rd.head.text shouldBe AuthenticatedEoriValue
+    }
+
   }
 }

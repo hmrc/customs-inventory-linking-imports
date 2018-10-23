@@ -20,7 +20,7 @@ import java.util.UUID
 
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}
-import org.mockito.Mockito.{verify, verifyZeroInteractions, when, atLeastOnce}
+import org.mockito.Mockito.{atLeastOnce, verify, verifyZeroInteractions, when}
 import org.scalatest.Matchers
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -33,7 +33,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import uk.gov.hmrc.customs.inventorylinking.imports.services._
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
@@ -60,18 +60,29 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     protected val mockPayloadDecorator: PayloadDecorator = mock[PayloadDecorator]
     protected val mockDateTimeProvider: DateTimeService = mock[DateTimeService]
     protected val mockHttpResponse: HttpResponse = mock[HttpResponse]
+    protected val mockImportsConfigService: ImportsConfigService = mock[ImportsConfigService]
 
     protected lazy val service: MessageSender = new MessageSender(mockApiSubscriptionFieldsConnector, mockPayloadDecorator, mockImportsConnector,
-      mockDateTimeProvider, stubUniqueIdsService, mockLogger)
+      mockDateTimeProvider, stubUniqueIdsService, mockLogger, mockImportsConfigService)
 
     protected def callSend(vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest, hc: HeaderCarrier = headerCarrier): Either[Result, Unit] = {
       await(service.send(importsMessageType)(vpr, hc))
     }
 
-    when(mockPayloadDecorator.wrap(meq(TestXmlPayload), meq[String](fieldsIdString).asInstanceOf[FieldsId], meq[String](CorrelationIdHeaderValue).asInstanceOf[CorrelationIdHeader], meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])).thenReturn(wrappedValidXML)
+    when(mockPayloadDecorator.wrap(
+      meq(TestXmlPayload),
+      meq[String](fieldsIdString).asInstanceOf[FieldsId],
+      meq[String](CorrelationIdHeaderValue).asInstanceOf[CorrelationIdHeader],
+      meq[String](AuthenticatedEoriValue).asInstanceOf[AuthenticatedEori],
+      meq(importsMessageType.wrapperRootElementLabel),
+      any[DateTime]
+    )(any[ValidatedPayloadRequest[_]])
+    ).thenReturn(wrappedValidXML)
+
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]])).thenReturn(mockHttpResponse)
     when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
+    when(mockImportsConfigService.importsConfig).thenReturn(ImportsConfig(Seq(), "https://random.url", "RASHADMUGHAL"))
   }
 
   "MessageSender" should {
@@ -93,7 +104,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     "call payload decorator passing incoming xml" in new SetUp() {
       callSend() shouldBe Right(())
 
-      verify(mockPayloadDecorator).wrap(meq(TestXmlPayload), meq[String](fieldsIdString).asInstanceOf[FieldsId], meq[String](CorrelationIdHeaderValue).asInstanceOf[CorrelationIdHeader], meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])
+      verify(mockPayloadDecorator).wrap(meq(TestXmlPayload), meq[String](fieldsIdString).asInstanceOf[FieldsId], meq[String](CorrelationIdHeaderValue).asInstanceOf[CorrelationIdHeader], meq[String](AuthenticatedEoriValue).asInstanceOf[AuthenticatedEori], meq(importsMessageType.wrapperRootElementLabel), any[DateTime])(any[ValidatedPayloadRequest[_]])
       verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKey))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
