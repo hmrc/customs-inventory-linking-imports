@@ -64,6 +64,11 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                                      (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, ApiSubscriptionFieldsResponse]] = {
     (apiSubscriptionFieldsConnector.getSubscriptionFields(ApiSubscriptionKey(c, apiContextEncoded, VersionOne)) map {
       response: ApiSubscriptionFieldsResponse =>
+        logger.debug(s"Got a response from api subscription fields $response")
+        response.fields.authenticatedEori match {
+          case Some(_) => logger.info("Got an eori back from api subscription fields")
+          case None => logger.info("No eori returned from api subscription fields")
+        }
         Right(response)
     }).recover {
       case NonFatal(e) =>

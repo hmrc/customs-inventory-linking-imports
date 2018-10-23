@@ -16,7 +16,7 @@ Make sure the `api-subscription-fields` service is running on port `9650`. Then 
  - Note that the UUID `6372609a-f550-11e7-8c3f-9a214cf093aa` is the application clientId.
 
 ```
-curl -v -X PUT "http://localhost:9650/field/application/6372609a-f550-11e7-8c3f-9a214cf093aa/context/customs%2Finventory-linking-imports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "https://postman-echo.com/post", "securityToken" : "securityToken", "authenticatedEori": "RASHADMUGHAL" } }'
+curl -v -X PUT "http://localhost:9650/field/application/6372609a-f550-11e7-8c3f-9a214cf093aa/context/customs%2Finventory-linking-imports/version/1.0" -H "Cache-Control: no-cache" -H "Content-Type: application/json" -d '{ "fields" : { "callbackUrl" : "https://postman-echo.com/post", "securityToken" : "securityToken", "authenticatedEori": "SOMEAUTHEORI" } }'
 ```
 
 ### Seeding data for the `customs-notifications-receiver-stub` dummy callback endpoint
