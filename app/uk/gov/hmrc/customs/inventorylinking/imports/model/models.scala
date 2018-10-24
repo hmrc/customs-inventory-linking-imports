@@ -58,8 +58,7 @@ object VersionOne extends ApiVersion{
 
 case class ImportsConfig (
   whiteListedCspApplicationIds: Seq[String],
-  apiSubscriptionFieldsBaseUrl: String,
-  authenticatedEori: String
+  apiSubscriptionFieldsBaseUrl: String
 )
 
 case class ImportsCircuitBreakerConfig(numberOfCallsToTriggerStateChange: Int,
