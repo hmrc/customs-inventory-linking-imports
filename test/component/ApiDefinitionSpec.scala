@@ -83,7 +83,7 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |          {
           |            "name": "authenticatedEori",
           |            "description": "Autheticated EORI value",
-          |            "type": "String",
+          |            "type": "STRING",
           |            "hint": "For example: SOMEAUTHEORI"
           |          }
           |        ]
