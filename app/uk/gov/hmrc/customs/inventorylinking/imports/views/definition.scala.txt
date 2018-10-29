@@ -42,7 +42,7 @@
           {
             "name": "authenticatedEori",
             "description": "Autheticated EORI value",
-            "type": "String",
+            "type": "STRING",
             "hint": "For example: SOMEAUTHEORI"
           }
         ]
