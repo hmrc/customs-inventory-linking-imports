@@ -82,9 +82,9 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |          },
           |          {
           |            "name": "authenticatedEori",
-          |            "description": "Autheticated EORI value",
+          |            "description": "What's your Economic Operator Registration and Identification (EORI) number?",
           |            "type": "STRING",
-          |            "hint": "For example: SOMEAUTHEORI"
+          |            "hint": "This is your EORI that will associate your application with you as a CSP"
           |          }
           |        ]
           |      }
