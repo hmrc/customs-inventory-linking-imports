@@ -25,6 +25,7 @@ import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.model.CorrelationIdHeader
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeaders, ValidatedHeadersRequest}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData
@@ -50,6 +51,9 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       }
       "be successful for content type XML with no space header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"))) shouldBe Right(TestExtractedHeaders)
+      }
+      "be successful for X-Correlation-ID as a UUID" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders + (XCorrelationIdHeaderName -> CorrelationIdValue))) shouldBe Right(TestExtractedHeaders.copy(correlationIdHeader = CorrelationIdHeader(CorrelationIdValue)))
       }
     }
     "in unhappy path, validation" should {
@@ -88,9 +92,6 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       }
       "be unsuccessful for a valid request with Invalid X-Correlation-ID header (too long)" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidXCorrelationIdTooLong)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
-      }
-      "be unsuccessful for a valid request with Invalid X-Correlation-ID header (contains ! character)" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + InvalidXCorrelationIdNonAlphanumeric)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
       }
       "be unsuccessful for a valid request with an invalid X-Submitter-Identifier with non alphanumeric characters" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierNonAlphanumeric)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)

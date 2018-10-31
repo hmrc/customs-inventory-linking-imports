@@ -35,7 +35,7 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
-  private lazy val xCorrelationIdHeaderRegex = "^[0-9A-Za-z]{1,36}$".r
+  private lazy val xCorrelationIdHeaderRegex = "^.{1,36}$".r
   private lazy val xSubmitterIdentifierHeaderRegex = "^[0-9A-Za-z]{1,17}$".r
   private lazy val errorResponseBadgeIdentifierHeaderMissing = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
   private lazy val errorResponseCorrelationIdHeaderMissing = errorBadRequest(s"${HeaderConstants.XCorrelationId} header is missing or invalid")
