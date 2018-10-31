@@ -17,8 +17,9 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import java.net.URLEncoder
-
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
+
 import org.joda.time.DateTime
 import play.api.mvc.Result
 import uk.gov.hmrc.circuitbreaker.UnhealthyServiceException
@@ -79,7 +80,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                             (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, Unit]] = {
     val dateTime = dateTimeProvider.nowUtc()
     val correlationId = uniqueIdsService.correlation
-    val xmlToSend = preparePayload(vpr.xmlBody, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, vpr.correlationIdHeader, importsMessageType, dateTime)
+    val xmlToSend = preparePayload(vpr.xmlBody, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, vpr.correlationIdHeader, importsMessageType, dateTime, correlationId.uuid)
 
     connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map(_ => Right(())).recover{
       case _: UnhealthyServiceException =>
@@ -91,9 +92,14 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
   }
 
-  private def preparePayload[A](xml: NodeSeq, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, correlationIdHeader: Option[CorrelationIdHeader], importsMessageType: ImportsMessageType, dateTime: DateTime)
+  private def preparePayload[A](xml: NodeSeq,
+                                apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse,
+                                correlationIdHeader: Option[CorrelationIdHeader],
+                                importsMessageType: ImportsMessageType,
+                                dateTime: DateTime,
+                                correlationId: UUID)
                                (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): NodeSeq = {
     logger.debug(s"preparePayload called")
-    payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, correlationIdHeader, importsMessageType.wrapperRootElementLabel, dateTime)
+    payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, correlationIdHeader, importsMessageType.wrapperRootElementLabel, dateTime, correlationId)
   }
 }

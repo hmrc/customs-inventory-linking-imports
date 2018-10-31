@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.xml
 
+import java.util.UUID
+
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
@@ -26,9 +28,10 @@ import scala.xml.NodeSeq
 class PayloadDecorator {
   def wrap[A](xml: NodeSeq,
               apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse,
-              correlationId: Option[CorrelationIdHeader],
+              correlationIdHeader: Option[CorrelationIdHeader],
               wrapperRootElementLabel: String,
-              dateTime: DateTime)(implicit vpr: ValidatedPayloadRequest[A]): NodeSeq =
+              dateTime: DateTime,
+              correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): NodeSeq =
 
     <n1:rootElementToBeRenamed
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -37,9 +40,7 @@ class PayloadDecorator {
       <n1:requestCommon>
         <n1:clientID>{ apiSubscriptionFieldsResponse.fieldsId.toString }</n1:clientID>
         <n1:conversationID>{ vpr.conversationId.toString}</n1:conversationID>
-        {
-          correlationId.fold(NodeSeq.Empty){ corrId: CorrelationIdHeader =>  <n1:correlationID>{ corrId.value }</n1:correlationID>}
-        }
+        <n1:correlationID>{ correlationIdHeader.fold(correlationId.toString){ corrId: CorrelationIdHeader => corrId.value } }</n1:correlationID>
         <n1:badgeIdentifier>{ vpr.badgeIdentifier.value }</n1:badgeIdentifier>
         <n1:dateTimeStamp>{ dateTime.toString(ISODateTimeFormat.dateTimeNoMillis) }</n1:dateTimeStamp>
         <n1:submitterID>{ vpr.submitterIdentifier.value }</n1:submitterID>
