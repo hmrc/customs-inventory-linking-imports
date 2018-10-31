@@ -47,13 +47,13 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
   "HeaderValidatorAction" can {
     "in happy path, validation" should {
       "be successful for a valid request with accept header for V1" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders)) shouldBe Right(TestExtractedHeaders)
+        validate(conversationIdRequest(ValidHeaders)) shouldBe Right(TestExtractedHeadersWithoutCorrelationId)
       }
       "be successful for content type XML with no space header" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"))) shouldBe Right(TestExtractedHeaders)
+        validate(conversationIdRequest(ValidHeaders + (CONTENT_TYPE -> "application/xml;charset=utf-8"))) shouldBe Right(TestExtractedHeadersWithoutCorrelationId)
       }
-      "be successful for X-Correlation-ID as a UUID" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + (XCorrelationIdHeaderName -> CorrelationIdValue))) shouldBe Right(TestExtractedHeaders.copy(correlationIdHeader = CorrelationIdHeader(CorrelationIdValue)))
+      "be successful for missing X-Correlation-ID" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders - XCorrelationIdHeaderName)) shouldBe Right(TestExtractedHeadersWithoutCorrelationId)
       }
     }
     "in unhappy path, validation" should {
@@ -68,9 +68,6 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       }
       "be unsuccessful for a valid request with missing X-Badge-Identifier header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders - XBadgeIdentifierHeaderName)) shouldBe Left(ErrorResponseBadgeIdentifierHeaderMissing)
-      }
-      "be unsuccessful for a valid request with missing X-Correlation-ID header" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders - XCorrelationIdHeaderName)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
       }
       "be unsuccessful for a valid request with missing X-Submitter-Identifier header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders - XSubmitterIdentifierHeaderName)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
@@ -89,9 +86,6 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       }
       "be unsuccessful for a valid request with Invalid X-Badge-Identifier header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidXBadgeIdentifier)) shouldBe Left(ErrorResponseBadgeIdentifierHeaderMissing)
-      }
-      "be unsuccessful for a valid request with Invalid X-Correlation-ID header (too long)" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + InvalidXCorrelationIdTooLong)) shouldBe Left(ErrorResponseCorrelationIdHeaderMissing)
       }
       "be unsuccessful for a valid request with an invalid X-Submitter-Identifier with non alphanumeric characters" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierNonAlphanumeric)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)

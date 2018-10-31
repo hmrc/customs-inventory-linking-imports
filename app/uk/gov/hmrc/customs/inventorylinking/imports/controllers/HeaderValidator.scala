@@ -35,10 +35,8 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
-  private lazy val xCorrelationIdHeaderRegex = "^.{1,36}$".r
   private lazy val xSubmitterIdentifierHeaderRegex = "^[0-9A-Za-z]{1,17}$".r
   private lazy val errorResponseBadgeIdentifierHeaderMissing = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
-  private lazy val errorResponseCorrelationIdHeaderMissing = errorBadRequest(s"${HeaderConstants.XCorrelationId} header is missing or invalid")
   private lazy val errorResponseSubmitterIdentifierHeaderMissing = errorBadRequest(s"${HeaderConstants.XSubmitterIdentifier} header is missing or invalid")
 
   def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
@@ -52,8 +50,6 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
 
     def hasXBadgeIdentifier = validateHeader(XBadgeIdentifier, xBadgeIdentifierRegex.findFirstIn(_).nonEmpty, errorResponseBadgeIdentifierHeaderMissing)
 
-    def hasXCorrelationId = validateHeader(XCorrelationId, xCorrelationIdHeaderRegex.findFirstIn(_).nonEmpty, errorResponseCorrelationIdHeaderMissing)
-
     def hasXSubmitterIdentifier = validateHeader(XSubmitterIdentifier, xSubmitterIdentifierHeaderRegex.findFirstIn(_).nonEmpty, errorResponseSubmitterIdentifierHeaderMissing)
 
     val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
@@ -61,7 +57,6 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
       contentType <- hasContentType.right
       xClientId <- hasXClientId.right
       xBadgeIdentifier <- hasXBadgeIdentifier.right
-      xCorrelationId <- hasXCorrelationId.right
       xSubmitterIdentifier <- hasXSubmitterIdentifier.right
     } yield {
       logger.debug(
@@ -69,14 +64,13 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
       + s"$CONTENT_TYPE header passed validation: $contentType\n"
       + s"$XClientId header passed validation: $xClientId\n"
       + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier"
-      + s"$XCorrelationId header passed validation: $xCorrelationId"
       + s"$XSubmitterIdentifier header passed validation: $xSubmitterIdentifier")
-      ExtractedHeadersImpl(BadgeIdentifier(xBadgeIdentifier), ClientId(xClientId), CorrelationIdHeader(xCorrelationId), SubmitterIdentifier(xSubmitterIdentifier))
+      ExtractedHeadersImpl(BadgeIdentifier(xBadgeIdentifier), ClientId(xClientId), None, SubmitterIdentifier(xSubmitterIdentifier))
     }
     theResult
   }
 
-  private def validateHeader[A](headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)
+  protected def validateHeader[A](headerName: String, rule: String => Boolean, errorResponse: ErrorResponse)
                                (implicit conversationIdRequest: ConversationIdRequest[A], h: Headers): Either[ErrorResponse, String] = {
     val left = Left(errorResponse)
     def leftWithLog(headerName: String) = {

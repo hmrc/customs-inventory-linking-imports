@@ -26,7 +26,7 @@ import scala.xml.NodeSeq
 class PayloadDecorator {
   def wrap[A](xml: NodeSeq,
               apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse,
-              correlationId: CorrelationIdHeader,
+              correlationId: Option[CorrelationIdHeader],
               wrapperRootElementLabel: String,
               dateTime: DateTime)(implicit vpr: ValidatedPayloadRequest[A]): NodeSeq =
 
@@ -37,7 +37,9 @@ class PayloadDecorator {
       <n1:requestCommon>
         <n1:clientID>{ apiSubscriptionFieldsResponse.fieldsId.toString }</n1:clientID>
         <n1:conversationID>{ vpr.conversationId.toString}</n1:conversationID>
-        <n1:correlationID>{ correlationId.toString }</n1:correlationID>
+        {
+          correlationId.fold(NodeSeq.Empty){ corrId: CorrelationIdHeader =>  <n1:correlationID>{ corrId.value }</n1:correlationID>}
+        }
         <n1:badgeIdentifier>{ vpr.badgeIdentifier.value }</n1:badgeIdentifier>
         <n1:dateTimeStamp>{ dateTime.toString(ISODateTimeFormat.dateTimeNoMillis) }</n1:dateTimeStamp>
         <n1:submitterID>{ vpr.submitterIdentifier.value }</n1:submitterID>

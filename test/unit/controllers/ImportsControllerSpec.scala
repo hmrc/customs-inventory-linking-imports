@@ -58,7 +58,7 @@ class ImportsControllerSpec extends UnitSpec
 
     protected val enrolment: Enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
 
-    protected val controller: GoodsArrivalController = new GoodsArrivalController(mockCommon, mockGoodsArrival, stubGoodsArrivalAuthAction, stubGoodsArrivalPayloadValidationAction)
+    protected val controller: GoodsArrivalController = new GoodsArrivalController(mockCommon, mockGoodsArrival, stubGoodsArrivalAuthAction, stubGoodsArrivalPayloadValidationAction, stubValidateAndExtractHeadersAction)
 
     protected def awaitSubmit(request: Request[AnyContent]): Result = {
       await(controller.post().apply(request))
@@ -69,7 +69,6 @@ class ImportsControllerSpec extends UnitSpec
     }
 
     when(mockCommon.conversationIdAction).thenReturn(stubConversationIdAction)
-    when(mockCommon.validateAndExtractHeadersAction).thenReturn(stubValidateAndExtractHeadersAction)
     when(mockCommon.messageSender).thenReturn(mockMessageSender)
 
     when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(Future.successful(()))

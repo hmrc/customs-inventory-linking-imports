@@ -91,7 +91,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     }
   }
 
-  private def preparePayload[A](xml: NodeSeq, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, correlationIdHeader: CorrelationIdHeader, importsMessageType: ImportsMessageType, dateTime: DateTime)
+  private def preparePayload[A](xml: NodeSeq, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, correlationIdHeader: Option[CorrelationIdHeader], importsMessageType: ImportsMessageType, dateTime: DateTime)
                                (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): NodeSeq = {
     logger.debug(s"preparePayload called")
     payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, correlationIdHeader, importsMessageType.wrapperRootElementLabel, dateTime)

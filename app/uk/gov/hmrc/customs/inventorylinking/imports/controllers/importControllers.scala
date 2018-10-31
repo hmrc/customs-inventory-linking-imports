@@ -31,20 +31,20 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class Common @Inject() (val conversationIdAction: ConversationIdAction,
-                        val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction,
                         val messageSender: MessageSender,
                         val logger: ImportsLogger)
 
 abstract class ImportController( val common: Common,
                                  val importsMessageType: ImportsMessageType,
                                  val authAction: AuthAction,
-                                 val payloadValidationAction: PayloadValidationAction
+                                 val payloadValidationAction: PayloadValidationAction,
+                                 val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction
                                ) extends BaseController {
 
   def process(): Action[AnyContent] =  (
     Action andThen
     common.conversationIdAction andThen
-    common.validateAndExtractHeadersAction andThen
+    validateAndExtractHeadersAction andThen
     authAction andThen
     payloadValidationAction
     )
@@ -71,11 +71,13 @@ abstract class ImportController( val common: Common,
 class GoodsArrivalController @Inject()(common: Common,
                                        importsMessageType: GoodsArrival,
                                        authAction: GoodsArrivalAuthAction,
-                                       payloadValidationAction: GoodsArrivalPayloadValidationAction)
+                                       payloadValidationAction: GoodsArrivalPayloadValidationAction,
+                                       validateAndExtractHeadersAction: ValidateAndExtractHeadersAction)
   extends ImportController(common: Common,
                            importsMessageType,
                            authAction,
-                           payloadValidationAction) {
+                           payloadValidationAction,
+                           validateAndExtractHeadersAction) {
 
   def post(): Action[AnyContent] = {
     super.process()
@@ -86,11 +88,13 @@ class GoodsArrivalController @Inject()(common: Common,
 class ValidateMovementController @Inject()(common: Common,
                                            importsMessageType: ValidateMovement,
                                            authAction: ValidateMovementAuthAction,
-                                           payloadValidationAction: ValidateMovementPayloadValidationAction)
+                                           payloadValidationAction: ValidateMovementPayloadValidationAction,
+                                           validateAndExtractHeadersAction: ValidateMovementValidateAndExtractHeadersAction)
   extends ImportController(common: Common,
                            importsMessageType,
                            authAction,
-                           payloadValidationAction) {
+                           payloadValidationAction,
+                           validateAndExtractHeadersAction) {
 
   def post(): Action[AnyContent] = {
     super.process()

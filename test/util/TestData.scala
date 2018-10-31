@@ -73,7 +73,8 @@ object TestData {
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
-  val TestExtractedHeaders = ExtractedHeadersImpl(ValidBadgeIdentifier, ApiSubscriptionFieldsTestData.clientId, ValidCorrelationIdHeader, ValidSubmitterIdentifierHeader)
+  val TestExtractedHeaders = ExtractedHeadersImpl(ValidBadgeIdentifier, ApiSubscriptionFieldsTestData.clientId, Some(ValidCorrelationIdHeader), ValidSubmitterIdentifierHeader)
+  val TestExtractedHeadersWithoutCorrelationId = TestExtractedHeaders.copy(correlationIdHeader = None)
 
   lazy val InvalidAcceptHeader: (String, String) = ACCEPT -> JSON
   lazy val InvalidContentTypeJsonHeader: (String, String) = CONTENT_TYPE -> JSON
