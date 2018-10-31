@@ -74,8 +74,8 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       meq(apiSubscriptionFieldsResponse),
       any[Option[String]].asInstanceOf[Option[CorrelationIdHeader]],
       meq(importsMessageType.wrapperRootElementLabel),
-      any[DateTime]
-    )(any[ValidatedPayloadRequest[_]])
+      any[DateTime],
+      meq(CorrelationIdUuid))(any[ValidatedPayloadRequest[_]])
     ).thenReturn(wrappedValidXML)
 
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
@@ -108,7 +108,8 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         meq(apiSubscriptionFieldsResponse),
         any[Option[String]].asInstanceOf[Option[CorrelationIdHeader]],
         meq(importsMessageType.wrapperRootElementLabel),
-        any[DateTime])(any[ValidatedPayloadRequest[_]])
+        any[DateTime],
+        meq(CorrelationIdUuid))(any[ValidatedPayloadRequest[_]])
       verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKey))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
