@@ -33,8 +33,8 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar with ApiSubscripti
 
   private val payloadDecorator = new PayloadDecorator
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
-
-  private def wrapPayload(apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse = apiSubscriptionFieldsResponse) = payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, ValidCorrelationIdHeader, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
+  private def wrapPayloadWithoutCorrelationId(apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse = apiSubscriptionFieldsResponse) = payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, None, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
+  private def wrapPayload(apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse = apiSubscriptionFieldsResponse) = payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, Some(ValidCorrelationIdHeader), "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime)
 
   "PayloadDecorator" should {
 
@@ -111,6 +111,14 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar with ApiSubscripti
       val result = wrapPayload(apiSubscriptionFieldsResponseWithoutAuthenticatedEori)
 
       val rd = result \\ "authenticatedpartyID"
+
+      rd shouldBe NodeSeq.Empty
+    }
+
+    "not set the correlationID when not present" in {
+      val result = wrapPayloadWithoutCorrelationId()
+
+      val rd = result \\ "correlationID"
 
       rd shouldBe NodeSeq.Empty
     }

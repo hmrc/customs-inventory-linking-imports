@@ -64,7 +64,6 @@ object ActionBuilderModelHelper {
       ar.request
     )
   }
-
 }
 
 trait HasConversationId {
@@ -74,7 +73,7 @@ trait HasConversationId {
 trait ExtractedHeaders {
   val badgeIdentifier: BadgeIdentifier
   val clientId: ClientId
-  val correlationIdHeader: CorrelationIdHeader
+  val correlationIdHeader: Option[CorrelationIdHeader]
   val submitterIdentifier: SubmitterIdentifier
 }
 
@@ -85,7 +84,7 @@ trait HasXmlBody {
 case class ExtractedHeadersImpl(
   badgeIdentifier: BadgeIdentifier,
   clientId: ClientId,
-  correlationIdHeader: CorrelationIdHeader,
+  correlationIdHeader: Option[CorrelationIdHeader],
   submitterIdentifier: SubmitterIdentifier
 ) extends ExtractedHeaders
 
@@ -107,7 +106,7 @@ case class ConversationIdRequest[A](
 case class ValidatedHeadersRequest[A](
                                        badgeIdentifier: BadgeIdentifier,
                                        conversationId: ConversationId,
-                                       correlationIdHeader: CorrelationIdHeader,
+                                       correlationIdHeader: Option[CorrelationIdHeader],
                                        submitterIdentifier: SubmitterIdentifier,
                                        clientId: ClientId,
                                        request: Request[A]
@@ -117,7 +116,7 @@ case class ValidatedHeadersRequest[A](
 case class AuthorisedRequest[A](
                                  badgeIdentifier: BadgeIdentifier,
                                  conversationId: ConversationId,
-                                 correlationIdHeader: CorrelationIdHeader,
+                                 correlationIdHeader: Option[CorrelationIdHeader],
                                  submitterIdentifier: SubmitterIdentifier,
                                  clientId: ClientId,
                                  request: Request[A]
@@ -127,7 +126,7 @@ case class AuthorisedRequest[A](
 case class ValidatedPayloadRequest[A](
                                        badgeIdentifier: BadgeIdentifier,
                                        conversationId: ConversationId,
-                                       correlationIdHeader: CorrelationIdHeader,
+                                       correlationIdHeader: Option[CorrelationIdHeader],
                                        submitterIdentifier: SubmitterIdentifier,
                                        clientId: ClientId,
                                        xmlBody: NodeSeq,
