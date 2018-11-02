@@ -16,42 +16,42 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
+import cats.implicits._
 import javax.inject.{Inject, Singleton}
-import scalaz.ValidationNel
-import scalaz.syntax.apply._
-import scalaz.syntax.traverse._
-import uk.gov.hmrc.customs.api.common.config.ConfigValidationNelAdaptor
+import uk.gov.hmrc.customs.api.common.config.{ConfigValidatedNelAdaptor, CustomsValidatedNel}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsCircuitBreakerConfig, ImportsConfig}
 
 @Singleton
-class ImportsConfigService @Inject() (configValidationNel: ConfigValidationNelAdaptor, logger: ImportsLogger) {
+class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdaptor, logger: ImportsLogger) {
 
-  private val root = configValidationNel.root
+  private val root = configValidatedNel.root
   private val whiteListedCspApplicationIds = root.stringSeq("api.access.version-1.0.whitelistedApplicationIds")
-  private val apiSubscriptionFieldsService = configValidationNel.service("api-subscription-fields")
+  private val apiSubscriptionFieldsService = configValidatedNel.service("api-subscription-fields")
   private val numberOfCallsToTriggerStateChangeNel = root.int("circuitBreaker.numberOfCallsToTriggerStateChange")
   private val unavailablePeriodDurationInMillisNel = root.int("circuitBreaker.unavailablePeriodDurationInMillis")
   private val unstablePeriodDurationInMillisNel = root.int("circuitBreaker.unstablePeriodDurationInMillis")
   private val apiSubscriptionFieldsServiceUrlNel = apiSubscriptionFieldsService.serviceUrl
 
-  private val validatedImportsConfig: ValidationNel[String, ImportsConfig] = (
-    whiteListedCspApplicationIds |@| apiSubscriptionFieldsServiceUrlNel
-  )(ImportsConfig.apply)
+  private val validatedImportsConfig: CustomsValidatedNel[ImportsConfig] = (
+    whiteListedCspApplicationIds, apiSubscriptionFieldsServiceUrlNel
+  ) mapN ImportsConfig.apply
 
-  private val validatedImportsCircuitBreakerConfig: ValidationNel[String, ImportsCircuitBreakerConfig] = (
-    numberOfCallsToTriggerStateChangeNel |@| unavailablePeriodDurationInMillisNel |@| unstablePeriodDurationInMillisNel
-    ) (ImportsCircuitBreakerConfig.apply)
+  private val validatedImportsCircuitBreakerConfig: CustomsValidatedNel[ImportsCircuitBreakerConfig] = (
+    numberOfCallsToTriggerStateChangeNel, unavailablePeriodDurationInMillisNel, unstablePeriodDurationInMillisNel
+    ) mapN ImportsCircuitBreakerConfig
 
   private val importsConfigHolder =
-    (validatedImportsConfig |@| validatedImportsCircuitBreakerConfig) (ImportsConfigHolder.apply) fold(
-      fail = { nel =>
+    (validatedImportsConfig, validatedImportsCircuitBreakerConfig) mapN ImportsConfigHolder fold(
+      // error
+      { nel =>
         // error case exposes nel (a NotEmptyList)
         val errorMsg = nel.toList.mkString("\n", "\n", "")
         logger.errorWithoutRequestContext(errorMsg)
         throw new IllegalStateException(errorMsg)
       },
-      succ = identity
+      // success
+      identity
     )
 
   val importsConfig: ImportsConfig = importsConfigHolder.importsConfig

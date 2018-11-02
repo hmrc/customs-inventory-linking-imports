@@ -19,7 +19,7 @@ package unit.services
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.mockito.MockitoSugar
 import play.api.{Configuration, Environment, Mode}
-import uk.gov.hmrc.customs.api.common.config.{ConfigValidationNelAdaptor, ServicesConfig}
+import uk.gov.hmrc.customs.api.common.config.{ConfigValidatedNelAdaptor, ServicesConfig}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.play.test.UnitSpec
@@ -45,7 +45,7 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
   private val mockImportsLogger = mock[ImportsLogger]
 
   private def customsConfigService(conf: Configuration) =
-    new ImportsConfigService(new ConfigValidationNelAdaptor(testServicesConfig(conf), conf), mockImportsLogger)
+    new ImportsConfigService(new ConfigValidatedNelAdaptor(testServicesConfig(conf), conf), mockImportsLogger)
 
   "ImportsConfigService" should {
     "return config as object model when configuration is valid" in {
