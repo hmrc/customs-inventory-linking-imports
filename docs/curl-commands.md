@@ -5,22 +5,21 @@
 | Path                                                                                                                            |  Method  | Description                                |
 |---------------------------------------------------------------------------------------------------------------------------------|----------|--------------------------------------------|
 | [`/arrival-notifications`](#user-content-post-arrival-notifications)                                                              |   `POST` |    Allows submission of a arrival notification | 
-| [`/movement-validation`](#user-content-post-movement-validation)                                                            |   `POST` |    Allows submission of movement validation request |
+| [`/movement-validation`](#user-content-post-movement-validation)                                                            |   `POST` |    Allows submission of movement validation response |
 
 --- 
  
 ### POST Customs Declaration Inventory Linking Imports 
-#### `POST /arrival-notifications`
 Submits a new arrival notification
  
 ##### curl command
 ```
 curl -v -X POST "http://localhost:9824/arrival-notifications" \
   -H 'Accept: application/vnd.hmrc.1.0+xml' \
-  -H 'Authorization: Bearer {ADD VALID TOKEN}' \
+  -H 'Authorization: Bearer {TOKEN}' \
   -H 'Content-Type: application/xml;charset=utf-8' \
   -H 'X-Badge-Identifier: {Badge Id}' \
-  -H 'X-Client-ID: {Valid Client Id}' \
+  -H 'X-Client-ID: {Client Id}' \
   -H 'cache-control: no-cache' \
   -H 'X-Submitter-Identifier: {Submitter Id}' \
  -d '<?xml version="1.0" encoding="UTF-8"?>
@@ -35,17 +34,16 @@ curl -v -X POST "http://localhost:9824/arrival-notifications" \
 ---
 
 ### POST Movement Validation
-#### `POST /movement-validation`
-Submits a customs movement validation
+Submits a customs movement validation response
  
 ##### curl command
 ```
 curl -v -X POST "http://localhost:9824/movement-validation" \
   -H 'Accept: application/vnd.hmrc.1.0+xml' \
-  -H 'Authorization: Bearer {ADD VALID TOKEN}' \
+  -H 'Authorization: Bearer {TOKEN}' \
   -H 'Content-Type: application/xml;charset=utf-8' \
   -H 'X-Badge-Identifier: {Badge Id}' \
-  -H 'X-Client-ID: {Valid Client Id}' \
+  -H 'X-Client-ID: {Client Id}' \
   -H 'cache-control: no-cache' \
   -H 'X-Submitter-Identifier: {Submitter Id}' \
   -H 'X-Correlation-ID: {Correlation Id}' \
