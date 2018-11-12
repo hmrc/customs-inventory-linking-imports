@@ -51,6 +51,9 @@ that `default` configuration is declared directly inside the `customs-inventory-
       }
     }
   }
+
+## Useful CURL commands for local testing
+[link to curl commands](docs/curl-commands.md)
     
 ### Switch service configuration for an endpoint
 
