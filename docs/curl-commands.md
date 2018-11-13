@@ -4,19 +4,19 @@
 
 | Path                                                                                                                            |  Method  | Description                                |
 |---------------------------------------------------------------------------------------------------------------------------------|----------|--------------------------------------------|
-| [`/arrival-notifications`](#user-content-post-arrival-notifications)                                                              |   `POST` |    Allows submission of a arrival notification | 
-| [`/movement-validation`](#user-content-post-movement-validation)                                                            |   `POST` |    Allows submission of movement validation response |
+| [`/arrival-notifications`](#user-content-post-arrival-notifications)                                                              |   `POST` |    Allows submission of a goods arrival notification | 
+| [`/movement-validation`](#user-content-post-movement-validation)                                                            |   `POST` |    Allows submission of a movement validation response |
 
 --- 
  
-### POST Customs Declaration Inventory Linking Imports 
-Submits a new arrival notification
+#### `POST /arrival-notifications` 
+Submits a goods arrival notification
  
 ##### curl command
 ```
 curl -v -X POST "http://localhost:9824/arrival-notifications" \
   -H 'Accept: application/vnd.hmrc.1.0+xml' \
-  -H 'Authorization: Bearer {TOKEN}' \
+  -H 'Authorization: Bearer {token}' \
   -H 'Content-Type: application/xml;charset=utf-8' \
   -H 'X-Badge-Identifier: {Badge Id}' \
   -H 'X-Client-ID: {Client Id}' \
@@ -33,14 +33,14 @@ curl -v -X POST "http://localhost:9824/arrival-notifications" \
  
 ---
 
-### POST Movement Validation
+#### `POST /movement-validation`
 Submits a customs movement validation response
  
 ##### curl command
 ```
 curl -v -X POST "http://localhost:9824/movement-validation" \
   -H 'Accept: application/vnd.hmrc.1.0+xml' \
-  -H 'Authorization: Bearer {TOKEN}' \
+  -H 'Authorization: Bearer {token}' \
   -H 'Content-Type: application/xml;charset=utf-8' \
   -H 'X-Badge-Identifier: {Badge Id}' \
   -H 'X-Client-ID: {Client Id}' \
