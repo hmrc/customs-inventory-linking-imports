@@ -43,7 +43,6 @@ class PayloadDecorator {
         <n1:correlationID>{ correlationIdHeader.fold(correlationId.toString){ corrId: CorrelationIdHeader => corrId.value } }</n1:correlationID>
         <n1:badgeIdentifier>{ vpr.badgeIdentifier.value }</n1:badgeIdentifier>
         <n1:dateTimeStamp>{ dateTime.toString(ISODateTimeFormat.dateTimeNoMillis) }</n1:dateTimeStamp>
-        <n1:submitterID>{ vpr.submitterIdentifier.value }</n1:submitterID>
         {
           apiSubscriptionFieldsResponse.fields.authenticatedEori.fold(NodeSeq.Empty) { authenticatedEori: String => <n1:authenticatedpartyID>{authenticatedEori}</n1:authenticatedpartyID>}
         }

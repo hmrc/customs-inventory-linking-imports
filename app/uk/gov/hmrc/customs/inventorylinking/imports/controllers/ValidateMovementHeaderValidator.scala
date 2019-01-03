@@ -44,7 +44,7 @@ class ValidateMovementHeaderValidator @Inject()(logger: ImportsLogger) extends H
           xCorrelationId <- hasXCorrelationId.right
         } yield {
           logger.debug(s"$XCorrelationId header passed validation: $xCorrelationId")
-          ExtractedHeadersImpl(b.badgeIdentifier, b.clientId, Some(CorrelationIdHeader(xCorrelationId)), b.submitterIdentifier)
+          ExtractedHeadersImpl(b.badgeIdentifier, b.clientId, Some(CorrelationIdHeader(xCorrelationId)))
         }
         theResult
       case Left(a) => Left(a)

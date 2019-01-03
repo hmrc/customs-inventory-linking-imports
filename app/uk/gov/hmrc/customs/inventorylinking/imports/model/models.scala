@@ -32,10 +32,6 @@ case class CorrelationIdHeader(value: String) extends AnyVal {
   override def toString: String = value.toString
 }
 
-case class SubmitterIdentifier(value: String) extends AnyVal {
-  override def toString: String = value.toString
-}
-
 case class AuthenticatedEori(value: String) extends AnyVal {
   override def toString: String = value.toString
 }

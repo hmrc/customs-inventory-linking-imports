@@ -69,9 +69,6 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       "be unsuccessful for a valid request with missing X-Badge-Identifier header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders - XBadgeIdentifierHeaderName)) shouldBe Left(ErrorResponseBadgeIdentifierHeaderMissing)
       }
-      "be unsuccessful for a valid request with missing X-Submitter-Identifier header" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders - XSubmitterIdentifierHeaderName)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
-      }
       "be unsuccessful for a valid request with Invalid accept header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidAcceptHeader)) shouldBe Left(ErrorAcceptHeaderInvalid)
       }
@@ -86,15 +83,6 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       }
       "be unsuccessful for a valid request with Invalid X-Badge-Identifier header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidXBadgeIdentifier)) shouldBe Left(ErrorResponseBadgeIdentifierHeaderMissing)
-      }
-      "be unsuccessful for a valid request with an invalid X-Submitter-Identifier with non alphanumeric characters" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierNonAlphanumeric)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
-      }
-      "be unsuccessful for a valid request with an invalid X-Submitter-Identifier header greater than 17 characters" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierLongerThan17)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
-      }
-      "be unsuccessful for a valid request with an invalid X-Submitter-Identifier header that is empty" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + InvalidXSubmitterIdentifierEmpty)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
       }
     }
   }

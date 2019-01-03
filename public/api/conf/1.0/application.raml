@@ -48,11 +48,6 @@ documentation:
           type: string
           required: true
           example: ABC123
-        X-Submitter-Identifier:
-          description: Alpha-numeric, maximum length is 17.
-          type: string
-          required: true
-          example: ABC123
 
       (annotations.scope): "write:customs-il-imports-movement-validation"
       securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-il-imports-movement-validation" ] } ]
@@ -112,11 +107,6 @@ documentation:
           type: string
           required: true
           example: DHL123
-        X-Submitter-Identifier:
-          description: Alpha-numeric, maximum length is 17.
-          type: string
-          required: true
-          example: ABC123
 
       (annotations.scope): "write:customs-il-imports-arrival-notifications"
       securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-il-imports-arrival-notifications" ] } ]
