@@ -43,7 +43,7 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
         "IGNORE" -> "IGNORE"
       )
     )
-  private val validatedHeadersRequest = ValidatedHeadersRequest(ValidBadgeIdentifier, ValidConversationId, Some(ValidCorrelationIdHeader), ValidSubmitterIdentifierHeader, ClientId("some-client-id"), requestMock)
+  private val validatedHeadersRequest = ValidatedHeadersRequest(ValidBadgeIdentifier, ValidConversationId, Some(ValidCorrelationIdHeader), ClientId("some-client-id"), requestMock)
 
   "LoggingHelper" should {
 
