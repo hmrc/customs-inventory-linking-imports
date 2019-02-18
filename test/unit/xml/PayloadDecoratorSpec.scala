@@ -91,18 +91,18 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar with ApiSubscripti
       rd.head.text shouldBe ValidBadgeIdentifierValue
     }
 
-    "set the authenticatedpartyID" in {
+    "set the authenticatedPartyID" in {
       val result = wrapPayload()
 
-      val rd = result \\ "authenticatedpartyID"
+      val rd = result \\ "authenticatedPartyID"
 
       rd.head.text shouldBe AuthenticatedEoriValue
     }
 
-    "not set the authenticatedpartyID when not present" in {
+    "not set the authenticatedPartyID when not present" in {
       val result = wrapPayload(apiSubscriptionFieldsResponseWithoutAuthenticatedEori)
 
-      val rd = result \\ "authenticatedpartyID"
+      val rd = result \\ "authenticatedPartyID"
 
       rd shouldBe NodeSeq.Empty
     }
