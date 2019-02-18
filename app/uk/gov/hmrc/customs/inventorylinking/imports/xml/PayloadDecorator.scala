@@ -44,7 +44,7 @@ class PayloadDecorator {
         <n1:badgeIdentifier>{ vpr.badgeIdentifier.value }</n1:badgeIdentifier>
         <n1:dateTimeStamp>{ dateTime.toString(ISODateTimeFormat.dateTimeNoMillis) }</n1:dateTimeStamp>
         {
-          apiSubscriptionFieldsResponse.fields.authenticatedEori.fold(NodeSeq.Empty) { authenticatedEori: String => <n1:authenticatedpartyID>{authenticatedEori}</n1:authenticatedpartyID>}
+          apiSubscriptionFieldsResponse.fields.authenticatedEori.fold(NodeSeq.Empty) { authenticatedEori: String => <n1:authenticatedPartyID>{authenticatedEori}</n1:authenticatedPartyID>}
         }
       </n1:requestCommon>
       <n1:requestDetail>
