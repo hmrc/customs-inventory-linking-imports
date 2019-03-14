@@ -27,7 +27,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.Validat
 import uk.gov.hmrc.customs.inventorylinking.imports.services.MessageSender
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class Common @Inject() (val conversationIdAction: ConversationIdAction,
@@ -39,7 +39,8 @@ abstract class ImportController( val common: Common,
                                  val authAction: AuthAction,
                                  val payloadValidationAction: PayloadValidationAction,
                                  val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction
-                               ) extends BaseController {
+                               )
+                               (implicit ex: ExecutionContext) extends BaseController {
 
   def process(): Action[AnyContent] =  (
     Action andThen
@@ -73,6 +74,7 @@ class GoodsArrivalController @Inject()(common: Common,
                                        authAction: GoodsArrivalAuthAction,
                                        payloadValidationAction: GoodsArrivalPayloadValidationAction,
                                        validateAndExtractHeadersAction: ValidateAndExtractHeadersAction)
+                                      (implicit ex: ExecutionContext)
   extends ImportController(common: Common,
                            importsMessageType,
                            authAction,
@@ -90,6 +92,7 @@ class ValidateMovementController @Inject()(common: Common,
                                            authAction: ValidateMovementAuthAction,
                                            payloadValidationAction: ValidateMovementPayloadValidationAction,
                                            validateAndExtractHeadersAction: ValidateMovementValidateAndExtractHeadersAction)
+                                          (implicit ex: ExecutionContext)
   extends ImportController(common: Common,
                            importsMessageType,
                            authAction,

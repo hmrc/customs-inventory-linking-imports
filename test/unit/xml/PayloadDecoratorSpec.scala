@@ -16,7 +16,7 @@
 
 package unit.xml
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.AnyContentAsXml
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionFieldsResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest

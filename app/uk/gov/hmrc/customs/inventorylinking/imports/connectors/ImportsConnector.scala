@@ -17,8 +17,8 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import java.util.UUID
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.http.HeaderNames._
@@ -36,8 +36,7 @@ import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
 @Singleton
@@ -46,7 +45,9 @@ class ImportsConnector @Inject()(http: HttpClient,
                                  serviceConfigProvider: ServiceConfigProvider,
                                  config: ImportsConfigService,
                                  override val configuration: Configuration
-                                 ) extends UsingCircuitBreaker with AppName {
+                                 )
+                                (implicit ex: ExecutionContext)
+                                extends UsingCircuitBreaker with AppName {
 
   def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))

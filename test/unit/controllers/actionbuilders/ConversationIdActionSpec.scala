@@ -16,7 +16,7 @@
 
 package unit.controllers.actionbuilders
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.ConversationIdAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger

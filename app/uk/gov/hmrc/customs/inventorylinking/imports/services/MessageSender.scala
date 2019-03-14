@@ -18,8 +18,8 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import java.net.URLEncoder
 import java.util.UUID
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.mvc.Result
 import uk.gov.hmrc.circuitbreaker.UnhealthyServiceException
@@ -33,8 +33,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.Validat
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Left
 import scala.util.control.NonFatal
 import scala.xml.NodeSeq
@@ -46,7 +45,8 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               dateTimeProvider: DateTimeService,
                               uniqueIdsService: UniqueIdsService,
                               logger: ImportsLogger,
-                              importsConfigService: ImportsConfigService) {
+                              importsConfigService: ImportsConfigService)
+                             (implicit ex: ExecutionContext) {
 
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")
   private val errorResponseServiceUnavailable = errorInternalServerError("This service is currently unavailable")
@@ -68,7 +68,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
         logger.debug(s"Got a response from api subscription fields $response")
         response.fields.authenticatedEori.fold(logger.info("No eori returned from api subscription fields")){ _ => logger.info("Got an eori back from api subscription fields")}
         Right(response)
-    }).recover {
+    }).recover[Either[Result, ApiSubscriptionFieldsResponse]] {
       case NonFatal(e) =>
         logger.error(s"Subscriptions fields lookup call failed: ${e.getMessage}", e)
         Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
@@ -82,7 +82,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     val correlationId = uniqueIdsService.correlation
     val xmlToSend = preparePayload(vpr.xmlBody, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, vpr.correlationIdHeader, importsMessageType, dateTime, correlationId.uuid)
 
-    connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map(_ => Right(())).recover{
+    connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map[Either[Result, Unit]](_ => Right(())).recover{
       case _: UnhealthyServiceException =>
         logger.error("unhealthy state entered")
         Left(errorResponseServiceUnavailable.XmlResult)
