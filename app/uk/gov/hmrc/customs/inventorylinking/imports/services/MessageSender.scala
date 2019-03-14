@@ -45,7 +45,8 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               dateTimeProvider: DateTimeService,
                               uniqueIdsService: UniqueIdsService,
                               logger: ImportsLogger,
-                              importsConfigService: ImportsConfigService)
+                              importsConfigService: ImportsConfigService
+                             )
                              (implicit ex: ExecutionContext) {
 
   private val apiContextEncoded = URLEncoder.encode("customs/inventory-linking-imports", "UTF-8")

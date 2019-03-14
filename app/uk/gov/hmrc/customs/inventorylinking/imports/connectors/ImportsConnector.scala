@@ -46,8 +46,7 @@ class ImportsConnector @Inject()(http: HttpClient,
                                  config: ImportsConfigService,
                                  override val configuration: Configuration
                                  )
-                                (implicit ex: ExecutionContext)
-                                extends UsingCircuitBreaker with AppName {
+                                (implicit ex: ExecutionContext) extends UsingCircuitBreaker with AppName {
 
   def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))

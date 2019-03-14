@@ -73,7 +73,8 @@ class GoodsArrivalController @Inject()(common: Common,
                                        importsMessageType: GoodsArrival,
                                        authAction: GoodsArrivalAuthAction,
                                        payloadValidationAction: GoodsArrivalPayloadValidationAction,
-                                       validateAndExtractHeadersAction: ValidateAndExtractHeadersAction)
+                                       validateAndExtractHeadersAction: ValidateAndExtractHeadersAction
+                                      )
                                       (implicit ex: ExecutionContext)
   extends ImportController(common: Common,
                            importsMessageType,
@@ -91,7 +92,8 @@ class ValidateMovementController @Inject()(common: Common,
                                            importsMessageType: ValidateMovement,
                                            authAction: ValidateMovementAuthAction,
                                            payloadValidationAction: ValidateMovementPayloadValidationAction,
-                                           validateAndExtractHeadersAction: ValidateMovementValidateAndExtractHeadersAction)
+                                           validateAndExtractHeadersAction: ValidateMovementValidateAndExtractHeadersAction
+                                          )
                                           (implicit ex: ExecutionContext)
   extends ImportController(common: Common,
                            importsMessageType,
