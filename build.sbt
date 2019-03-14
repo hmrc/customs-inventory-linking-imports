@@ -22,7 +22,7 @@ lazy val allResolvers = resolvers ++= Seq(
 
 val compileDependencies = Seq(customsApiCommon, circuitBreaker)
 
-val testDependencies = Seq(hmrcTest, scalaTest, pegDown, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
+val testDependencies = Seq(hmrcTest, scalaTest, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
 
 lazy val AcceptanceTest = config("component") extend Test
 lazy val CdsIntegrationTest = config("it") extend Test

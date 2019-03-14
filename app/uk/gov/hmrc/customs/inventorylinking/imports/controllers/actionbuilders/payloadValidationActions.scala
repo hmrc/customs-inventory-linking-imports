@@ -25,18 +25,26 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{Author
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService, XmlValidationService}
 
 import scala.collection.Seq
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.xml.{NodeSeq, SAXException}
 
 @Singleton
-class GoodsArrivalPayloadValidationAction @Inject() (xmlValidationService: GoodsArrivalXmlValidationService, logger: ImportsLogger) extends PayloadValidationAction(xmlValidationService, logger)
+class GoodsArrivalPayloadValidationAction @Inject() (xmlValidationService: GoodsArrivalXmlValidationService,
+                                                     logger: ImportsLogger
+                                                    )
+                                                    (implicit ex: ExecutionContext) extends PayloadValidationAction(xmlValidationService, logger)
 
 @Singleton
-class ValidateMovementPayloadValidationAction @Inject() (xmlValidationService: ValidateMovementXmlValidationService, logger: ImportsLogger) extends PayloadValidationAction(xmlValidationService, logger)
+class ValidateMovementPayloadValidationAction @Inject() (xmlValidationService: ValidateMovementXmlValidationService,
+                                                         logger: ImportsLogger
+                                                        )
+                                                        (implicit ex: ExecutionContext) extends PayloadValidationAction(xmlValidationService, logger)
 
-abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlValidationService, val logger: ImportsLogger) extends ActionRefiner[AuthorisedRequest, ValidatedPayloadRequest] {
+abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlValidationService,
+                                                 val logger: ImportsLogger
+                                                )
+                                                (implicit ex: ExecutionContext) extends ActionRefiner[AuthorisedRequest, ValidatedPayloadRequest] {
 
   override def refine[A](ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
     implicit val implicitAr: AuthorisedRequest[A] = ar
@@ -48,8 +56,8 @@ abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlVa
     lazy val errorMessage = "Request body does not contain a well-formed XML document."
     lazy val errorNotWellFormed = ErrorResponse.errorBadRequest(errorMessage).XmlResult.withConversationId
 
-    def validate(xml: NodeSeq): Future[Either[Result, ValidatedPayloadRequest[A]] with Product with Serializable] =
-      xmlValidationService.validate(xml).map{ _ =>
+    def validate(xml: NodeSeq): Future[Either[Result, ValidatedPayloadRequest[A]]] =
+      xmlValidationService.validate(xml).map[Either[Result, ValidatedPayloadRequest[A]]] { _ =>
         logger.debug("XML payload validated.")
         Right(ar.toValidatedPayloadRequest(xml))
       }

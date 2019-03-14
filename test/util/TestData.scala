@@ -20,7 +20,7 @@ import java.util.UUID
 
 import com.google.inject.AbstractModule
 import org.joda.time.{DateTime, DateTimeZone}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.http.MimeTypes.{JSON, XML}
 import play.api.inject.guice.GuiceableModule

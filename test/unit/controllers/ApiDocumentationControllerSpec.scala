@@ -19,7 +19,7 @@ package unit.controllers
 import java.io.FileNotFoundException
 
 import akka.stream.Materializer
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.http.HeaderNames.CONTENT_TYPE

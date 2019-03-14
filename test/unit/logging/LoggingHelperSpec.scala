@@ -16,7 +16,7 @@
 
 package unit.logging
 
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.HeaderNames.{ACCEPT, CONTENT_TYPE}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
