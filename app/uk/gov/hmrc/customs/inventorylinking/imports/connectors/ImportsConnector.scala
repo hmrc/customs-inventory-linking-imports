@@ -20,7 +20,6 @@ import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
-import play.api.Configuration
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.http.MimeTypes.XML
@@ -33,7 +32,6 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, Impor
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.play.bootstrap.config.AppName
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,10 +41,8 @@ import scala.xml.NodeSeq
 class ImportsConnector @Inject()(http: HttpClient,
                                  logger: ImportsLogger,
                                  serviceConfigProvider: ServiceConfigProvider,
-                                 config: ImportsConfigService,
-                                 override val configuration: Configuration
-                                 )
-                                (implicit ex: ExecutionContext) extends UsingCircuitBreaker with AppName {
+                                 config: ImportsConfigService)
+                                (implicit ex: ExecutionContext) extends UsingCircuitBreaker {
 
   def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
@@ -80,7 +76,7 @@ class ImportsConnector @Inject()(http: HttpClient,
 
   override protected def circuitBreakerConfig: CircuitBreakerConfig =
     CircuitBreakerConfig(
-      serviceName = appName,
+      serviceName = "customs-inventory-linking-imports",
       numberOfCallsToTriggerStateChange = config.importsCircuitBreakerConfig.numberOfCallsToTriggerStateChange,
       unavailablePeriodDuration = config.importsCircuitBreakerConfig.unavailablePeriodDurationInMillis,
       unstablePeriodDuration = config.importsCircuitBreakerConfig.unstablePeriodDurationInMillis

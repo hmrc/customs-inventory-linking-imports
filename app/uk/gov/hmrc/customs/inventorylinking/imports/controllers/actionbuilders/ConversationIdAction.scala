@@ -22,13 +22,18 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.services.UniqueIdsService
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Action builder that transforms a `Request` to a `ConversationIdRequest`
   *
   */
 @Singleton
-class ConversationIdAction @Inject()(uniqueIdService: UniqueIdsService, logger: ImportsLogger) extends ActionTransformer[Request, ConversationIdRequest] {
+class ConversationIdAction @Inject()(uniqueIdService: UniqueIdsService,
+                                     logger: ImportsLogger)
+                                    (implicit ec: ExecutionContext)
+  extends ActionTransformer[Request, ConversationIdRequest] {
+
+  protected def executionContext: ExecutionContext = ec
 
   override def transform[A](request: Request[A]): Future[ConversationIdRequest[A]] = {
 

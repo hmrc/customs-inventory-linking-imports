@@ -25,10 +25,9 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.Configuration
 import play.api.http.HeaderNames
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc.AnyContentAsXml
+import play.api.test.Helpers
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
@@ -51,9 +50,9 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private val mockServiceConfigProvider = mock[ServiceConfigProvider]
   private val mockImportsConfigService = mock[ImportsConfigService]
   private val mockImportsCircuitBreakerConfig = mock[ImportsCircuitBreakerConfig]
-  private val mockConfiguration = mock[Configuration]
-
-  private val connector = new ImportsConnector(mockWsPost, mockLogger, mockServiceConfigProvider, mockImportsConfigService, mockConfiguration)
+  private implicit val ec = Helpers.stubControllerComponents().executionContext
+  
+  private val connector = new ImportsConnector(mockWsPost, mockLogger, mockServiceConfigProvider, mockImportsConfigService)
 
   private val goodsArrivalConfig = ServiceConfig("some-ga-url", Some("ga-bearer-token"), "ga-default")
 
@@ -64,10 +63,9 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
 
   override protected def beforeEach() {
-    reset(mockWsPost, mockLogger, mockServiceConfigProvider, mockConfiguration)
+    reset(mockWsPost, mockLogger, mockServiceConfigProvider)
     when(mockServiceConfigProvider.getConfig("goodsarrival")).thenReturn(goodsArrivalConfig)
     when(mockImportsConfigService.importsCircuitBreakerConfig).thenReturn(mockImportsCircuitBreakerConfig)
-    when(mockConfiguration.getString("appName")).thenReturn(Some("an-app-name"))
   }
 
   private val year = 2017

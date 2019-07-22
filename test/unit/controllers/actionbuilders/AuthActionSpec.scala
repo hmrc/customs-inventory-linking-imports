@@ -20,6 +20,7 @@ import org.mockito.Mockito.reset
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.test.Helpers
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.ErrorInternalServerError
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{GoodsArrivalAuthAction, ValidateMovementAuthAction}
@@ -37,7 +38,8 @@ class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenProperty
     ConversationIdRequest(ValidConversationId, testFakeRequest()).toValidatedHeadersRequest(TestExtractedHeaders)
   private val mockAuthenticationConnector: AuthConnector = mock[AuthConnector]
   private val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
-
+  private implicit val ec = Helpers.stubControllerComponents().executionContext
+  
   trait SetUp extends AuthConnectorStubbing {
     override val mockAuthConnector: AuthConnector = mockAuthenticationConnector
   }

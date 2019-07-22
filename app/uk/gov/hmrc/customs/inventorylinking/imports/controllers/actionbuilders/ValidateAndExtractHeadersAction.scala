@@ -23,7 +23,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedHeadersRequest}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /** Action builder that validates headers.
   * <li/>INPUT - `ConversationIdRequest`
@@ -31,7 +31,12 @@ import scala.concurrent.Future
   * <li/>ERROR - 4XX Result if is a header validation error. This terminates the action builder pipeline.
   */
 @Singleton
-class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator, logger: ImportsLogger) extends ActionRefiner[ConversationIdRequest, ValidatedHeadersRequest] {
+class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator,
+                                                logger: ImportsLogger)
+                                               (implicit ec: ExecutionContext)
+  extends ActionRefiner[ConversationIdRequest, ValidatedHeadersRequest] {
+
+  protected def executionContext: ExecutionContext = ec
 
   override def refine[A](cr: ConversationIdRequest[A]): Future[Either[Result, ValidatedHeadersRequest[A]]] = Future.successful {
     implicit val id: ConversationIdRequest[A] = cr

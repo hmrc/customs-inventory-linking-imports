@@ -18,7 +18,7 @@ package integration
 
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.test.Helpers
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{GoodsArrivalPayloadValidationAction, ValidateMovementPayloadValidationAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
@@ -26,6 +26,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlVal
 
 class ControllersWiringSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar {
 
+  private implicit val ec = Helpers.stubControllerComponents().executionContext
   private lazy val mockGoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
   private lazy val mockValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
   private lazy val mockImportLogger = mock[ImportsLogger]

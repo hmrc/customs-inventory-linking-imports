@@ -25,6 +25,7 @@ import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.http.MimeTypes.{JSON, XML}
 import play.api.inject.guice.GuiceableModule
 import play.api.mvc.AnyContentAsXml
+import play.api.mvc.request.RequestTarget
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE, POST}
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
@@ -167,7 +168,8 @@ object TestData {
   implicit class FakeRequestOps[R](val fakeRequest: FakeRequest[R]) extends AnyVal {
     def fromCsp: FakeRequest[R] = fakeRequest.withHeaders(AUTHORIZATION -> s"Bearer $CspBearerToken")
 
-    def postTo(endpoint: String): FakeRequest[R] = fakeRequest.copyFakeRequest(method = POST, uri = endpoint)
+    def postTo(endpoint: String): FakeRequest[R] = fakeRequest.withMethod(POST)
+      .withTarget(RequestTarget(path = endpoint, uriString = fakeRequest.uri, queryString = fakeRequest.queryString))
   }
 
   val ErrorResponseBadgeIdentifierHeaderMissing: ErrorResponse = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")

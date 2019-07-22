@@ -31,21 +31,22 @@ import scala.xml.{NodeSeq, SAXException}
 
 @Singleton
 class GoodsArrivalPayloadValidationAction @Inject() (xmlValidationService: GoodsArrivalXmlValidationService,
-                                                     logger: ImportsLogger
-                                                    )
-                                                    (implicit ex: ExecutionContext) extends PayloadValidationAction(xmlValidationService, logger)
+                                                     logger: ImportsLogger)
+                                                    (implicit ec: ExecutionContext)
+  extends PayloadValidationAction(xmlValidationService, logger)
 
 @Singleton
 class ValidateMovementPayloadValidationAction @Inject() (xmlValidationService: ValidateMovementXmlValidationService,
-                                                         logger: ImportsLogger
-                                                        )
-                                                        (implicit ex: ExecutionContext) extends PayloadValidationAction(xmlValidationService, logger)
+                                                         logger: ImportsLogger)
+                                                        (implicit ec: ExecutionContext)
+  extends PayloadValidationAction(xmlValidationService, logger)
 
 abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlValidationService,
-                                                 val logger: ImportsLogger
-                                                )
-                                                (implicit ex: ExecutionContext) extends ActionRefiner[AuthorisedRequest, ValidatedPayloadRequest] {
+                                                 val logger: ImportsLogger)
+                                                (implicit ec: ExecutionContext)
+  extends ActionRefiner[AuthorisedRequest, ValidatedPayloadRequest] {
 
+  protected def executionContext: ExecutionContext = ec
   override def refine[A](ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
     implicit val implicitAr: AuthorisedRequest[A] = ar
 
