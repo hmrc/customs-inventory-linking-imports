@@ -30,21 +30,31 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Imports
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.HeaderCarrierConverter
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Left
 import scala.util.control.NonFatal
 
 @Singleton
-class GoodsArrivalAuthAction @Inject()(authConnector: AuthConnector, importsMessageType: GoodsArrival, logger: ImportsLogger)
+class GoodsArrivalAuthAction @Inject()(authConnector: AuthConnector,
+                                       importsMessageType: GoodsArrival,
+                                       logger: ImportsLogger)
+                                      (implicit ec: ExecutionContext)
   extends AuthAction(authConnector, importsMessageType, logger)
 
 @Singleton
-class ValidateMovementAuthAction @Inject()(authConnector: AuthConnector, importsMessageType: ValidateMovement, logger: ImportsLogger)
+class ValidateMovementAuthAction @Inject()(authConnector: AuthConnector,
+                                           importsMessageType: ValidateMovement,
+                                           logger: ImportsLogger)
+                                          (implicit ec: ExecutionContext)
   extends AuthAction(authConnector, importsMessageType, logger)
 
-abstract class AuthAction @Inject()(override val authConnector: AuthConnector, importsMessageType: ImportsMessageType, logger: ImportsLogger)
+abstract class AuthAction @Inject()(override val authConnector: AuthConnector,
+                                    importsMessageType: ImportsMessageType,
+                                    logger: ImportsLogger)
+                                   (implicit ec: ExecutionContext)
   extends ActionRefiner[ValidatedHeadersRequest, AuthorisedRequest] with AuthorisedFunctions  {
+
+  protected def executionContext: ExecutionContext = ec
 
   private val errorResponseUnauthorisedGeneral =
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")

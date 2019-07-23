@@ -1,6 +1,5 @@
 import AppDependencies._
 import org.scalastyle.sbt.ScalastylePlugin._
-import play.sbt.routes.RoutesKeys._
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
 import sbt.{Resolver, _}
@@ -9,7 +8,7 @@ import uk.gov.hmrc.PublishingSettings._
 import uk.gov.hmrc.SbtArtifactory
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 
-import language.postfixOps
+import scala.language.postfixOps
 
 name := "customs-inventory-linking-imports"
 
@@ -24,10 +23,10 @@ val compileDependencies = Seq(customsApiCommon, circuitBreaker)
 
 val testDependencies = Seq(hmrcTest, scalaTest, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
 
-lazy val AcceptanceTest = config("component") extend Test
+lazy val ComponentTest = config("component") extend Test
 lazy val CdsIntegrationTest = config("it") extend Test
 
-val testConfig = Seq(AcceptanceTest, CdsIntegrationTest, Test)
+val testConfig = Seq(ComponentTest, CdsIntegrationTest, Test)
 
 def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[Group] =
   tests.groupBy(_.name.takeWhile(_ != '.')).filter(packageAndTests => packages contains packageAndTests._1) map {
@@ -36,7 +35,7 @@ def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[G
   } toSeq
 
 lazy val testAll = TaskKey[Unit]("test-all")
-lazy val allTest = Seq(testAll := (test in AcceptanceTest)
+lazy val allTest = Seq(testAll := (test in ComponentTest)
   .dependsOn((test in CdsIntegrationTest).dependsOn(test in Test)))
 
 lazy val microservice = (project in file("."))
@@ -50,7 +49,7 @@ lazy val microservice = (project in file("."))
     commonSettings,
     unitTestSettings,
     integrationTestSettings,
-    acceptanceTestSettings,
+    componentTestSettings,
     playPublishingSettings,
     allTest,
     scoverageSettings,
@@ -81,14 +80,14 @@ lazy val integrationTestSettings =
       testGrouping in CdsIntegrationTest := forkedJvmPerTestConfig((definedTests in Test).value, "integration", "component")
     )
 
-lazy val acceptanceTestSettings =
-  inConfig(AcceptanceTest)(Defaults.testTasks) ++
+lazy val componentTestSettings =
+  inConfig(ComponentTest)(Defaults.testTasks) ++
     Seq(
-      testOptions in AcceptanceTest := Seq(Tests.Filter(onPackageName("component"))),
-      testOptions in AcceptanceTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
-      fork in AcceptanceTest := false,
-      parallelExecution in AcceptanceTest := false,
-      addTestReportOption(AcceptanceTest, "component-reports")
+      testOptions in ComponentTest := Seq(Tests.Filter(onPackageName("component"))),
+      testOptions in ComponentTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
+      fork in ComponentTest := false,
+      parallelExecution in ComponentTest := false,
+      addTestReportOption(ComponentTest, "component-reports")
     )
 
 
@@ -103,7 +102,7 @@ lazy val playPublishingSettings: Seq[sbt.Setting[_]] = sbtrelease.ReleasePlugin.
   publishAllArtefacts
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
-  coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(AuthService|BuildInfo|Routes).*;uk.gov.hmrc.customs.inventorylinking.imports.views.*",
+  coverageExcludedPackages := "<empty>;models/.data/..*;view.*;models.*;config.*;.*(Reverse|AuthService|BuildInfo|Routes).*;uk.gov.hmrc.customs.inventorylinking.imports.views.*",
   coverageMinimum := 97,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,

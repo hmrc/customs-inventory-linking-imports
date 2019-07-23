@@ -20,8 +20,8 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.{BeforeAndAfterEach, Matchers}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc._
+import play.api.test.Helpers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
@@ -44,22 +44,22 @@ class ImportsControllerSpec extends UnitSpec
 
   trait SetUp extends AuthConnectorStubbing {
 
+    protected implicit val ec = Helpers.stubControllerComponents().executionContext
     override val mockAuthConnector: AuthConnector = mock[AuthConnector]
     protected val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
     protected val mockMessageSender: MessageSender = mock[MessageSender]
     protected val mockResult: Result = mock[Result]
     protected val mockGoodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
     protected val mockGoodsArrival: GoodsArrival = mock[GoodsArrival]
-    protected val mockCommon: Common = mock[Common]
 
     protected val stubConversationIdAction: ConversationIdAction = new ConversationIdAction(stubUniqueIdsService, mockImportsLogger)
     protected val stubGoodsArrivalAuthAction = new GoodsArrivalAuthAction(mockAuthConnector, mockGoodsArrival, mockImportsLogger)
     protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger), mockImportsLogger)
     protected val stubGoodsArrivalPayloadValidationAction: GoodsArrivalPayloadValidationAction = new GoodsArrivalPayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger)
-
+    protected val stubCommon: Common = new Common(stubConversationIdAction, mockMessageSender, Helpers.stubControllerComponents(), mockImportsLogger)
     protected val enrolment: Enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
 
-    protected val controller: GoodsArrivalController = new GoodsArrivalController(mockCommon, mockGoodsArrival, stubGoodsArrivalAuthAction, stubGoodsArrivalPayloadValidationAction, stubValidateAndExtractHeadersAction)
+    protected val controller: GoodsArrivalController = new GoodsArrivalController(stubCommon, mockGoodsArrival, stubGoodsArrivalAuthAction, stubGoodsArrivalPayloadValidationAction, stubValidateAndExtractHeadersAction)
 
     protected def awaitSubmit(request: Request[AnyContent]): Result = {
       await(controller.post().apply(request))
@@ -68,9 +68,6 @@ class ImportsControllerSpec extends UnitSpec
     protected def submit(request: Request[AnyContent]): Future[Result] = {
       controller.post().apply(request)
     }
-
-    when(mockCommon.conversationIdAction).thenReturn(stubConversationIdAction)
-    when(mockCommon.messageSender).thenReturn(mockMessageSender)
 
     when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(Future.successful(()))
     when(mockMessageSender.send(any[GoodsArrival])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(Right(())))

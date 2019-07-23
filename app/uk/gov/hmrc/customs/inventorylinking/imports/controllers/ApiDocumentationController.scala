@@ -16,16 +16,18 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
+import controllers.Assets
 import javax.inject.{Inject, Singleton}
-
-import play.api.http.HttpErrorHandler
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.customs.api.common.controllers.DocumentationController
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 
 @Singleton
-class ApiDocumentationController @Inject()(httpErrorHandler: HttpErrorHandler, importsConfigService: ImportsConfigService) extends DocumentationController(httpErrorHandler) {
+class ApiDocumentationController @Inject()(assets: Assets,
+                                           cc: ControllerComponents,
+                                           importsConfigService: ImportsConfigService)
+  extends DocumentationController(assets, cc) {
 
   def definition(): Action[AnyContent] = Action {
     Ok(txt.definition(importsConfigService.importsConfig.whiteListedCspApplicationIds)).withHeaders(CONTENT_TYPE -> JSON)

@@ -79,12 +79,12 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
     s"$messageType XmlValidationService with valid input" should {
       s"not throw exceptions for valid XML for linking type ${messageType.name}" in new SetUp {
         protected val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(None)
 
         await(service.validate(validXml))
 
-        verify(mockConfiguration).getStringSeq(ameq(xsdPropertyPathLocation))
+        verify(mockConfiguration).getOptional[Seq[String]](xsdPropertyPathLocation)
       }
     }
   }
@@ -93,8 +93,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
     s"$messageType XmlValidationService with invalid input" should {
       "fail the future when in configuration there are no locations of xsd resource files" in new SetUp {
         val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(None)
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(None)
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(None)
 
         private val caught = intercept[IllegalStateException] {
           await(service.validate(mockXml))
@@ -104,8 +104,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
       s"fail the future when in configuration there is an empty list for locations of xsd resource files" in new SetUp {
         val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(Nil))
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(Some(Nil))
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(None)
 
         private val caught = intercept[IllegalStateException] {
           await(service.validate(mockXml))
@@ -115,8 +115,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
       "fail the future when a configured xsd resource file cannot be found" in new SetUp {
         val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(List("there/is/no/such/file")))
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(Some(List("there/is/no/such/file")))
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(None)
 
         private val caught = intercept[FileNotFoundException] {
           await(service.validate(mockXml))
@@ -126,8 +126,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
       "fail the future with SAXException when there is an valid XML for other XSD" in new SetUp {
         val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(None)
 
         private val caught = intercept[SAXException] {
           await(service.validate(validXmlForOtherElement))
@@ -140,8 +140,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
       "fail the future with SAXException when there is an error in XML" in new SetUp {
         val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(None)
 
         private val caught = intercept[SAXException] {
           await(service.validate(invalidXml))
@@ -153,8 +153,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
       "fail the future with wrapped SAXExceptions when there are multiple errors in XML" in new SetUp {
         val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(None)
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(None)
 
         private val caught = intercept[SAXException] {
           await(service.validate(invalidXmlWithMultipleErrors))
@@ -187,13 +187,13 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
       "fail the future with configured number of wrapped SAXExceptions when there are multiple errors in XML" in new SetUp {
         val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(Some(2))
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(Some(2))
 
         private val caught = intercept[SAXException] {
           await(service.validate(invalidXmlWithMultipleErrors))
         }
-        verify(mockConfiguration).getInt("xml.max-errors")
+        verify(mockConfiguration).getOptional[Int]("xml.max-errors")
 
         caught.getMessage shouldBe "cvc-pattern-valid: Value 'abc_123' is not facet-valid with respect to pattern '([a-zA-Z0-9])*' for type 'entryNumber'."
 
@@ -207,8 +207,8 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
       "fail the future with system error when a configured maximum of xml errors is not a positive number" in new SetUp {
         val importsMessageType: ImportsMessageType = messageType
-        when(mockConfiguration.getStringSeq(xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
-        when(mockConfiguration.getInt("xml.max-errors")).thenReturn(Some(0))
+        when(mockConfiguration.getOptional[Seq[String]](xsdPropertyPathLocation)).thenReturn(Some(xsdLocations))
+        when(mockConfiguration.getOptional[Int]("xml.max-errors")).thenReturn(Some(0))
 
         private val caught = intercept[IllegalArgumentException] {
           await(service.validate(mockXml))

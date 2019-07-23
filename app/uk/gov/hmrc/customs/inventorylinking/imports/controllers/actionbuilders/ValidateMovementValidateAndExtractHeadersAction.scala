@@ -17,9 +17,10 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders
 
 import javax.inject.{Inject, Singleton}
-
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementHeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
+
+import scala.concurrent.ExecutionContext
 
 /** Action builder that validates headers.
   * <li/>INPUT - `ConversationIdRequest`
@@ -27,6 +28,9 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
   * <li/>ERROR - 4XX Result if is a header validation error. This terminates the action builder pipeline.
   */
 @Singleton
-class ValidateMovementValidateAndExtractHeadersAction @Inject()(validator: ValidateMovementHeaderValidator, logger: ImportsLogger) extends ValidateAndExtractHeadersAction(validator, logger) {}
+class ValidateMovementValidateAndExtractHeadersAction @Inject()(validator: ValidateMovementHeaderValidator,
+                                                                logger: ImportsLogger)
+                                                               (implicit ec: ExecutionContext)
+  extends ValidateAndExtractHeadersAction(validator, logger) {}
 
 

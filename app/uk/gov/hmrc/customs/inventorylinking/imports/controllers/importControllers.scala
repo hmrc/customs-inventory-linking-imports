@@ -25,22 +25,23 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.services.MessageSender
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class Common @Inject() (val conversationIdAction: ConversationIdAction,
                         val messageSender: MessageSender,
+                        val cc: ControllerComponents,
                         val logger: ImportsLogger)
 
-abstract class ImportController( val common: Common,
-                                 val importsMessageType: ImportsMessageType,
-                                 val authAction: AuthAction,
-                                 val payloadValidationAction: PayloadValidationAction,
-                                 val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction
-                               )
-                               (implicit ex: ExecutionContext) extends BaseController {
+abstract class ImportController(val common: Common,
+                                val importsMessageType: ImportsMessageType,
+                                val authAction: AuthAction,
+                                val payloadValidationAction: PayloadValidationAction,
+                                val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction)
+                               (implicit ex: ExecutionContext)
+  extends BackendController(common.cc) {
 
   def process(): Action[AnyContent] =  (
     Action andThen
@@ -73,8 +74,7 @@ class GoodsArrivalController @Inject()(common: Common,
                                        importsMessageType: GoodsArrival,
                                        authAction: GoodsArrivalAuthAction,
                                        payloadValidationAction: GoodsArrivalPayloadValidationAction,
-                                       validateAndExtractHeadersAction: ValidateAndExtractHeadersAction
-                                      )
+                                       validateAndExtractHeadersAction: ValidateAndExtractHeadersAction)
                                       (implicit ex: ExecutionContext)
   extends ImportController(common: Common,
                            importsMessageType,
@@ -92,8 +92,7 @@ class ValidateMovementController @Inject()(common: Common,
                                            importsMessageType: ValidateMovement,
                                            authAction: ValidateMovementAuthAction,
                                            payloadValidationAction: ValidateMovementPayloadValidationAction,
-                                           validateAndExtractHeadersAction: ValidateMovementValidateAndExtractHeadersAction
-                                          )
+                                           validateAndExtractHeadersAction: ValidateMovementValidateAndExtractHeadersAction)
                                           (implicit ex: ExecutionContext)
   extends ImportController(common: Common,
                            importsMessageType,
