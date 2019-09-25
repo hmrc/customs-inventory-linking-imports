@@ -44,11 +44,11 @@ class ImportsConnector @Inject()(http: HttpClient,
                                  config: ImportsConfigService)
                                 (implicit ex: ExecutionContext) extends UsingCircuitBreaker {
 
-  def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): Future[HttpResponse] = {
+  def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
-    implicit val hc: HeaderCarrier = HeaderCarrier(extraHeaders = getHeaders(date, correlationId, vpr.conversationId), authorization = Some(Authorization(bearerToken)))
-    withCircuitBreaker(post(xml, config.url))
+    implicit val headerCarrier: HeaderCarrier = hc.copy(extraHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId), authorization = Some(Authorization(bearerToken)))
+    withCircuitBreaker(post(xml, config.url)(vpr, headerCarrier))(headerCarrier)
   }
 
   private def getHeaders(date: DateTime, correlationId: UUID, conversationId: ConversationId) = {
