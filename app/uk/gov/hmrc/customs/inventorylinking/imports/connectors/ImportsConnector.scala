@@ -62,7 +62,7 @@ class ImportsConnector @Inject()(http: HttpClient,
   }
 
   private def post[A](xml: NodeSeq, url: String)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
-    logger.debug(s"Sending request to backend. Payload: ${xml.toString()}")
+    logger.debug(s"Sending request to backend. Url: $url\nPayload: ${xml.toString()}")
     http.POSTString[HttpResponse](url, xml.toString())
       .recoverWith {
         case httpError: HttpException => Future.failed(new RuntimeException(httpError))
