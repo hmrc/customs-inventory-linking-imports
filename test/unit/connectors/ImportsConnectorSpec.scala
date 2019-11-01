@@ -30,14 +30,15 @@ import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
+import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig, SeqOfHeader}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import uk.gov.hmrc.play.test.UnitSpec
+import unit.logging.StubImportsLogger
 import util.TestData._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -46,13 +47,14 @@ import scala.concurrent.{ExecutionContext, Future}
 class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfterEach with Eventually {
 
   private val mockWsPost = mock[HttpClient]
-  private val mockLogger = mock[ImportsLogger]
+  private val stubImportsLogger = new StubImportsLogger(mock[CdsLogger])
   private val mockServiceConfigProvider = mock[ServiceConfigProvider]
   private val mockImportsConfigService = mock[ImportsConfigService]
   private val mockImportsCircuitBreakerConfig = mock[ImportsCircuitBreakerConfig]
+  private val mockResponse = mock[HttpResponse]
   private implicit val ec = Helpers.stubControllerComponents().executionContext
   
-  private val connector = new ImportsConnector(mockWsPost, mockLogger, mockServiceConfigProvider, mockImportsConfigService)
+  private val connector = new ImportsConnector(mockWsPost, stubImportsLogger, mockServiceConfigProvider, mockImportsConfigService)
 
   private val goodsArrivalConfig = ServiceConfig("some-ga-url", Some("ga-bearer-token"), "ga-default")
 
@@ -63,9 +65,10 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
 
   override protected def beforeEach() {
-    reset(mockWsPost, mockLogger, mockServiceConfigProvider)
+    reset(mockWsPost, mockServiceConfigProvider)
     when(mockServiceConfigProvider.getConfig("goodsarrival")).thenReturn(goodsArrivalConfig)
     when(mockImportsConfigService.importsCircuitBreakerConfig).thenReturn(mockImportsCircuitBreakerConfig)
+    when(mockResponse.body).thenReturn("<foo/>")
   }
 
   private val year = 2017
@@ -84,7 +87,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
     "when making a successful request" should {
 
       "pass URL from config" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         awaitRequest
 
@@ -93,7 +96,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       }
 
       "pass the xml in the body" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         awaitRequest
 
@@ -102,7 +105,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       }
 
       "set the content type header" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         awaitRequest
 
@@ -113,7 +116,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       }
 
       "set the accept header" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         awaitRequest
 
@@ -124,7 +127,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       }
 
       "set the date header" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         awaitRequest
 
@@ -135,7 +138,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       }
 
       "set the X-Forwarded-Host header" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         awaitRequest
 
@@ -146,7 +149,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       }
 
       "set the X-Correlation-Id header" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         awaitRequest
 
@@ -157,7 +160,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       }
 
       "set the X-Conversation-Id header" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         awaitRequest
 
@@ -168,7 +171,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
       }
 
       "prefix the config key with the prefix if passed" in {
-        returnResponseForRequest(Future.successful(mock[HttpResponse]))
+        returnResponseForRequest(Future.successful(mockResponse))
 
         await(connector.send(new GoodsArrival(), xml, date, correlationId))
 
