@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
@@ -27,7 +29,7 @@ import uk.gov.hmrc.circuitbreaker.{CircuitBreakerConfig, UsingCircuitBreaker}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{HasConversationId, ValidatedPayloadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, ImportsMessageType}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http._
@@ -35,7 +37,7 @@ import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.NodeSeq
+import scala.xml.{NodeSeq, PrettyPrinter, TopScope}
 
 @Singleton
 class ImportsConnector @Inject()(http: HttpClient,
@@ -48,7 +50,14 @@ class ImportsConnector @Inject()(http: HttpClient,
     val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
     implicit val headerCarrier: HeaderCarrier = hc.copy(extraHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId), authorization = Some(Authorization(bearerToken)))
-    withCircuitBreaker(post(xml, config.url)(vpr, headerCarrier))(headerCarrier)
+    val startTime = LocalDateTime.now
+    withCircuitBreaker(post(xml, config.url)(vpr, headerCarrier))(headerCarrier).map{
+      response => {
+        logCallDuration(startTime)
+        logger.debug(s"Response status ${response.status} and response body ${formatResponseBody(response.body)}")
+      }
+        response
+    }
   }
 
   private def getHeaders(date: DateTime, correlationId: UUID, conversationId: ConversationId) = {
@@ -72,6 +81,19 @@ class ImportsConnector @Inject()(http: HttpClient,
           logger.error(s"Call to backend failed. url=$url")
           Future.failed(e)
       }
+  }
+
+  protected def logCallDuration(startTime: LocalDateTime)(implicit r: HasConversationId): Unit ={
+    val callDuration = ChronoUnit.MILLIS.between(startTime, LocalDateTime.now)
+    logger.info(s"Outbound call duration was ${callDuration} ms")
+  }
+
+  private def formatResponseBody(responseBody: String) = {
+    if (responseBody.isEmpty) {
+      "<empty>"
+    } else {
+      new PrettyPrinter(120, 2).format(xml.XML.loadString(responseBody), TopScope)
+    }
   }
 
   override protected def circuitBreakerConfig: CircuitBreakerConfig =
