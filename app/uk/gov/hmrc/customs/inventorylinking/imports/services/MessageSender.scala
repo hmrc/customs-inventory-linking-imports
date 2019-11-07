@@ -83,12 +83,15 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     val correlationId = uniqueIdsService.correlation
     val xmlToSend = preparePayload(vpr.xmlBody, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, vpr.correlationIdHeader, importsMessageType, dateTime, correlationId.uuid)
 
-    connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map[Either[Result, Unit]](_ => Right(())).recover{
+    connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map[Either[Result, Unit]]{
+      logger.info("Inventory linking import request processed successfully")
+      _ => Right(())
+    }.recover{
       case _: UnhealthyServiceException =>
         logger.error("unhealthy state entered")
         Left(errorResponseServiceUnavailable.XmlResult)
       case NonFatal(e) =>
-        logger.error(s"Inventory linking call failed: ${e.getMessage}", e)
+        logger.error(s"Inventory linking import request failed: ${e.getMessage}", e)
         Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
     }
   }
