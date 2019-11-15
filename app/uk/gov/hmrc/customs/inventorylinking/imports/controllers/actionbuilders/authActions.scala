@@ -64,14 +64,14 @@ abstract class AuthAction @Inject()(override val authConnector: AuthConnector,
       implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
 
       authorised(importsMessageType.enrolment and AuthProviders(PrivilegedApplication)) {
-        logger.debug("Authorised as CSP")
+        logger.debug(s"Successfully authorised CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment")
         Future.successful(Right(vhr.toAuthorisedRequest))
       }.recover{
         case NonFatal(_: AuthorisationException) =>
-          logger.error("Not authorised")
+          logger.error(s"No authorisation for CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment")
           Left(errorResponseUnauthorisedGeneral.XmlResult.withConversationId)
         case NonFatal(e) =>
-          logger.error("Error authorising CSP", e)
+          logger.error(s"Error when authorising for CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment", e)
           Left(ErrorInternalServerError.XmlResult.withConversationId)
       }
     }
