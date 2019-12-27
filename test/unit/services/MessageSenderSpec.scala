@@ -20,7 +20,7 @@ import java.util.UUID
 
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}
-import org.mockito.Mockito.{atLeastOnce, verify, verifyZeroInteractions, when}
+import org.mockito.Mockito.{atLeastOnce, verify, verifyNoMoreInteractions, when}
 import org.scalatest.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
@@ -120,8 +120,8 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(emulatedServiceFailure))
       callSend() shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
 
-      verifyZeroInteractions(mockPayloadDecorator)
-      verifyZeroInteractions(mockImportsConnector)
+      verifyNoMoreInteractions(mockPayloadDecorator)
+      verifyNoMoreInteractions(mockImportsConnector)
     }
 
     "return InternalServerError ErrorResponse when Mdg Import call fails" in new SetUp() {

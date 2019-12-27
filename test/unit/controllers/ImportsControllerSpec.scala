@@ -102,8 +102,8 @@ class ImportsControllerSpec extends UnitSpec
 
       await(result) shouldBe errorResultUnauthorised
       header(XConversationIdHeaderName, result) shouldBe Some(ConversationIdValue)
-      verifyZeroInteractions(mockMessageSender)
-      verifyZeroInteractions(mockGoodsArrivalXmlValidationService)
+      verifyNoMoreInteractions(mockMessageSender)
+      verifyNoMoreInteractions(mockGoodsArrivalXmlValidationService)
     }
 
     "return the error response returned from the Communication service" in new SetUp {
