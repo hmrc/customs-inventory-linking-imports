@@ -91,6 +91,14 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar with ApiSubscripti
       rd.head.text shouldBe ValidBadgeIdentifierValue
     }
 
+    "set the submitterID" in {
+      val result = wrapPayload()
+
+      val rd = result \\ "submitterID"
+
+      rd.head.text shouldBe SubmitterIdentifierHeaderValue
+    }
+
     "set the authenticatedPartyID" in {
       val result = wrapPayload()
 

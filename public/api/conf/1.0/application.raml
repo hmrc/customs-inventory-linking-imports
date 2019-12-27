@@ -39,10 +39,15 @@ documentation:
           required: true
           example: application/xml; charset=UTF-8
         X-Badge-Identifier:
-          description: Alpha-numeric, maximum length is 12. Represents the end-user who is interacting with the CSP systems. It is used within the CSP systems to facilitate message routing back to the originator.
+          description: Either this or X-Submitter-Identifier (or both) required. Represents the end-user who is interacting with the application. Must be numeric or upper case letters with a minimum length of 6 and a maximum length of 12.
           type: string
-          required: true
-          example: DHL123
+          required: false
+          example: ABC123
+        X-Submitter-Identifier:
+          description: Either this or X-Badge-Identifier (or both) required. This is the EORI associated with the originating owner of the submission. Must be numeric and upper case characters with a maximum length of 17 characters.
+          type: string
+          required: false
+          example: GB123456789000
         X-Correlation-ID:
           description: Alpha-numeric, maximum length is 36. Specifies the correlation id sent in the movement validation request. Returning the request correlation id in the movement validation response permits backend reconciliation of request and response.
           type: string
@@ -103,10 +108,15 @@ documentation:
           required: true
           example: application/xml; charset=UTF-8
         X-Badge-Identifier:
-          description: Alpha-numeric, maximum length is 12. Represents the end-user who is interacting with the CSP systems. It is used within the CSP systems to facilitate message routing back to the originator.
+          description: Either this or X-Submitter-Identifier (or both) required. Represents the end-user who is interacting with the application. Must be numeric or upper case letters with a minimum length of 6 and a maximum length of 12.
           type: string
-          required: true
-          example: DHL123
+          required: false
+          example: ABC123
+        X-Submitter-Identifier:
+          description: Either this or X-Badge-Identifier (or both) required. This is the EORI associated with the originating owner of the submission. Must be numeric and upper case characters with a maximum length of 17 characters.
+          type: string
+          required: false
+          example: GB123456789000
 
       (annotations.scope): "write:customs-il-imports-arrival-notifications"
       securedBy: [ sec.oauth_2_0: { scopes: [ "write:customs-il-imports-arrival-notifications" ] } ]

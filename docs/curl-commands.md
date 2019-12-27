@@ -21,6 +21,7 @@ curl -v -X POST "http://localhost:9824/arrival-notifications" \
   -H 'X-Badge-Identifier: {Badge Id}' \
   -H 'X-Client-ID: {Client Id}' \
   -H 'cache-control: no-cache' \
+  -H 'X-Submitter-Identifier: {Submitter Id}' \
  -d '<?xml version="1.0" encoding="UTF-8"?>
      <inv:inventoryLinkingImportsGoodsArrival xmlns:inv="http://gov.uk/customs/inventoryLinkingImport/v1">
         <inv:entryNumber>string</inv:entryNumber>
@@ -44,6 +45,7 @@ curl -v -X POST "http://localhost:9824/movement-validation" \
   -H 'X-Badge-Identifier: {Badge Id}' \
   -H 'X-Client-ID: {Client Id}' \
   -H 'cache-control: no-cache' \
+  -H 'X-Submitter-Identifier: {Submitter Id}' \
   -H 'X-Correlation-ID: {Correlation Id}' \
  -d '<?xml version="1.0" encoding="UTF-8"?>
      <inv:InventoryLinkingImportsValidateMovementResponse xmlns:inv="http://gov.uk/customs/inventoryLinkingImport/v1">

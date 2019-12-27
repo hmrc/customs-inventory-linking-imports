@@ -46,6 +46,7 @@ class PayloadDecorator {
         {
           apiSubscriptionFieldsResponse.fields.authenticatedEori.fold(NodeSeq.Empty) { authenticatedEori: String => <n1:authenticatedPartyID>{authenticatedEori}</n1:authenticatedPartyID>}
         }
+        <n1:submitterID>{ vpr.submitterIdentifier.value }</n1:submitterID>
       </n1:requestCommon>
       <n1:requestDetail>
         { xml }

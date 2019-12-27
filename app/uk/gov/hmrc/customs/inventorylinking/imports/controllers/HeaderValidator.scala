@@ -35,7 +35,9 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
+  private lazy val xSubmitterIdentifierHeaderRegex = "^[0-9A-Za-z]{1,17}$".r
   private lazy val errorResponseBadgeIdentifierHeaderMissing = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
+  private lazy val errorResponseSubmitterIdentifierHeaderMissing = errorBadRequest(s"${HeaderConstants.XSubmitterIdentifier} header is missing or invalid")
 
   def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
     implicit val headers: Headers = conversationIdRequest.headers
@@ -48,18 +50,22 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
 
     def hasXBadgeIdentifier = validateHeader(XBadgeIdentifier, xBadgeIdentifierRegex.findFirstIn(_).nonEmpty, errorResponseBadgeIdentifierHeaderMissing)
 
+    def hasXSubmitterIdentifier = validateHeader(XSubmitterIdentifier, xSubmitterIdentifierHeaderRegex.findFirstIn(_).nonEmpty, errorResponseSubmitterIdentifierHeaderMissing)
+
     val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
       accept <- hasAccept.right
       contentType <- hasContentType.right
       xClientId <- hasXClientId.right
       xBadgeIdentifier <- hasXBadgeIdentifier.right
+      xSubmitterIdentifier <- hasXSubmitterIdentifier.right
     } yield {
       logger.debug(
         s"$ACCEPT header passed validation: $accept\n"
       + s"$CONTENT_TYPE header passed validation: $contentType\n"
       + s"$XClientId header passed validation: $xClientId\n"
-      + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier")
-      ExtractedHeadersImpl(BadgeIdentifier(xBadgeIdentifier), ClientId(xClientId), None)
+      + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier"
+      + s"$XSubmitterIdentifier header passed validation: $xSubmitterIdentifier")
+      ExtractedHeadersImpl(BadgeIdentifier(xBadgeIdentifier), ClientId(xClientId), None, SubmitterIdentifier(xSubmitterIdentifier))
     }
     theResult
   }
