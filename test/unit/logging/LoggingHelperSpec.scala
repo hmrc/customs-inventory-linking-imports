@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import util.TestData._
 class LoggingHelperSpec extends UnitSpec with MockitoSugar {
 
   private def expectedMessage(message: String) = s"[conversationId=${ValidConversationId.toString}]" +
-    s"[clientId=some-client-id][badgeIdentifier=BADGEID123] $message"
+    s"[clientId=some-client-id][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] $message"
   private val requestMock = mock[Request[_]]
   private val conversationIdRequest =
     ConversationIdRequest(
@@ -43,10 +43,9 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
         "IGNORE" -> "IGNORE"
       )
     )
-  private val validatedHeadersRequest = ValidatedHeadersRequest(ValidBadgeIdentifier, ValidConversationId, Some(ValidCorrelationIdHeader), ValidSubmitterIdentifierHeader, ClientId("some-client-id"), requestMock)
+  private val validatedHeadersRequest = ValidatedHeadersRequest(Some(ValidBadgeIdentifier), ValidConversationId, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader), ClientId("some-client-id"), requestMock)
 
   "LoggingHelper" should {
-
 
     "testFormatInfo" in {
       LoggingHelper.formatInfo("Info message", validatedHeadersRequest) shouldBe expectedMessage("Info message")

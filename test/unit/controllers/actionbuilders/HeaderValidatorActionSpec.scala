@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,11 +65,14 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       "be unsuccessful for a valid request with missing X-Client-ID header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders - XClientIdHeaderName)) shouldBe Left(ErrorInternalServerError)
       }
-      "be unsuccessful for a valid request with missing X-Badge-Identifier header" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders - XBadgeIdentifierHeaderName)) shouldBe Left(ErrorResponseBadgeIdentifierHeaderMissing)
+      "be successful for a valid request with missing X-Badge-Identifier header" in new SetUp {
+        validate(conversationIdRequest(ValidHeadersNoCorrelationId - XBadgeIdentifierHeaderName)) shouldBe Right(TestExtractedHeadersWithoutCorrelationIdOrBadgeId)
       }
-      "be unsuccessful for a valid request with missing X-Submitter-Identifier header" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders - XSubmitterIdentifierHeaderName)) shouldBe Left(ErrorResponseSubmitterIdentifierHeaderMissing)
+      "be successful for a valid request with missing X-Submitter-Identifier header" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders - XSubmitterIdentifierHeaderName)) shouldBe Right(TestExtractedHeadersWithoutCorrelationIdOrSubmitterId)
+      }
+      "be successful for a valid request with missing X-Submitter-Identifier and X-Badge-Identifier headers" in new SetUp {
+        validate(conversationIdRequest(ValidHeaders - XSubmitterIdentifierHeaderName - XBadgeIdentifierHeaderName)) shouldBe Right(TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId)
       }
       "be unsuccessful for a valid request with Invalid accept header" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + InvalidAcceptHeader)) shouldBe Left(ErrorAcceptHeaderInvalid)

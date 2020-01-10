@@ -47,6 +47,7 @@ lazy val microservice = (project in file("."))
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .configs(testConfig: _*)
   .settings(
+    commonSettings,
     unitTestSettings,
     integrationTestSettings,
     componentTestSettings,
@@ -89,6 +90,13 @@ lazy val componentTestSettings =
       parallelExecution in ComponentTest := false,
       addTestReportOption(ComponentTest, "component-reports")
     )
+
+
+lazy val commonSettings: Seq[Setting[_]] =
+  scalaSettings ++
+  publishingSettings ++
+  defaultSettings() ++
+  gitStampSettings
 
 lazy val playPublishingSettings: Seq[sbt.Setting[_]] = sbtrelease.ReleasePlugin.releaseSettings ++
   Seq(credentials += SbtCredentials) ++

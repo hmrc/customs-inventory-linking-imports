@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                             (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, Unit]] = {
     val dateTime = dateTimeProvider.nowUtc()
     val correlationId = uniqueIdsService.correlation
-    val xmlToSend = preparePayload(vpr.xmlBody, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, vpr.correlationIdHeader, importsMessageType, dateTime, correlationId.uuid)
+    val xmlToSend = preparePayload(vpr.xmlBody, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, vpr.maybeCorrelationIdHeader, importsMessageType, dateTime, correlationId.uuid)
 
     connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map[Either[Result, Unit]]{
       logger.info("Inventory linking import request processed successfully")

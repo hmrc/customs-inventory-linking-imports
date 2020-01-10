@@ -39,12 +39,12 @@ documentation:
           required: true
           example: application/xml; charset=UTF-8
         X-Badge-Identifier:
-          description: Either this or X-Submitter-Identifier (or both) required. Represents the end-user who is interacting with the application. Must be numeric or upper case letters with a minimum length of 6 and a maximum length of 12.
+          description: Alpha-numeric, maximum length is 12. Represents the end-user who is interacting with the CSP systems. It is used within the CSP systems to facilitate message routing back to the originator.
           type: string
           required: false
           example: ABC123
         X-Submitter-Identifier:
-          description: Either this or X-Badge-Identifier (or both) required. This is the EORI associated with the originating owner of the submission. Must be numeric and upper case characters with a maximum length of 17 characters.
+          description: This is the EORI associated with the originating owner of the submission. Must be numeric and upper case characters with a maximum length of 17 characters.
           type: string
           required: false
           example: GB123456789000
@@ -108,12 +108,12 @@ documentation:
           required: true
           example: application/xml; charset=UTF-8
         X-Badge-Identifier:
-          description: Either this or X-Submitter-Identifier (or both) required. Represents the end-user who is interacting with the application. Must be numeric or upper case letters with a minimum length of 6 and a maximum length of 12.
+          description: Alpha-numeric, maximum length is 12. Represents the end-user who is interacting with the CSP systems. It is used within the CSP systems to facilitate message routing back to the originator.
           type: string
           required: false
           example: ABC123
         X-Submitter-Identifier:
-          description: Either this or X-Badge-Identifier (or both) required. This is the EORI associated with the originating owner of the submission. Must be numeric and upper case characters with a maximum length of 17 characters.
+          description: This is the EORI associated with the originating owner of the submission. Must be numeric and upper case characters with a maximum length of 17 characters.
           type: string
           required: false
           example: GB123456789000

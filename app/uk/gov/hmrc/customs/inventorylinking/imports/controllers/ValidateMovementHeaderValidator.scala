@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,15 +36,16 @@ class ValidateMovementHeaderValidator @Inject()(logger: ImportsLogger) extends H
 
     implicit val headers: Headers = conversationIdRequest.headers
 
-    def hasXCorrelationId = validateHeader(XCorrelationId, xCorrelationIdHeaderRegex.findFirstIn(_).nonEmpty, errorResponseCorrelationIdHeaderMissing)
+    def hasXCorrelationId = validateHeader(XCorrelationId, xCorrelationIdHeaderRegex.findFirstIn(_).nonEmpty, errorResponseCorrelationIdHeaderMissing, optional = false)
 
     super.validateHeaders match {
       case Right(b) =>
         val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
           xCorrelationId <- hasXCorrelationId.right
         } yield {
+          val cid = xCorrelationId.fold[Option[CorrelationIdHeader]](None)(c => Some(CorrelationIdHeader(c)))
           logger.debug(s"$XCorrelationId header passed validation: $xCorrelationId")
-          ExtractedHeadersImpl(b.badgeIdentifier, b.clientId, Some(CorrelationIdHeader(xCorrelationId)), b.submitterIdentifier)
+          ExtractedHeadersImpl(b.maybeBadgeIdentifier, b.clientId, cid, b.maybeSubmitterIdentifier)
         }
         theResult
       case Left(a) => Left(a)
