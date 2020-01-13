@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,8 +102,8 @@ class ImportsControllerSpec extends UnitSpec
 
       await(result) shouldBe errorResultUnauthorised
       header(XConversationIdHeaderName, result) shouldBe Some(ConversationIdValue)
-      verifyZeroInteractions(mockMessageSender)
-      verifyZeroInteractions(mockGoodsArrivalXmlValidationService)
+      verifyNoMoreInteractions(mockMessageSender)
+      verifyNoMoreInteractions(mockGoodsArrivalXmlValidationService)
     }
 
     "return the error response returned from the Communication service" in new SetUp {

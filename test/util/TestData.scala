@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ object TestData {
   val XClientIdHeaderName = "X-Client-ID"
   val XConversationIdHeaderName = "X-Conversation-ID"
   val XCorrelationIdHeaderName = "X-Correlation-ID"
+  val XSubmitterIdentifierHeaderName = "X-Submitter-Identifier"
 
   val ConversationIdValue = "38400000-8cf0-11bd-b23e-10b96e4ef00d"
   val ConversationIdUuid: UUID = UUID.fromString(ConversationIdValue)
@@ -60,6 +61,9 @@ object TestData {
   val CorrelationIdHeaderValue = "abCabC123u"
   val ValidCorrelationIdHeader = CorrelationIdHeader(CorrelationIdHeaderValue)
 
+  val SubmitterIdentifierHeaderValue = "xsubmitterid123"
+  val ValidSubmitterIdentifierHeader = SubmitterIdentifier(SubmitterIdentifierHeaderValue)
+
   val AuthenticatedEoriValue = "RASHADMUGHAL"
   val ValidAuthenticatedEori = AuthenticatedEori(AuthenticatedEoriValue)
 
@@ -70,8 +74,11 @@ object TestData {
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
-  val TestExtractedHeaders = ExtractedHeadersImpl(ValidBadgeIdentifier, ApiSubscriptionFieldsTestData.clientId, Some(ValidCorrelationIdHeader))
-  val TestExtractedHeadersWithoutCorrelationId = TestExtractedHeaders.copy(correlationIdHeader = None)
+  val TestExtractedHeaders = ExtractedHeadersImpl(Some(ValidBadgeIdentifier), ApiSubscriptionFieldsTestData.clientId, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader))
+  val TestExtractedHeadersWithoutCorrelationId = TestExtractedHeaders.copy(maybeCorrelationIdHeader = None)
+  val TestExtractedHeadersWithoutCorrelationIdOrBadgeId = TestExtractedHeadersWithoutCorrelationId.copy(maybeBadgeIdentifier = None)
+  val TestExtractedHeadersWithoutCorrelationIdOrSubmitterId = TestExtractedHeadersWithoutCorrelationId.copy(maybeSubmitterIdentifier = None)
+  val TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId = TestExtractedHeadersWithoutCorrelationId.copy(maybeSubmitterIdentifier = None, maybeBadgeIdentifier = None)
 
   lazy val InvalidAcceptHeader: (String, String) = ACCEPT -> JSON
   lazy val InvalidContentTypeJsonHeader: (String, String) = CONTENT_TYPE -> JSON
@@ -79,6 +86,9 @@ object TestData {
   lazy val InvalidXBadgeIdentifier: (String, String) = XBadgeIdentifierHeaderName -> "This is too long and has spaces _"
   lazy val InvalidXCorrelationIdTooLong: (String, String) = XCorrelationIdHeaderName -> "Thisiisslongerrthann34ccharactersssooisttoollong"
   lazy val InvalidXCorrelationIdNonAlphanumeric: (String, String) = XCorrelationIdHeaderName -> "Illegal-char!acter"
+  lazy val InvalidXSubmitterIdentifierNonAlphanumeric: (String, String) = XSubmitterIdentifierHeaderName -> "Illegal-char!acter"
+  lazy val InvalidXSubmitterIdentifierLongerThan17: (String, String) = XSubmitterIdentifierHeaderName -> "12345678901234567890"
+  lazy val InvalidXSubmitterIdentifierEmpty: (String, String) = XSubmitterIdentifierHeaderName -> ""
 
   lazy val ValidAcceptHeader: (String, String) = ACCEPT -> AcceptHeaderValue
   lazy val ValidContentTypeHeader: (String, String) = CONTENT_TYPE -> (XML + "; charset=utf-8")
@@ -86,8 +96,10 @@ object TestData {
   lazy val ValidXBadgeIdentifierHeader: (String, String) = XBadgeIdentifierHeaderName -> ValidBadgeIdentifierValue
   lazy val XConversationIdHeader: (String, String) = XConversationIdHeaderName -> ValidConversationId.toString
   lazy val XCorrelationIdHeader: (String, String) = XCorrelationIdHeaderName -> CorrelationIdHeaderValue.toString
+  lazy val XSubmitterIdentifierHeader: (String, String) = XSubmitterIdentifierHeaderName -> SubmitterIdentifierHeaderValue.toString
 
-  val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader, XConversationIdHeader, XCorrelationIdHeader)
+  val ValidHeaders = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader, XConversationIdHeader, XCorrelationIdHeader, XSubmitterIdentifierHeader)
+  val ValidHeadersNoCorrelationId = Map(ValidAcceptHeader, ValidContentTypeHeader, ValidXClientIdHeader, ValidXBadgeIdentifierHeader, XConversationIdHeader, XSubmitterIdentifierHeader)
 
   val CspBearerToken = "CSP-Bearer-Token"
 
@@ -156,10 +168,12 @@ object TestData {
 
   val TestXmlPayload: Elem = <foo>bar</foo>
   val TestFakeRequest: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(TestXmlPayload)
-  val TestConversationIdRequest = ConversationIdRequest(ValidConversationId, TestFakeRequest)
+  val TestConversationIdRequest: ConversationIdRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, TestFakeRequest)
   val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeaders)
+  val TestValidatedHeadersNoIdsRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId)
   val TestAuthorisedRequest: AuthorisedRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest
   val TestCspValidatedPayloadRequest: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
+  val TestCspValidatedPayloadRequestNoIds: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersNoIdsRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
   val ValidRequest: FakeRequest[AnyContentAsXml] = TestFakeRequest.withHeaders(ValidHeaders.toSeq: _*)
 
   def testFakeRequest(badgeIdString: String = ValidBadgeIdentifier.value): FakeRequest[AnyContentAsXml] =
@@ -172,6 +186,7 @@ object TestData {
       .withTarget(RequestTarget(path = endpoint, uriString = fakeRequest.uri, queryString = fakeRequest.queryString))
   }
 
-  val ErrorResponseBadgeIdentifierHeaderMissing: ErrorResponse = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is missing or invalid")
+  val ErrorResponseBadgeIdentifierHeaderMissing: ErrorResponse = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is invalid")
   val ErrorResponseCorrelationIdHeaderMissing: ErrorResponse = errorBadRequest(s"${HeaderConstants.XCorrelationId} header is missing or invalid")
+  val ErrorResponseSubmitterIdentifierHeaderMissing: ErrorResponse = errorBadRequest(s"${HeaderConstants.XSubmitterIdentifier} header is invalid")
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ class ValidateMovementHeaderValidatorActionSpec extends UnitSpec with TableDrive
   "ValidateMovementHeaderValidatorAction" can {
     "in happy path, validation" should {
       "be successful for X-Correlation-ID as a UUID" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + (XCorrelationIdHeaderName -> CorrelationIdValue))) shouldBe Right(TestExtractedHeaders.copy(correlationIdHeader = Some(CorrelationIdHeader(CorrelationIdValue))))
+        validate(conversationIdRequest(ValidHeaders + (XCorrelationIdHeaderName -> CorrelationIdValue))) shouldBe Right(TestExtractedHeaders.copy(maybeCorrelationIdHeader = Some(CorrelationIdHeader(CorrelationIdValue))))
       }
     }
     "in unhappy path, validation" should {

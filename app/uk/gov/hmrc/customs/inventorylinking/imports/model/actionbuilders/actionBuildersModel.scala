@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,10 @@ object ActionBuilderModelHelper {
 
   implicit class CorrelationIdsRequestOps[A](val cir: ConversationIdRequest[A]) extends AnyVal {
     def toValidatedHeadersRequest(eh: ExtractedHeaders): ValidatedHeadersRequest[A] = ValidatedHeadersRequest(
-      eh.badgeIdentifier,
+      eh.maybeBadgeIdentifier,
       cir.conversationId,
-      eh.correlationIdHeader,
+      eh.maybeCorrelationIdHeader,
+      eh.maybeSubmitterIdentifier,
       eh.clientId,
       cir.request
     )
@@ -43,9 +44,10 @@ object ActionBuilderModelHelper {
   implicit class ValidatedHeadersRequestOps[A](val vhr: ValidatedHeadersRequest[A]) extends AnyVal {
 
     def toAuthorisedRequest: AuthorisedRequest[A] = AuthorisedRequest(
-      vhr.badgeIdentifier,
+      vhr.maybeBadgeIdentifier,
       vhr.conversationId,
-      vhr.correlationIdHeader,
+      vhr.maybeCorrelationIdHeader,
+      vhr.maybeSubmitterIdentifier,
       vhr.clientId,
       vhr.request
     )
@@ -53,9 +55,10 @@ object ActionBuilderModelHelper {
 
   implicit class AuthorisedRequestOps[A](val ar: AuthorisedRequest[A]) extends AnyVal {
     def toValidatedPayloadRequest(xmlBody: NodeSeq): ValidatedPayloadRequest[A] = ValidatedPayloadRequest(
-      ar.badgeIdentifier,
+      ar.maybeBadgeIdentifier,
       ar.conversationId,
-      ar.correlationIdHeader,
+      ar.maybeCorrelationIdHeader,
+      ar.maybeSubmitterIdentifier,
       ar.clientId,
       xmlBody,
       ar.request
@@ -68,9 +71,10 @@ trait HasConversationId {
 }
 
 trait ExtractedHeaders {
-  val badgeIdentifier: BadgeIdentifier
+  val maybeBadgeIdentifier: Option[BadgeIdentifier]
   val clientId: ClientId
-  val correlationIdHeader: Option[CorrelationIdHeader]
+  val maybeCorrelationIdHeader: Option[CorrelationIdHeader]
+  val maybeSubmitterIdentifier: Option[SubmitterIdentifier]
 }
 
 trait HasXmlBody {
@@ -78,9 +82,10 @@ trait HasXmlBody {
 }
 
 case class ExtractedHeadersImpl(
-  badgeIdentifier: BadgeIdentifier,
-  clientId: ClientId,
-  correlationIdHeader: Option[CorrelationIdHeader]
+                                 maybeBadgeIdentifier: Option[BadgeIdentifier],
+                                 clientId: ClientId,
+                                 maybeCorrelationIdHeader: Option[CorrelationIdHeader],
+                                 maybeSubmitterIdentifier: Option[SubmitterIdentifier]
 ) extends ExtractedHeaders
 
 /*
@@ -99,27 +104,30 @@ case class ConversationIdRequest[A](
 
 // Available after ValidatedHeadersAction builder
 case class ValidatedHeadersRequest[A](
-                                       badgeIdentifier: BadgeIdentifier,
+                                       maybeBadgeIdentifier: Option[BadgeIdentifier],
                                        conversationId: ConversationId,
-                                       correlationIdHeader: Option[CorrelationIdHeader],
+                                       maybeCorrelationIdHeader: Option[CorrelationIdHeader],
+                                       maybeSubmitterIdentifier: Option[SubmitterIdentifier],
                                        clientId: ClientId,
                                        request: Request[A]
 ) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders
 
 // Available after Authorise action builder
 case class AuthorisedRequest[A](
-                                 badgeIdentifier: BadgeIdentifier,
+                                 maybeBadgeIdentifier: Option[BadgeIdentifier],
                                  conversationId: ConversationId,
-                                 correlationIdHeader: Option[CorrelationIdHeader],
+                                 maybeCorrelationIdHeader: Option[CorrelationIdHeader],
+                                 maybeSubmitterIdentifier: Option[SubmitterIdentifier],
                                  clientId: ClientId,
                                  request: Request[A]
 ) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders
 
 // Available after ValidatedPayloadAction builder
 case class ValidatedPayloadRequest[A](
-                                       badgeIdentifier: BadgeIdentifier,
+                                       maybeBadgeIdentifier: Option[BadgeIdentifier],
                                        conversationId: ConversationId,
-                                       correlationIdHeader: Option[CorrelationIdHeader],
+                                       maybeCorrelationIdHeader: Option[CorrelationIdHeader],
+                                       maybeSubmitterIdentifier: Option[SubmitterIdentifier],
                                        clientId: ClientId,
                                        xmlBody: NodeSeq,
                                        request: Request[A]

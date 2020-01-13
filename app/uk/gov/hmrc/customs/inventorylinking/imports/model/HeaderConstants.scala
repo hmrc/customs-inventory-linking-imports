@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ object HeaderConstants {
   val XForwardedHost: String = "X-Forwarded-Host"
   val XCorrelationId: String = "X-Correlation-ID"
   val XBadgeIdentifier: String = "X-Badge-Identifier"
+  val XSubmitterIdentifier: String = "X-Submitter-Identifier"
 
   val Version1AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
 }

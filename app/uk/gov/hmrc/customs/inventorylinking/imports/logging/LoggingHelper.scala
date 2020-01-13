@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,10 @@ object LoggingHelper {
       case _ => ""
     }
     def extractedHeaders = r match {
-      case h: ExtractedHeaders => s"[clientId=${h.clientId}][badgeIdentifier=${h.badgeIdentifier.value}]"
+      case h: ExtractedHeaders =>
+        val bid = h.maybeBadgeIdentifier.fold("")(b => s"[badgeIdentifier=${b.value}]")
+        val sid = h.maybeSubmitterIdentifier.fold("")(s => s"[submitterIdentifier=${s.value}]")
+        s"[clientId=${h.clientId}]$bid$sid"
       case _ => ""
     }
     s"$conversationId$extractedHeaders"

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,14 +43,14 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
       logger.debug("msg")
 
       PassByNameVerifier(mockCdsLogger, "debug")
-        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123] msg")
+        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] msg")
         .verify()
     }
     "debug(s: => String, e: => Throwable)" in new SetUp {
       logger.debug("msg", emulatedServiceFailure)
 
       PassByNameVerifier(mockCdsLogger, "debug")
-        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123] msg")
+        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] msg")
         .withByNameParam(emulatedServiceFailure)
         .verify()
     }
@@ -65,21 +65,21 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
       logger.info("msg")
 
       PassByNameVerifier(mockCdsLogger, "info")
-        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123] msg")
+        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] msg")
         .verify()
     }
     "warn(s: => String)" in new SetUp {
       logger.warn("msg")
 
       PassByNameVerifier(mockCdsLogger, "warn")
-        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123] msg")
+        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] msg")
         .verify()
     }
     "error(s: => String, e: => Throwable)" in new SetUp {
       logger.error("msg", emulatedServiceFailure)
 
       PassByNameVerifier(mockCdsLogger, "error")
-        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123] msg")
+        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] msg")
         .withByNameParam(emulatedServiceFailure)
         .verify()
     }
@@ -87,7 +87,7 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
       logger.error("msg")
 
       PassByNameVerifier(mockCdsLogger, "error")
-        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123] msg")
+        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] msg")
         .verify()
     }
     "errorWithoutRequestContext(s: => String)" in new SetUp {

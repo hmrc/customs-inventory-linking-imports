@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,11 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar with ApiSubscripti
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
   private def wrapPayloadWithoutCorrelationId(apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse = apiSubscriptionFieldsResponse) = payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, None, "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime, CorrelationIdUuid)
   private def wrapPayload(apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse = apiSubscriptionFieldsResponse) = payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, Some(ValidCorrelationIdHeader), "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime, CorrelationIdUuid)
-
+  private def wrapPayloadWithoutIds() = {
+    implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequestNoIds
+    payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, Some(ValidCorrelationIdHeader), "InventoryLinkingImportsInboundValidateMovementResponse", RequestDateTime, CorrelationIdUuid)
+  }
+  
   "PayloadDecorator" should {
 
     "set the root element label" in {
@@ -91,6 +95,14 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar with ApiSubscripti
       rd.head.text shouldBe ValidBadgeIdentifierValue
     }
 
+    "set the originatingPartyID" in {
+      val result = wrapPayload()
+
+      val rd = result \\ "originatingPartyID"
+
+      rd.head.text shouldBe SubmitterIdentifierHeaderValue
+    }
+
     "set the authenticatedPartyID" in {
       val result = wrapPayload()
 
@@ -103,6 +115,21 @@ class PayloadDecoratorSpec extends UnitSpec with MockitoSugar with ApiSubscripti
       val result = wrapPayload(apiSubscriptionFieldsResponseWithoutAuthenticatedEori)
 
       val rd = result \\ "authenticatedPartyID"
+
+      rd shouldBe NodeSeq.Empty
+    }
+
+    "not set the badgeIdentifier when not present" in {
+      val result = wrapPayloadWithoutIds()
+
+      val rd = result \\ "badgeIdentifier"
+
+      rd shouldBe NodeSeq.Empty
+    }
+
+    "not set the submitterIdentifier when not present" in {
+      val result = wrapPayloadWithoutIds()
+      val rd = result \\ "submitterIdentifier"
 
       rd shouldBe NodeSeq.Empty
     }

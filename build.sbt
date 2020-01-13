@@ -3,6 +3,7 @@ import org.scalastyle.sbt.ScalastylePlugin._
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
 import sbt.{Resolver, _}
+import uk.gov.hmrc.gitstamp.GitStampPlugin._
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, defaultSettings, scalaSettings, targetJvm}
 import uk.gov.hmrc.PublishingSettings._
 import uk.gov.hmrc.SbtArtifactory

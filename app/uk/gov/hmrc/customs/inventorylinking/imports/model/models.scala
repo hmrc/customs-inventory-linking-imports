@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 HM Revenue & Customs
+ * Copyright 2020 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,10 @@ case class ConversationId(uuid: UUID) extends AnyVal {
 }
 
 case class CorrelationIdHeader(value: String) extends AnyVal {
+  override def toString: String = value.toString
+}
+
+case class SubmitterIdentifier(value: String) extends AnyVal {
   override def toString: String = value.toString
 }
 
