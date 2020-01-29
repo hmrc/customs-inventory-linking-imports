@@ -54,6 +54,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
   private val wrappedValidXML = <wrapped></wrapped>
   private val errorResponseServiceUnavailable = errorInternalServerError("This service is currently unavailable")
+  private val errorResponseMissingEori = errorInternalServerError("Missing authenticated eori in service lookup")
 
   trait SetUp {
     protected val importsMessageType: ImportsMessageType = new GoodsArrival()
@@ -119,6 +120,14 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     "return InternalServerError ErrorResponse when subscription fields call fails" in new SetUp() {
       when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(emulatedServiceFailure))
       callSend() shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+
+      verifyNoMoreInteractions(mockPayloadDecorator)
+      verifyNoMoreInteractions(mockImportsConnector)
+    }
+
+    "return InternalServerError ErrorResponse when subscription fields call succeeds but does not return a authenticatedEori value" in new SetUp() {
+      when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponseWithoutAuthenticatedEori))
+      callSend() shouldBe Left(errorResponseMissingEori.XmlResult.withConversationId)
 
       verifyNoMoreInteractions(mockPayloadDecorator)
       verifyNoMoreInteractions(mockImportsConnector)
