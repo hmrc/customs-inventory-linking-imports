@@ -50,30 +50,21 @@ object LoggingHelper {
   }
 
   private def format(r: HasConversationId): String = {
-    def conversationId = r match {
-      case c: HasConversationId => s"[conversationId=${c.conversationId}]"
-      case _ => ""
+    val defaultMsg = s"[conversationId=${r.conversationId}]"
+
+    r match {
+      case h: HasConversationId with ExtractedHeaders =>
+        val bid = h.maybeBadgeIdentifier.map(b => s"[badgeIdentifier=${b.value}]").getOrElse("")
+        val sid = h.maybeSubmitterIdentifier.map(s => s"[submitterIdentifier=${s.value}]").getOrElse("")
+        s"${defaultMsg}[clientId=${h.clientId}]$bid$sid"
+      case _ => defaultMsg
     }
-    def extractedHeaders = r match {
-      case h: ExtractedHeaders =>
-        val bid = h.maybeBadgeIdentifier.fold("")(b => s"[badgeIdentifier=${b.value}]")
-        val sid = h.maybeSubmitterIdentifier.fold("")(s => s"[submitterIdentifier=${s.value}]")
-        s"[clientId=${h.clientId}]$bid$sid"
-      case _ => ""
-    }
-    s"$conversationId$extractedHeaders"
   }
 
   def formatMessageFull(msg: String, r: HasConversationId with Request[_]): String = {
-    def filteredHeaders = r match {
-      case request: Request[_] =>
-        request.headers.toSimpleMap.filter(keyValTuple =>
-          headerSet.contains(keyValTuple._1.toLowerCase)
-        )
-      case _ => ""
-    }
+    val filteredHeaders = r.headers.toSimpleMap
+      .filter(keyValTuple => headerSet.contains(keyValTuple._1.toLowerCase))
 
     s"[conversationId=${r.conversationId.uuid}] $msg headers=$filteredHeaders"
   }
-
 }
