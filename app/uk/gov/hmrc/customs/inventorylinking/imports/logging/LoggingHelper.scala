@@ -53,7 +53,7 @@ object LoggingHelper {
     val defaultMsg = s"[conversationId=${r.conversationId}]"
 
     r match {
-      case h: HasConversationId with ExtractedHeaders =>
+      case h: ExtractedHeaders =>
         val bid = h.maybeBadgeIdentifier.map(b => s"[badgeIdentifier=${b.value}]").getOrElse("")
         val sid = h.maybeSubmitterIdentifier.map(s => s"[submitterIdentifier=${s.value}]").getOrElse("")
         s"${defaultMsg}[clientId=${h.clientId}]$bid$sid"
