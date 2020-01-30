@@ -33,7 +33,7 @@ switching of the endpoint there must be a corresponding section in the applicati
 ## Example
 The service `customs-inventory-linking-imports` has a `default` configuration and a `stub` configuration. Note
 that `default` configuration is declared directly inside the `customs-inventory-linking-imports` section.
-
+```
   services {
     ...
 
@@ -51,7 +51,7 @@ that `default` configuration is declared directly inside the `customs-inventory-
       }
     }
   }
-
+```
 ## Useful CURL commands for local testing
 [link to curl commands](docs/curl-commands.md)
     
