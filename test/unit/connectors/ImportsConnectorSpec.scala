@@ -208,6 +208,17 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
         }
         caught.getMessage shouldBe "config not found"
       }
+
+      "throw an exception when no bearer token value is found in config" in {
+        val mockServiceConfig = mock[ServiceConfig]
+        when(mockServiceConfig.bearerToken).thenReturn(None)
+        when(mockServiceConfigProvider.getConfig("goodsarrival")).thenReturn(mockServiceConfig)
+
+        val caught = intercept[IllegalStateException] {
+          awaitRequest
+        }
+        caught.getMessage shouldBe "no bearer token was found in config"
+      }
     }
   }
 

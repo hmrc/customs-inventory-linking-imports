@@ -67,8 +67,14 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     (apiSubscriptionFieldsConnector.getSubscriptionFields(ApiSubscriptionKey(c, apiContextEncoded, VersionOne)) map {
       response: ApiSubscriptionFieldsResponse =>
         logger.debug(s"Got a response from api subscription fields $response")
-        response.fields.authenticatedEori.fold(logger.info("No eori returned from api subscription fields")){ _ => logger.info("Got an eori back from api subscription fields")}
-        Right(response)
+        response.fields.authenticatedEori match {
+          case Some(_) =>
+            logger.info("Got an eori back from api subscription fields")
+            Right(response)
+          case None =>
+            logger.info("No eori returned from api subscription fields")
+            Left(errorInternalServerError("Missing authenticated eori in service lookup").XmlResult.withConversationId)
+        }
     }).recover[Either[Result, ApiSubscriptionFieldsResponse]] {
       case NonFatal(e) =>
         logger.error(s"Subscriptions fields lookup call failed: ${e.getMessage}", e)
