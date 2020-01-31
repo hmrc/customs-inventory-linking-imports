@@ -45,7 +45,7 @@ class ValidateMovementHeaderValidatorActionSpec extends UnitSpec with TableDrive
   "ValidateMovementHeaderValidatorAction" can {
     "in happy path, validation" should {
       "be successful for X-Correlation-ID as a UUID" in new SetUp {
-        validate(conversationIdRequest(ValidHeaders + (XCorrelationIdHeaderName -> CorrelationIdValue))) shouldBe Right(TestExtractedHeaders.copy(maybeCorrelationIdHeader = Some(CorrelationIdHeader(CorrelationIdValue))))
+        validate(conversationIdRequest(ValidHeaders + (XCorrelationIdHeaderName -> CorrelationIdValue))) shouldBe Right(TestExtractedHeadersV1.copy(maybeCorrelationIdHeader = Some(CorrelationIdHeader(CorrelationIdValue))))
       }
     }
     "in unhappy path, validation" should {

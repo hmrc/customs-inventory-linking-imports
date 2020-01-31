@@ -84,7 +84,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(mockHttpResponse)
     when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
-    when(mockImportsConfigService.importsConfig).thenReturn(ImportsConfig(Seq(), "https://random.url"))
+    when(mockImportsConfigService.importsConfig).thenReturn(ImportsConfig("https://random.url"))
   }
 
   "MessageSender" should {

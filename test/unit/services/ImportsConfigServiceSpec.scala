@@ -52,7 +52,6 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
     "return config as object model when configuration is valid" in {
       val configService = customsConfigService(validServicesConfiguration)
 
-      configService.importsConfig.whiteListedCspApplicationIds shouldBe Seq("someId-1", "someId-2")
       configService.importsConfig.apiSubscriptionFieldsBaseUrl shouldBe "http://some-host:1111/some-context"
       configService.importsCircuitBreakerConfig.numberOfCallsToTriggerStateChange shouldBe 5
       configService.importsCircuitBreakerConfig.unavailablePeriodDurationInMillis shouldBe 1000

@@ -42,7 +42,7 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
   "HeaderValidationAction when validation succeeds" should {
     "extract headers from incoming request and copy relevant values on to the ValidatedHeaderRequest" in new SetUp {
       val conversationIdRequest: ConversationIdRequest[AnyContentAsXml] = TestConversationIdRequest
-      when(mockHeaderValidator.validateHeaders(any[ConversationIdRequest[_]])).thenReturn(Right(TestExtractedHeaders))
+      when(mockHeaderValidator.validateHeaders(any[ConversationIdRequest[_]])).thenReturn(Right(TestExtractedHeadersV1))
 
       val actualResult: Either[Result, ValidatedHeadersRequest[_]] = await(validateAndExtractHeadersAction.refine(conversationIdRequest))
 

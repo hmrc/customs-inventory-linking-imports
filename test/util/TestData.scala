@@ -74,8 +74,9 @@ object TestData {
   val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
-  val TestExtractedHeaders = ExtractedHeadersImpl(Some(ValidBadgeIdentifier), ApiSubscriptionFieldsTestData.clientId, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader))
-  val TestExtractedHeadersWithoutCorrelationId = TestExtractedHeaders.copy(maybeCorrelationIdHeader = None)
+  val TestExtractedHeadersV1 = ExtractedHeadersImpl(VersionOne, Some(ValidBadgeIdentifier), ApiSubscriptionFieldsTestData.clientId, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader))
+  val TestExtractedHeadersV2 = ExtractedHeadersImpl(VersionTwo, Some(ValidBadgeIdentifier), ApiSubscriptionFieldsTestData.clientId, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader))
+  val TestExtractedHeadersWithoutCorrelationId = TestExtractedHeadersV1.copy(maybeCorrelationIdHeader = None)
   val TestExtractedHeadersWithoutCorrelationIdOrBadgeId = TestExtractedHeadersWithoutCorrelationId.copy(maybeBadgeIdentifier = None)
   val TestExtractedHeadersWithoutCorrelationIdOrSubmitterId = TestExtractedHeadersWithoutCorrelationId.copy(maybeSubmitterIdentifier = None)
   val TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId = TestExtractedHeadersWithoutCorrelationId.copy(maybeSubmitterIdentifier = None, maybeBadgeIdentifier = None)
@@ -169,10 +170,12 @@ object TestData {
   val TestXmlPayload: Elem = <foo>bar</foo>
   val TestFakeRequest: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(TestXmlPayload)
   val TestConversationIdRequest: ConversationIdRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, TestFakeRequest)
-  val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeaders)
+  val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersV1)
+  val TestValidatedHeadersRequestV2: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersV2)
   val TestValidatedHeadersNoIdsRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId)
   val TestAuthorisedRequest: AuthorisedRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest
   val TestCspValidatedPayloadRequest: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
+  val TestCspValidatedPayloadRequestV2: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequestV2.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
   val TestCspValidatedPayloadRequestNoIds: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersNoIdsRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
   val ValidRequest: FakeRequest[AnyContentAsXml] = TestFakeRequest.withHeaders(ValidHeaders.toSeq: _*)
 

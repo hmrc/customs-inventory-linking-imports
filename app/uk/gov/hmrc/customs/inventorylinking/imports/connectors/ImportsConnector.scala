@@ -47,7 +47,7 @@ class ImportsConnector @Inject()(http: HttpClient,
                                 (implicit ex: ExecutionContext) extends UsingCircuitBreaker {
 
   def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[HttpResponse] = {
-    val config = Option(serviceConfigProvider.getConfig(s"${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
+    val config = Option(serviceConfigProvider.getConfig(s"${vpr.requestedApiVersion.configPrefix}${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
     implicit val headerCarrier: HeaderCarrier = hc.copy(extraHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId), authorization = Some(Authorization(bearerToken)))
     val startTime = LocalDateTime.now

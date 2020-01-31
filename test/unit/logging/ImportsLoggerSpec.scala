@@ -25,7 +25,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionB
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ConversationIdRequest}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
-import util.TestData.{TestExtractedHeaders, TestXmlPayload, ValidConversationId, emulatedServiceFailure}
+import util.TestData.{TestExtractedHeadersV1, TestXmlPayload, ValidConversationId, emulatedServiceFailure}
 
 class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
@@ -34,7 +34,7 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
     val logger = new ImportsLogger(mockCdsLogger)
     implicit val implicitVpr: AuthorisedRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, FakeRequest()
       .withXmlBody(TestXmlPayload).withHeaders("Content-Type" -> "Some-Content-Type"))
-      .toValidatedHeadersRequest(TestExtractedHeaders)
+      .toValidatedHeadersRequest(TestExtractedHeadersV1)
       .toAuthorisedRequest
   }
 

@@ -23,7 +23,7 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedHeadersRequest}
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ClientId, HeaderConstants}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ClientId, HeaderConstants, VersionOne}
 import uk.gov.hmrc.play.test.UnitSpec
 import util.TestData._
 
@@ -43,7 +43,7 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
         "IGNORE" -> "IGNORE"
       )
     )
-  private val validatedHeadersRequest = ValidatedHeadersRequest(Some(ValidBadgeIdentifier), ValidConversationId, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader), ClientId("some-client-id"), requestMock)
+  private val validatedHeadersRequest = ValidatedHeadersRequest(Some(ValidBadgeIdentifier), ValidConversationId, VersionOne, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader), ClientId("some-client-id"), requestMock)
 
   "LoggingHelper" should {
 
