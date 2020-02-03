@@ -75,7 +75,7 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
 
     "return 400 error response when XML is not well formed" in new SetUp {
       private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, FakeRequest().withTextBody("<foo><foo>"))
-        .toValidatedHeadersRequest(TestExtractedHeaders).toAuthorisedRequest
+        .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
 
       private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNonWellFormedXml))
 
@@ -111,7 +111,7 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
 
     "return 400 error response when XML is not well formed" in new SetUp {
       private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, FakeRequest().withTextBody("<foo><foo>"))
-        .toValidatedHeadersRequest(TestExtractedHeaders).toAuthorisedRequest
+        .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
 
       private val actual = await(goodsArrivalPayloadValidationAction.refine(authorisedRequestWithNonWellFormedXml))
 

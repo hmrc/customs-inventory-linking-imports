@@ -26,16 +26,14 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsCircuitBreaker
 class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdaptor, logger: ImportsLogger) {
 
   private val root = configValidatedNel.root
-  private val whiteListedCspApplicationIds = root.stringSeq("api.access.version-1.0.whitelistedApplicationIds")
   private val apiSubscriptionFieldsService = configValidatedNel.service("api-subscription-fields")
   private val numberOfCallsToTriggerStateChangeNel = root.int("circuitBreaker.numberOfCallsToTriggerStateChange")
   private val unavailablePeriodDurationInMillisNel = root.int("circuitBreaker.unavailablePeriodDurationInMillis")
   private val unstablePeriodDurationInMillisNel = root.int("circuitBreaker.unstablePeriodDurationInMillis")
   private val apiSubscriptionFieldsServiceUrlNel = apiSubscriptionFieldsService.serviceUrl
 
-  private val validatedImportsConfig: CustomsValidatedNel[ImportsConfig] = (
-    whiteListedCspApplicationIds, apiSubscriptionFieldsServiceUrlNel
-  ) mapN ImportsConfig.apply
+  private val validatedImportsConfig: CustomsValidatedNel[ImportsConfig] = (apiSubscriptionFieldsServiceUrlNel
+  ) map  ImportsConfig.apply
 
   private val validatedImportsCircuitBreakerConfig: CustomsValidatedNel[ImportsCircuitBreakerConfig] = (
     numberOfCallsToTriggerStateChangeNel, unavailablePeriodDurationInMillisNel, unstablePeriodDurationInMillisNel

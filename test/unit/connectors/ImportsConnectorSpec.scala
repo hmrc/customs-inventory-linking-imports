@@ -95,6 +95,18 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
           any[HttpReads[HttpResponse]](), any[HeaderCarrier](), any[ExecutionContext])
       }
 
+      "pass URL for v2 from config" in {
+        implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequestV2
+        returnResponseForRequest(Future.successful(mockResponse))
+
+        when(mockServiceConfigProvider.getConfig("v2.goodsarrival")).thenReturn(ServiceConfig("v2-url", Some("v2-bearer-token"), "v2-env"))
+
+        await(connector.send(new GoodsArrival(), xml, date, correlationId))
+
+        verify(mockWsPost).POSTString(ameq("v2-url"), anyString, any[SeqOfHeader])(
+          any[HttpReads[HttpResponse]](), any[HeaderCarrier](), any[ExecutionContext])
+      }
+
       "pass the xml in the body" in {
         returnResponseForRequest(Future.successful(mockResponse))
 

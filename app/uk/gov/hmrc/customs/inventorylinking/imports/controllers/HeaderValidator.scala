@@ -30,7 +30,10 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{Conver
 @Singleton
 class HeaderValidator @Inject() (logger: ImportsLogger) {
 
-  private lazy val validAcceptHeaders = Seq(Version1AcceptHeaderValue)
+  protected val versionsByAcceptHeader: Map[String, ApiVersion] = Map(
+    "application/vnd.hmrc.1.0+xml" -> VersionOne,
+    "application/vnd.hmrc.2.0+xml" -> VersionTwo
+  )
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
@@ -41,7 +44,7 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
     implicit val headers: Headers = conversationIdRequest.headers
 
-    def hasAccept = validateHeader(ACCEPT, validAcceptHeaders.contains(_), ErrorAcceptHeaderInvalid, optional = false)
+    def hasAccept = validateHeader(ACCEPT, versionsByAcceptHeader.keySet.contains(_), ErrorAcceptHeaderInvalid, optional = false)
 
     def hasContentType = validateHeader(CONTENT_TYPE, s => validContentTypeHeaders.contains(s.toLowerCase()), ErrorContentTypeHeaderInvalid, optional = false)
 
@@ -66,7 +69,7 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
       + s"$XClientId header passed validation: $xClientId\n"
       + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier"
       + s"$XSubmitterIdentifier header passed validation: $xSubmitterIdentifier")
-      ExtractedHeadersImpl(bid, ClientId(xClientId.get), None, sid)
+      ExtractedHeadersImpl(versionsByAcceptHeader(accept.get), bid, ClientId(xClientId.get), None, sid) // accept cannot be None
     }
     theResult
   }

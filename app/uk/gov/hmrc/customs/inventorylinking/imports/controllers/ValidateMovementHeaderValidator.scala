@@ -45,7 +45,7 @@ class ValidateMovementHeaderValidator @Inject()(logger: ImportsLogger) extends H
         } yield {
           val cid = xCorrelationId.map( CorrelationIdHeader(_) )
           logger.debug(s"$XCorrelationId header passed validation: $xCorrelationId")
-          ExtractedHeadersImpl(b.maybeBadgeIdentifier, b.clientId, cid, b.maybeSubmitterIdentifier)
+          ExtractedHeadersImpl(b.requestedApiVersion, b.maybeBadgeIdentifier, b.clientId, cid, b.maybeSubmitterIdentifier)
         }
         theResult
       case left => left

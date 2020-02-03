@@ -34,6 +34,7 @@ object ActionBuilderModelHelper {
     def toValidatedHeadersRequest(eh: ExtractedHeaders): ValidatedHeadersRequest[A] = ValidatedHeadersRequest(
       eh.maybeBadgeIdentifier,
       cir.conversationId,
+      eh.requestedApiVersion,
       eh.maybeCorrelationIdHeader,
       eh.maybeSubmitterIdentifier,
       eh.clientId,
@@ -46,6 +47,7 @@ object ActionBuilderModelHelper {
     def toAuthorisedRequest: AuthorisedRequest[A] = AuthorisedRequest(
       vhr.maybeBadgeIdentifier,
       vhr.conversationId,
+      vhr.requestedApiVersion,
       vhr.maybeCorrelationIdHeader,
       vhr.maybeSubmitterIdentifier,
       vhr.clientId,
@@ -57,6 +59,7 @@ object ActionBuilderModelHelper {
     def toValidatedPayloadRequest(xmlBody: NodeSeq): ValidatedPayloadRequest[A] = ValidatedPayloadRequest(
       ar.maybeBadgeIdentifier,
       ar.conversationId,
+      ar.requestedApiVersion,
       ar.maybeCorrelationIdHeader,
       ar.maybeSubmitterIdentifier,
       ar.clientId,
@@ -73,6 +76,7 @@ trait HasConversationId {
 trait ExtractedHeaders {
   val maybeBadgeIdentifier: Option[BadgeIdentifier]
   val clientId: ClientId
+  val requestedApiVersion: ApiVersion
   val maybeCorrelationIdHeader: Option[CorrelationIdHeader]
   val maybeSubmitterIdentifier: Option[SubmitterIdentifier]
 }
@@ -81,7 +85,7 @@ trait HasXmlBody {
   val xmlBody: NodeSeq
 }
 
-case class ExtractedHeadersImpl(
+case class ExtractedHeadersImpl( requestedApiVersion: ApiVersion,
                                  maybeBadgeIdentifier: Option[BadgeIdentifier],
                                  clientId: ClientId,
                                  maybeCorrelationIdHeader: Option[CorrelationIdHeader],
@@ -106,6 +110,7 @@ case class ConversationIdRequest[A](
 case class ValidatedHeadersRequest[A](
                                        maybeBadgeIdentifier: Option[BadgeIdentifier],
                                        conversationId: ConversationId,
+                                       requestedApiVersion: ApiVersion,
                                        maybeCorrelationIdHeader: Option[CorrelationIdHeader],
                                        maybeSubmitterIdentifier: Option[SubmitterIdentifier],
                                        clientId: ClientId,
@@ -116,6 +121,7 @@ case class ValidatedHeadersRequest[A](
 case class AuthorisedRequest[A](
                                  maybeBadgeIdentifier: Option[BadgeIdentifier],
                                  conversationId: ConversationId,
+                                 requestedApiVersion: ApiVersion,
                                  maybeCorrelationIdHeader: Option[CorrelationIdHeader],
                                  maybeSubmitterIdentifier: Option[SubmitterIdentifier],
                                  clientId: ClientId,
@@ -126,6 +132,7 @@ case class AuthorisedRequest[A](
 case class ValidatedPayloadRequest[A](
                                        maybeBadgeIdentifier: Option[BadgeIdentifier],
                                        conversationId: ConversationId,
+                                       requestedApiVersion: ApiVersion,
                                        maybeCorrelationIdHeader: Option[CorrelationIdHeader],
                                        maybeSubmitterIdentifier: Option[SubmitterIdentifier],
                                        clientId: ClientId,
