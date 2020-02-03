@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="http://gov.uk/customs/inventoryLinkingImport/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://gov.uk/customs/inventoryLinkingImport/v1" elementFormDefault="qualified" version="1.0">
+	<xs:include schemaLocation="inventoryLinkingImportCommonTypes.xsd"/>
+	<!-- ========================================================================================= -->
+	<!-- Inventory Linking Imports Handle Additional Message CSPs / Traders requesting to present  -->
+	<!-- their goods to Customs. This causes the pre-lodged declaration to be arrived meaning the  -->
+	<!-- 'Manage Declaration' process is re-started. This is an initial draft of the goods arrival -->
+	<!-- message and may be subject to change after consultation with the CSPs.                    -->
+	<!-- ========================================================================================= -->
+	<xs:element name="inventoryLinkingImportsGoodsArrival">
+		<xs:annotation>
+			<xs:documentation>Inventory Linking Imports Goods Arrival
+            </xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="entryNumber" type="entryNumber" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="entryVersionNumber" type="entryVersionNumber" nillable="true" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="inventoryConsignmentReference" type="inventoryConsignmentReference" nillable="false" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="transportNationality" type="transportNationality" nillable="true" minOccurs="0" maxOccurs="1"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
