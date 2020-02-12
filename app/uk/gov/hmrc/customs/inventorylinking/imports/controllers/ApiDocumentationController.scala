@@ -22,8 +22,6 @@ import play.api.Configuration
 import play.api.http.MimeTypes
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.customs.api.common.controllers.DocumentationController
-import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
-import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 
 @Singleton
 class ApiDocumentationController @Inject()(assets: Assets,
