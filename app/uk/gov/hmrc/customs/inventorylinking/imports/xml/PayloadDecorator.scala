@@ -44,7 +44,7 @@ class PayloadDecorator {
     <n1:rootElementToBeRenamed
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:n1="http://gov.uk/customs/inventoryLinkingImport/v1"
-    xsi:schemaLocation="http://gov.uk/customs/inventoryLinkingImport/v1request_schema.xsd">
+    xsi:schemaLocation="http://gov.uk/customs/inventoryLinkingImport/v1 request_schema.xsd">
       <n1:requestCommon>
         <n1:clientID>{apiSubscriptionFieldsResponse.fieldsId.toString}</n1:clientID>
         <n1:conversationID>{vpr.conversationId.toString}</n1:conversationID>
