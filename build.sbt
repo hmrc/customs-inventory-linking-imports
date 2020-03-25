@@ -13,7 +13,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 import scala.language.postfixOps
 
 name := "customs-inventory-linking-imports"
-scalaVersion := "2.12.10"
+scalaVersion := "2.12.11"
 targetJvm := "jvm-1.8"
 
 lazy val allResolvers = resolvers ++= Seq(
@@ -21,14 +21,9 @@ lazy val allResolvers = resolvers ++= Seq(
   Resolver.jcenterRepo
 )
 
-val compileDependencies = Seq(customsApiCommon, circuitBreaker)
+lazy val CdsIntegrationComponentTest = config("it") extend Test
 
-val testDependencies = Seq(hmrcTest, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
-
-lazy val ComponentTest = config("component") extend Test
-lazy val CdsIntegrationTest = config("it") extend Test
-
-val testConfig = Seq(ComponentTest, CdsIntegrationTest, Test)
+val testConfig = Seq(CdsIntegrationComponentTest, Test)
 
 def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[Group] =
   tests.groupBy(_.name.takeWhile(_ != '.')).filter(packageAndTests => packages contains packageAndTests._1) map {
@@ -37,8 +32,7 @@ def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[G
   } toSeq
 
 lazy val testAll = TaskKey[Unit]("test-all")
-lazy val allTest = Seq(testAll := (test in ComponentTest)
-  .dependsOn((test in CdsIntegrationTest).dependsOn(test in Test)).value)
+lazy val allTest = Seq(testAll := (test in CdsIntegrationComponentTest).dependsOn(test in Test).value)
 
 lazy val microservice = (project in file("."))
   .enablePlugins(PlayScala)
@@ -50,46 +44,29 @@ lazy val microservice = (project in file("."))
   .settings(
     commonSettings,
     unitTestSettings,
-    integrationTestSettings,
-    componentTestSettings,
+    integrationComponentTestSettings,
     playPublishingSettings,
     allTest,
     scoverageSettings,
     allResolvers
   ).settings(majorVersion := 0)
 
-def onPackageName(rootPackage: String): String => Boolean = {
-  testName => testName startsWith rootPackage
-}
-
 lazy val unitTestSettings =
   inConfig(Test)(Defaults.testTasks) ++
     Seq(
-      testOptions in Test := Seq(Tests.Filter(onPackageName("unit"))),
-      testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
+      testOptions in Test := Seq(Tests.Filter(unitTestFilter)),
       unmanagedSourceDirectories in Test := Seq((baseDirectory in Test).value / "test"),
       addTestReportOption(Test, "test-reports")
     )
 
-lazy val integrationTestSettings =
-  inConfig(CdsIntegrationTest)(Defaults.testTasks) ++
+lazy val integrationComponentTestSettings =
+  inConfig(CdsIntegrationComponentTest)(Defaults.testTasks) ++
     Seq(
-      testOptions in CdsIntegrationTest := Seq(Tests.Filters(Seq(onPackageName("integration"), onPackageName("component")))),
-      testOptions in CdsIntegrationTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
-      fork in CdsIntegrationTest := false,
-      parallelExecution in CdsIntegrationTest := false,
-      addTestReportOption(CdsIntegrationTest, "int-test-reports"),
-      testGrouping in CdsIntegrationTest := forkedJvmPerTestConfig((definedTests in Test).value, "integration", "component")
-    )
-
-lazy val componentTestSettings =
-  inConfig(ComponentTest)(Defaults.testTasks) ++
-    Seq(
-      testOptions in ComponentTest := Seq(Tests.Filter(onPackageName("component"))),
-      testOptions in ComponentTest += Tests.Argument(TestFrameworks.ScalaTest, "-oD"),
-      fork in ComponentTest := false,
-      parallelExecution in ComponentTest := false,
-      addTestReportOption(ComponentTest, "component-reports")
+      testOptions in CdsIntegrationComponentTest := Seq(Tests.Filter(integrationComponentTestFilter)),
+      fork in CdsIntegrationComponentTest := false,
+      parallelExecution in CdsIntegrationComponentTest := false,
+      addTestReportOption(CdsIntegrationComponentTest, "int-comp-test-reports"),
+      testGrouping in CdsIntegrationComponentTest := forkedJvmPerTestConfig((definedTests in Test).value, "integration", "component")
     )
 
 lazy val commonSettings: Seq[Setting[_]] = publishingSettings ++ gitStampSettings
@@ -105,7 +82,14 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   parallelExecution in Test := false
 )
 
+def integrationComponentTestFilter(name: String): Boolean = (name startsWith "integration") || (name startsWith "component")
+def unitTestFilter(name: String): Boolean = name startsWith "unit"
+
 scalastyleConfig := baseDirectory.value / "project" / "scalastyle-config.xml"
+
+val compileDependencies = Seq(customsApiCommon, circuitBreaker)
+
+val testDependencies = Seq(hmrcTest, scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
 
 unmanagedResourceDirectories in Compile += baseDirectory.value / "public"
 (managedClasspath in Runtime) += (packageBin in Assets).value
