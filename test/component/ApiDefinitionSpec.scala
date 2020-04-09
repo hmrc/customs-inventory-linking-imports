@@ -72,19 +72,22 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |            "name": "callbackUrl",
           |            "description": "The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.",
           |            "type": "URL",
-          |            "hint": "This is how we'll notify you when we've processed them. It must include https and port 443"
+          |            "hint": "This is how we'll notify you when we've processed them. It must include https and port 443",
+          |            "shortDescription" : "Callback URL"
           |          },
           |          {
           |            "name": "securityToken",
           |            "description": "The full value of Authorization HTTP header that will be used when notifying you.",
           |            "type": "SecureToken",
-          |            "hint": "For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk"
+          |            "hint": "For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk",
+          |            "shortDescription" : "Authorization Token"
           |          },
           |          {
           |            "name": "authenticatedEori",
           |            "description": "What's your Economic Operator Registration and Identification (EORI) number?",
           |            "type": "STRING",
-          |            "hint": "This is your EORI that will associate your application with you as a CSP"
+          |            "hint": "This is your EORI that will associate your application with you as a CSP",
+          |            "shortDescription" : "EORI"
           |          }
           |        ]
           |      },
@@ -101,19 +104,22 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |            "name": "callbackUrl",
           |            "description": "The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.",
           |            "type": "URL",
-          |            "hint": "This is how we'll notify you when we've processed them. It must include https and port 443"
+          |            "hint": "This is how we'll notify you when we've processed them. It must include https and port 443",
+          |            "shortDescription" : "Callback URL"
           |          },
           |          {
           |            "name": "securityToken",
           |            "description": "The full value of Authorization HTTP header that will be used when notifying you.",
           |            "type": "SecureToken",
-          |            "hint": "For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk"
+          |            "hint": "For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk",
+          |            "shortDescription" : "Authorization Token"
           |          },
           |          {
           |            "name": "authenticatedEori",
           |            "description": "What's your Economic Operator Registration and Identification (EORI) number?",
           |            "type": "STRING",
-          |            "hint": "This is your EORI that will associate your application with you as a CSP"
+          |            "hint": "This is your EORI that will associate your application with you as a CSP",
+          |            "shortDescription" : "EORI"
           |          }
           |        ]
           |      }

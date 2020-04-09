@@ -22,8 +22,6 @@ import akka.stream.Materializer
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.http.HeaderNames.CONTENT_TYPE
-import play.api.http.MimeTypes
 import play.api.http.Status.OK
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
