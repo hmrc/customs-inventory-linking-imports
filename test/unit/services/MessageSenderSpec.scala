@@ -17,7 +17,9 @@
 package unit.services
 
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
+import akka.pattern.CircuitBreakerOpenException
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.Mockito.{atLeastOnce, verify, verifyNoMoreInteractions, when}
@@ -26,7 +28,6 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.Helpers
-import uk.gov.hmrc.circuitbreaker.UnhealthyServiceException
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorInternalServerError
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector}
@@ -42,6 +43,7 @@ import util.ApiSubscriptionFieldsTestData._
 import util.TestData.{TestCspValidatedPayloadRequest, TestXmlPayload, _}
 
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 import scala.xml.NodeSeq
 
 
@@ -141,7 +143,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     }
 
     "return InternalServerError ErrorResponse when backend circuit breaker trips" in new SetUp() {
-      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new UnhealthyServiceException("wco-declaration")))
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new CircuitBreakerOpenException(FiniteDuration(10, TimeUnit.SECONDS))))
       callSend() shouldBe Left(errorResponseServiceUnavailable.XmlResult)
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
