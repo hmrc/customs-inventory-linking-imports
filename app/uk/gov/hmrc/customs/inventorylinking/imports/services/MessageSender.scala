@@ -19,10 +19,10 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 import java.net.URLEncoder
 import java.util.UUID
 
+import akka.pattern.CircuitBreakerOpenException
 import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.mvc.Result
-import uk.gov.hmrc.circuitbreaker.UnhealthyServiceException
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorInternalServerError
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector}
@@ -93,7 +93,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
       logger.info("Inventory linking import request processed successfully")
       _ => Right(())
     }.recover{
-      case _: UnhealthyServiceException =>
+      case _: CircuitBreakerOpenException =>
         logger.error("unhealthy state entered")
         Left(errorResponseServiceUnavailable.XmlResult)
       case NonFatal(e) =>

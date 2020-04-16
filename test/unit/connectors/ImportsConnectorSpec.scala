@@ -18,6 +18,7 @@ package unit.connectors
 
 import java.util.UUID
 
+import akka.actor.ActorSystem
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => ameq, _}
@@ -52,9 +53,11 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private val mockImportsConfigService = mock[ImportsConfigService]
   private val mockImportsCircuitBreakerConfig = mock[ImportsCircuitBreakerConfig]
   private val mockResponse = mock[HttpResponse]
+  private val cdsLogger = mock[CdsLogger]
+  private val actorSystem = ActorSystem("mockActorSystem")
   private implicit val ec = Helpers.stubControllerComponents().executionContext
   
-  private val connector = new ImportsConnector(mockWsPost, stubImportsLogger, mockServiceConfigProvider, mockImportsConfigService)
+  private val connector = new ImportsConnector(mockWsPost, stubImportsLogger, mockServiceConfigProvider, mockImportsConfigService, cdsLogger, actorSystem)
 
   private val goodsArrivalConfig = ServiceConfig("some-ga-url", Some("ga-bearer-token"), "ga-default")
 
