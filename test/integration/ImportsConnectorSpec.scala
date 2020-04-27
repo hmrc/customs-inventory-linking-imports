@@ -90,34 +90,7 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
 
         verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, ValidInventoryLinkingMovementRequestXML.toString())
       }
-
-      "cause circuit breaker to trip after specified number of failures" in {
-        Thread.sleep(unavailablePeriodDurationInMillis)
-
-        startBackendService(INTERNAL_SERVER_ERROR)
-
-        1 to numberOfCallsToTriggerStateChange foreach { _ =>
-          val k = intercept[Upstream5xxResponse](await(sendValidXml(ValidInventoryLinkingMovementRequestXML)))
-          k.reportAs shouldBe BAD_GATEWAY
-        }
-
-        1 to 3 foreach { _ =>
-          intercept[CircuitBreakerOpenException](await(sendValidXml(ValidInventoryLinkingMovementRequestXML)))
-        }
-
-        resetMockServer()
-        startBackendService()
-
-        Thread.sleep(unavailablePeriodDurationInMillis)
-
-        1 to 5 foreach { _ =>
-          resetMockServer()
-          startBackendService()
-          await(sendValidXml(ValidInventoryLinkingMovementRequestXML))
-          verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, ValidInventoryLinkingMovementRequestXML.toString())
-        }
-      }
-
+      
       "return a failed future when service returns 404" in {
         startBackendService(NOT_FOUND)
 

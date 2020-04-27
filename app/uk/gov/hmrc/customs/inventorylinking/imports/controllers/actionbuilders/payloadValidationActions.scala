@@ -47,41 +47,38 @@ abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlVa
   extends ActionRefiner[AuthorisedRequest, ValidatedPayloadRequest] {
 
   protected def executionContext: ExecutionContext = ec
-  override def refine[A](ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
-    implicit val implicitAr: AuthorisedRequest[A] = ar
 
-    validateXml
+  override def refine[A](ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
+    implicit val implicitAr = ar
+    lazy val errorMessage = "Request body does not contain a well-formed XML document."
+
+    ar.body match {
+      case content: AnyContent =>
+        content.asXml
+          .map(validateXml(_))
+          .getOrElse(Future.successful(Left(errorResponse(errorMessage))))
+
+      case _ => Future.successful(Left(errorResponse(errorMessage)))
+    }
   }
 
-  private def validateXml[A](implicit ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
-    lazy val errorMessage = "Request body does not contain a well-formed XML document."
-    lazy val errorNotWellFormed = ErrorResponse.errorBadRequest(errorMessage).XmlResult.withConversationId
-
-    def validate(xml: NodeSeq): Future[Either[Result, ValidatedPayloadRequest[A]]] =
-      xmlValidationService.validate(xml).map[Either[Result, ValidatedPayloadRequest[A]]] { _ =>
-        logger.debug("XML payload validated.")
+  private def validateXml[A](xml: NodeSeq)(implicit ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
+    xmlValidationService.validate(xml)
+      .map { _ =>
+        logger.debug("XML payload validated")
         Right(ar.toValidatedPayloadRequest(xml))
       }
-        .recover {
-          case saxe: SAXException =>
-            val msg = "Payload did not pass validation against the schema."
-            logger.debug(msg, saxe)
-            logger.error(msg)
-            Left(ErrorResponse
-              .errorBadRequest("Payload is not valid according to schema")
-              .withErrors(xmlValidationErrors(saxe): _*).XmlResult.withConversationId)
-          case NonFatal(e) =>
-            val msg = "Error validating payload."
-            logger.debug(msg, e)
-            logger.error(msg)
-            Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
-        }
-
-    ar.asInstanceOf[AuthorisedRequest[AnyContent]].body.asXml.fold[Future[Either[Result, ValidatedPayloadRequest[A]]]]{
-      Future.successful(Left(errorNotWellFormed))
-    }{
-      xml => validate(xml)
-    }
+      .recover {
+        case saxe: SAXException =>
+          val msg = "Payload is not valid according to schema"
+          logger.debug(s"$msg:\n${xml.toString()}", saxe)
+          Left(errorResponse(msg, xmlValidationErrors(saxe): _*))
+        case NonFatal(e) =>
+          val msg = "Error validating payload."
+          logger.debug(s"$msg:\n${xml.toString()}", e)
+          logger.warn(msg)
+          Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+      }
   }
 
   private def xmlValidationErrors(saxe: SAXException): Seq[ResponseContents] = {
@@ -95,5 +92,13 @@ abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlVa
     }
 
     loop(saxe, Nil)
+  }
+
+  private def errorResponse[A](msg: String, contents: ResponseContents*)(implicit ar: AuthorisedRequest[A]): Result = {
+    logger.warn(msg)
+    ErrorResponse.errorBadRequest(msg)
+      .withErrors(contents: _*)
+      .XmlResult
+      .withConversationId
   }
 }
