@@ -18,7 +18,6 @@ package integration
 
 import java.util.UUID
 
-import akka.pattern.CircuitBreakerOpenException
 import org.joda.time.DateTime
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
@@ -42,15 +41,8 @@ import scala.xml.NodeSeq
 class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImportsService with GuiceOneAppPerSuite with MockitoSugar
   with ApiSubscriptionFieldsService with TableDrivenPropertyChecks {
 
-  private val numberOfCallsToTriggerStateChange = 5
-  private val unstablePeriodDurationInMillis = 200
-  private val unavailablePeriodDurationInMillis = 250
-
   override implicit lazy val app: Application =
     new GuiceApplicationBuilder().configure(Map(
-      "circuitBreaker.numberOfCallsToTriggerStateChange" -> numberOfCallsToTriggerStateChange,
-      "circuitBreaker.unstablePeriodDurationInMillis" -> unstablePeriodDurationInMillis,
-      "circuitBreaker.unavailablePeriodDurationInMillis" -> unavailablePeriodDurationInMillis,
       "microservice.services.goodsarrival.host" -> Host,
       "microservice.services.goodsarrival.port" -> Port,
       "microservice.services.goodsarrival.context" -> GoodsArrivalConnectorContext,
@@ -79,9 +71,6 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
   }
 
     "ImportsConnector" should {
-
-      //wait to clear the circuit breaker state that may of been tripped by previous tests
-      Thread.sleep(unavailablePeriodDurationInMillis)
 
       "make a correct request" in {
         startImportsService(GoodsArrivalConnectorContext)
