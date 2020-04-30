@@ -30,7 +30,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFields
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 import util.ExternalServicesConfig._
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig.ApiSubscriptionFieldsContext
 import util.{ApiSubscriptionFieldsTestData, TestData}

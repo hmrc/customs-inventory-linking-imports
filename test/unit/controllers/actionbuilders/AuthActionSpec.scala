@@ -28,7 +28,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, HeaderConstants, ValidateMovement}
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 import util.AuthConnectorStubbing
 import util.TestData.{ConversationIdValue, TestExtractedHeadersV1, ValidConversationId, testFakeRequest}
 
