@@ -18,16 +18,14 @@ package unit.services
 
 import java.io.FileNotFoundException
 
-import org.mockito.ArgumentMatchers.{eq => ameq}
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.Configuration
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService, XmlValidationService}
-import uk.gov.hmrc.play.test.UnitSpec
-import util.TestData
 import util.TestData._
+import util.{TestData, UnitSpec}
 import util.XMLTestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global

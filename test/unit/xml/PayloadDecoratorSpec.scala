@@ -21,7 +21,7 @@ import play.api.mvc.AnyContentAsXml
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ApiSubscriptionFieldsResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 import util.TestData._
 import util.{ApiSubscriptionFieldsTestData, TestData}
 

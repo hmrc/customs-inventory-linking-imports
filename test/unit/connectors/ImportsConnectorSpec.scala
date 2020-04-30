@@ -38,7 +38,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, Imports
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 import unit.logging.StubImportsLogger
 import util.TestData._
 

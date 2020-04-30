@@ -24,7 +24,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedHeadersRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ClientId, HeaderConstants, VersionOne}
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 import util.TestData._
 
 class LoggingHelperSpec extends UnitSpec with MockitoSugar {

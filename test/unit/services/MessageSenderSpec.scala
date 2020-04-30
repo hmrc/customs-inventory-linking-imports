@@ -38,7 +38,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 import util.ApiSubscriptionFieldsTestData._
 import util.TestData.{TestCspValidatedPayloadRequest, TestXmlPayload, _}
 

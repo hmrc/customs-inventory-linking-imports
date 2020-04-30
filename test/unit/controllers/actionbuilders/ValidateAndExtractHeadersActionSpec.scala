@@ -27,7 +27,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.ValidateAndExtractHeadersAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedHeadersRequest}
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 import util.TestData._
 
 class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {

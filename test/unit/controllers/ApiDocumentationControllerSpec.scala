@@ -28,7 +28,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ApiDocumentationController
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 
 class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
 

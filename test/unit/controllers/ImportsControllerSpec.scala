@@ -32,7 +32,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.Validat
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, MessageSender}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.test.UnitSpec
+import util.UnitSpec
 import util.AuthConnectorStubbing
 import util.TestData._
 
