@@ -44,8 +44,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               connector: ImportsConnector,
                               dateTimeProvider: DateTimeService,
                               uniqueIdsService: UniqueIdsService,
-                              logger: ImportsLogger,
-                              importsConfigService: ImportsConfigService
+                              logger: ImportsLogger
                              )
                              (implicit ex: ExecutionContext) {
 
@@ -64,7 +63,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
 
   private def futureApiSubFieldsId[A](c: ClientId)
                                      (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, ApiSubscriptionFieldsResponse]] = {
-    (apiSubscriptionFieldsConnector.getSubscriptionFields(ApiSubscriptionKey(c, apiContextEncoded, VersionOne)) map {
+    (apiSubscriptionFieldsConnector.getSubscriptionFields(ApiSubscriptionKey(c, apiContextEncoded, vpr.requestedApiVersion)) map {
       response: ApiSubscriptionFieldsResponse =>
         logger.debug(s"Got a response from api subscription fields $response")
         response.fields.authenticatedEori match {
