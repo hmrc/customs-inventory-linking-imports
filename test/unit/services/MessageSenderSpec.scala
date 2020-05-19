@@ -35,12 +35,12 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{ImportsConfigService, _}
+import uk.gov.hmrc.customs.inventorylinking.imports.services._
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
-import util.UnitSpec
 import util.ApiSubscriptionFieldsTestData._
 import util.TestData.{TestCspValidatedPayloadRequest, TestXmlPayload, _}
+import util.UnitSpec
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
@@ -52,7 +52,8 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
   private implicit val ec = Helpers.stubControllerComponents().executionContext
   private val dateTime = new DateTime()
   private val headerCarrier: HeaderCarrier = HeaderCarrier()
-  private val expectedApiSubscriptionKey = ApiSubscriptionKey(clientId, "customs%2Finventory-linking-imports", VersionOne)
+  private val expectedApiSubscriptionKeyV1 = ApiSubscriptionKey(clientId, "customs%2Finventory-linking-imports", VersionOne)
+  private val expectedApiSubscriptionKeyV2 = expectedApiSubscriptionKeyV1.copy(version = VersionTwo)
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
   private val wrappedValidXML = <wrapped></wrapped>
   private val errorResponseServiceUnavailable = errorInternalServerError("This service is currently unavailable")
@@ -66,10 +67,9 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     protected val mockPayloadDecorator: PayloadDecorator = mock[PayloadDecorator]
     protected val mockDateTimeProvider: DateTimeService = mock[DateTimeService]
     protected val mockHttpResponse: HttpResponse = mock[HttpResponse]
-    protected val mockImportsConfigService: ImportsConfigService = mock[ImportsConfigService]
 
     protected lazy val service: MessageSender = new MessageSender(mockApiSubscriptionFieldsConnector, mockPayloadDecorator, mockImportsConnector,
-      mockDateTimeProvider, stubUniqueIdsService, mockLogger, mockImportsConfigService)
+      mockDateTimeProvider, stubUniqueIdsService, mockLogger)
 
     protected def callSend(vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest, hc: HeaderCarrier = headerCarrier): Either[Result, Unit] = {
       await(service.send(importsMessageType)(vpr, hc))
@@ -87,7 +87,6 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(mockHttpResponse)
     when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
-    when(mockImportsConfigService.importsConfig).thenReturn(ImportsConfig("https://random.url"))
   }
 
   "MessageSender" should {
@@ -96,6 +95,13 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       callSend() shouldBe Right(())
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+    }
+
+    "ensure that correct version is used in call to subscription service" in new SetUp() {
+      callSend(vpr = TestCspValidatedPayloadRequestV2) shouldBe Right(())
+
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(expectedApiSubscriptionKeyV2)(TestCspValidatedPayloadRequestV2, headerCarrier)
       verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
@@ -116,7 +122,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         meq(importsMessageType.wrapperRootElementLabel),
         any[DateTime],
         meq(CorrelationIdUuid))(any[ValidatedPayloadRequest[_]])
-      verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKey))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKeyV1))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
     "return InternalServerError ErrorResponse when subscription fields call fails" in new SetUp() {
