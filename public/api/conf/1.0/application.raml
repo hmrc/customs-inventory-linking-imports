@@ -36,7 +36,7 @@ documentation:
           required: true
           example: application/vnd.hmrc.1.0+xml
         Content-Type:
-          description: Specifies the format of the request body, which must be XML. Download [schemas](/api-documentation/docs/api/download/customs-inventory-linking-imports/1.0/inventory-linking-imports-schemas.zip).
+          description: Specifies the format of the request body, which must be XML.
           type: string
           required: true
           example: application/xml; charset=UTF-8
@@ -67,7 +67,7 @@ documentation:
       body:
         application/xml:
           type: !include schemas/imports/inventoryLinkingImportValidateMovementResponse.xsd
-          example: !include examples/Trade%20Test%2010.3%20Sample%20Messages/TT_IM03a/Example%20Movement%20Messages/2_IVL%20TypeF%20to%20C%20UKCIRM%20Validate%20Movement%20Response%20001.xml
+          example: !include examples/example_messages/Trade%20Test%2010.3%20Sample%20Messages/TT_IM03a/Example%20Movement%20Messages/2_IVL%20TypeF%20to%20C%20UKCIRM%20Validate%20Movement%20Response%20001.xml
 
       responses:
         202:
@@ -111,7 +111,7 @@ documentation:
           required: true
           example: application/vnd.hmrc.1.0+xml
         Content-Type:
-          description: Specifies the format of the request body, which must be XML. Download [schemas](/api-documentation/docs/api/download/customs-inventory-linking-imports/1.0/inventory-linking-imports-schemas.zip).
+          description: Specifies the format of the request body, which must be XML.
           type: string
           required: true
           example: application/xml; charset=UTF-8
@@ -137,7 +137,7 @@ documentation:
       body:
         application/xml:
           type: !include schemas/imports/inventoryLinkingImportArriveGoods.xsd
-          example: !include examples/Trade%20Test%2010.3%20Sample%20Messages/TT_IM03a/Example%20Movement%20Messages/5_IVL%20Type%20F%20to%20C%20GAN%20Payload.xml
+          example: !include examples/example_messages/Trade%20Test%2010.3%20Sample%20Messages/TT_IM03a/Example%20Movement%20Messages/5_IVL%20Type%20F%20to%20C%20GAN%20Payload.xml
 
       responses:
         202:
