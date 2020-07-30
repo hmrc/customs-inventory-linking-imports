@@ -36,7 +36,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig, SeqOfHeader}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, NotFoundException}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import util.UnitSpec
 import unit.logging.StubImportsLogger
@@ -64,7 +64,6 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private val xml = <xml></xml>
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val httpException = new NotFoundException("Emulated 404 response from a web call")
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
 
   override protected def beforeEach() {
@@ -72,6 +71,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
     when(mockServiceConfigProvider.getConfig("goodsarrival")).thenReturn(goodsArrivalConfig)
     when(mockImportsConfigService.importsCircuitBreakerConfig).thenReturn(mockImportsCircuitBreakerConfig)
     when(mockResponse.body).thenReturn("<foo/>")
+    when(mockResponse.status).thenReturn(200)
   }
 
   private val year = 2017
@@ -202,15 +202,6 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
           awaitRequest
         }
         caught shouldBe emulatedServiceFailure
-      }
-
-      "wrap an underlying error when MDG call fails with an http exception" in {
-        returnResponseForRequest(Future.failed(httpException))
-
-        val caught = intercept[RuntimeException] {
-          awaitRequest
-        }
-        caught.getCause shouldBe httpException
       }
     }
 

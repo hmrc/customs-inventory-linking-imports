@@ -76,25 +76,25 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
     "correctly propagate NotFoundException when external service returns 404" in {
       setupGetSubscriptionFieldsToReturn(NOT_FOUND)
 
-      intercept[RuntimeException](await(getApiSubscriptionFields)).getCause.getClass shouldBe classOf[NotFoundException]
+      checkCorrectExceptionStatus(NOT_FOUND)
       verifyGetSubscriptionFieldsCalled()
     }
 
     "correctly propagate BadRequestException when external service returns 400" in {
       setupGetSubscriptionFieldsToReturn(BAD_REQUEST)
-      intercept[RuntimeException](await(getApiSubscriptionFields)).getCause.getClass shouldBe classOf[BadRequestException]
+      checkCorrectExceptionStatus(BAD_REQUEST)
       verifyGetSubscriptionFieldsCalled()
     }
 
     "correctly propagate Upstream4xxResponse when external service returns any 4xx response other than 400" in {
       setupGetSubscriptionFieldsToReturn(FORBIDDEN)
-      intercept[Upstream4xxResponse](await(getApiSubscriptionFields))
+      checkCorrectExceptionStatus(FORBIDDEN)
       verifyGetSubscriptionFieldsCalled()
     }
 
     "correctly propagate Upstream5xxResponse when external service returns 500" in {
       setupGetSubscriptionFieldsToReturn(INTERNAL_SERVER_ERROR)
-      intercept[Upstream5xxResponse](await(getApiSubscriptionFields))
+      checkCorrectExceptionStatus(INTERNAL_SERVER_ERROR)
       verifyGetSubscriptionFieldsCalled()
     }
 
@@ -108,5 +108,10 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   private def getApiSubscriptionFields(implicit vpr: ValidatedPayloadRequest[_]): Future[ApiSubscriptionFieldsResponse] = {
     connector.getSubscriptionFields(apiSubscriptionKey)
+  }
+
+  private def checkCorrectExceptionStatus(status: Int): Unit = {
+    val ex = intercept[UpstreamErrorResponse](await(getApiSubscriptionFields))
+    ex.statusCode shouldBe status
   }
 }
