@@ -25,7 +25,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, Non2xxResponseException}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.GoodsArrival
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.http._
@@ -82,26 +82,23 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
       
       "return a failed future when service returns 404" in {
         startBackendService(NOT_FOUND)
-
-        intercept[RuntimeException](await(sendValidXml(ValidInventoryLinkingMovementRequestXML))).getCause.getClass shouldBe classOf[NotFoundException]
+        checkCorrectExceptionStatus(NOT_FOUND)
       }
 
       "return a failed future when service returns 400" in {
         startBackendService(BAD_REQUEST)
-
-        intercept[RuntimeException](await(sendValidXml(ValidInventoryLinkingMovementRequestXML))).getCause.getClass shouldBe classOf[BadRequestException]
+        checkCorrectExceptionStatus(BAD_REQUEST)
       }
 
       "return a failed future when service returns 500" in {
         startBackendService(INTERNAL_SERVER_ERROR)
-
-        intercept[Upstream5xxResponse](await(sendValidXml(ValidInventoryLinkingMovementRequestXML)))
+        checkCorrectExceptionStatus(INTERNAL_SERVER_ERROR)
       }
 
       "return a failed future when connection with backend service fails" in {
         stopMockServer()
 
-        intercept[RuntimeException](await(sendValidXml(ValidInventoryLinkingMovementRequestXML))).getCause.getClass shouldBe classOf[BadGatewayException]
+        intercept[BadGatewayException](await(sendValidXml(ValidInventoryLinkingMovementRequestXML)))
 
         startMockServer()
       }
@@ -112,4 +109,9 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
 
   private def sendValidXml(xml:NodeSeq)(implicit vpr: ValidatedPayloadRequest[_]) =
     connector.send(new GoodsArrival(), xml, new DateTime(), correlationId)
+
+  private def checkCorrectExceptionStatus(status: Int): Unit = {
+    val ex = intercept[Non2xxResponseException](await(sendValidXml(ValidInventoryLinkingMovementRequestXML)))
+    ex.responseCode shouldBe status
+  }
 }

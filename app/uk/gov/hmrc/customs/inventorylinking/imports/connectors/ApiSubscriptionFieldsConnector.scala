@@ -23,6 +23,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFields
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -42,13 +43,12 @@ class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
 
     http.GET[ApiSubscriptionFieldsResponse](url)
       .recoverWith {
-        case httpError: HttpException => Future.failed(new RuntimeException(httpError))
-      }
-      .recoverWith {
+        case httpError: HttpException =>
+          Future.failed(new RuntimeException(httpError))
+
         case e: Throwable =>
           logger.error(s"Call to subscription information service failed. url=$url")
           Future.failed(e)
       }
   }
-
 }
