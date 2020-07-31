@@ -73,7 +73,13 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |            "description": "The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.",
           |            "type": "URL",
           |            "hint": "This is how we'll notify you when we've processed them. It must include https and port 443",
-          |            "shortDescription" : "Callback URL"
+          |            "shortDescription" : "Callback URL",
+          |            "validation" : {
+          |              "errorMessage" : "Enter a URL in the correct format, like 'https://your.domain.name/some/path' ",
+          |              "rules" : [{
+          |                "UrlValidationRule" : {}
+          |              }]
+          |            }
           |          },
           |          {
           |            "name": "securityToken",
@@ -105,7 +111,13 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |            "description": "The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.",
           |            "type": "URL",
           |            "hint": "This is how we'll notify you when we've processed them. It must include https and port 443",
-          |            "shortDescription" : "Callback URL"
+          |            "shortDescription" : "Callback URL",
+          |            "validation" : {
+          |              "errorMessage" : "Enter a URL in the correct format, like 'https://your.domain.name/some/path' ",
+          |              "rules" : [{
+          |                "UrlValidationRule" : {}
+          |              }]
+          |            }
           |          },
           |          {
           |            "name": "securityToken",
