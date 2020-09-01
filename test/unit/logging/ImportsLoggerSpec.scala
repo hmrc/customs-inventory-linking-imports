@@ -23,6 +23,7 @@ import uk.gov.hmrc.customs.api.common.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ConversationIdRequest}
+import util.CustomsMetricsTestData.EventStart
 import util.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
 import util.TestData.{TestExtractedHeadersV1, TestXmlPayload, ValidConversationId, emulatedServiceFailure}
@@ -32,7 +33,7 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
   trait SetUp {
     val mockCdsLogger: CdsLogger = mock[CdsLogger]
     val logger = new ImportsLogger(mockCdsLogger)
-    implicit val implicitVpr: AuthorisedRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, FakeRequest()
+    implicit val implicitVpr: AuthorisedRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest()
       .withXmlBody(TestXmlPayload).withHeaders("Content-Type" -> "Some-Content-Type"))
       .toValidatedHeadersRequest(TestExtractedHeadersV1)
       .toAuthorisedRequest

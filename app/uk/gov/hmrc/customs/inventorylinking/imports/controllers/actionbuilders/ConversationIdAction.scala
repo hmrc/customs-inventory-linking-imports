@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{ActionTransformer, Request}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
-import uk.gov.hmrc.customs.inventorylinking.imports.services.UniqueIdsService
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, UniqueIdsService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -29,6 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 @Singleton
 class ConversationIdAction @Inject()(uniqueIdService: UniqueIdsService,
+                                     val timeService: DateTimeService,
                                      logger: ImportsLogger)
                                     (implicit ec: ExecutionContext)
   extends ActionTransformer[Request, ConversationIdRequest] {
@@ -37,7 +38,7 @@ class ConversationIdAction @Inject()(uniqueIdService: UniqueIdsService,
 
   override def transform[A](request: Request[A]): Future[ConversationIdRequest[A]] = {
 
-    val r = ConversationIdRequest(uniqueIdService.conversation, request)
+    val r = ConversationIdRequest(uniqueIdService.conversation, timeService.zonedDateTimeUtc, request)
     logger.debugFull("In ConversationIdAction.")(r)
 
     Future.successful(r)

@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders
 
+import java.time.ZonedDateTime
+
 import play.api.mvc.{Request, Result, WrappedRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -34,6 +36,7 @@ object ActionBuilderModelHelper {
     def toValidatedHeadersRequest(eh: ExtractedHeaders): ValidatedHeadersRequest[A] = ValidatedHeadersRequest(
       eh.maybeBadgeIdentifier,
       cir.conversationId,
+      cir.start,
       eh.requestedApiVersion,
       eh.maybeCorrelationIdHeader,
       eh.maybeSubmitterIdentifier,
@@ -47,6 +50,7 @@ object ActionBuilderModelHelper {
     def toAuthorisedRequest: AuthorisedRequest[A] = AuthorisedRequest(
       vhr.maybeBadgeIdentifier,
       vhr.conversationId,
+      vhr.start,
       vhr.requestedApiVersion,
       vhr.maybeCorrelationIdHeader,
       vhr.maybeSubmitterIdentifier,
@@ -59,6 +63,7 @@ object ActionBuilderModelHelper {
     def toValidatedPayloadRequest(xmlBody: NodeSeq): ValidatedPayloadRequest[A] = ValidatedPayloadRequest(
       ar.maybeBadgeIdentifier,
       ar.conversationId,
+      ar.start,
       ar.requestedApiVersion,
       ar.maybeCorrelationIdHeader,
       ar.maybeSubmitterIdentifier,
@@ -103,6 +108,7 @@ case class ExtractedHeadersImpl( requestedApiVersion: ApiVersion,
 // Available after ConversationIdAction action builder
 case class ConversationIdRequest[A](
   conversationId: ConversationId,
+  start: ZonedDateTime,
   request: Request[A]
 ) extends WrappedRequest[A](request) with HasConversationId
 
@@ -110,6 +116,7 @@ case class ConversationIdRequest[A](
 case class ValidatedHeadersRequest[A](
                                        maybeBadgeIdentifier: Option[BadgeIdentifier],
                                        conversationId: ConversationId,
+                                       start: ZonedDateTime,
                                        requestedApiVersion: ApiVersion,
                                        maybeCorrelationIdHeader: Option[CorrelationIdHeader],
                                        maybeSubmitterIdentifier: Option[SubmitterIdentifier],
@@ -121,6 +128,7 @@ case class ValidatedHeadersRequest[A](
 case class AuthorisedRequest[A](
                                  maybeBadgeIdentifier: Option[BadgeIdentifier],
                                  conversationId: ConversationId,
+                                 start: ZonedDateTime,
                                  requestedApiVersion: ApiVersion,
                                  maybeCorrelationIdHeader: Option[CorrelationIdHeader],
                                  maybeSubmitterIdentifier: Option[SubmitterIdentifier],
@@ -132,6 +140,7 @@ case class AuthorisedRequest[A](
 case class ValidatedPayloadRequest[A](
                                        maybeBadgeIdentifier: Option[BadgeIdentifier],
                                        conversationId: ConversationId,
+                                       start: ZonedDateTime,
                                        requestedApiVersion: ApiVersion,
                                        maybeCorrelationIdHeader: Option[CorrelationIdHeader],
                                        maybeSubmitterIdentifier: Option[SubmitterIdentifier],

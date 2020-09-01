@@ -38,6 +38,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{UniqueIdsService, UuidService}
+import util.CustomsMetricsTestData.EventStart
 import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 
 import scala.xml.Elem
@@ -169,7 +170,7 @@ object TestData {
 
   val TestXmlPayload: Elem = <foo>bar</foo>
   val TestFakeRequest: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(TestXmlPayload)
-  val TestConversationIdRequest: ConversationIdRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, TestFakeRequest)
+  val TestConversationIdRequest: ConversationIdRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, EventStart, TestFakeRequest)
   val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersV1)
   val TestValidatedHeadersRequestV2: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersV2)
   val TestValidatedHeadersNoIdsRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId)

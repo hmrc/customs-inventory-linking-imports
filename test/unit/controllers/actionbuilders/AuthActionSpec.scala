@@ -30,12 +30,13 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.Convers
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, HeaderConstants, ValidateMovement}
 import util.UnitSpec
 import util.AuthConnectorStubbing
+import util.CustomsMetricsTestData.EventStart
 import util.TestData.{ConversationIdValue, TestExtractedHeadersV1, ValidConversationId, testFakeRequest}
 
 class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
 
   private lazy val validatedHeadersRequest =
-    ConversationIdRequest(ValidConversationId, testFakeRequest()).toValidatedHeadersRequest(TestExtractedHeadersV1)
+    ConversationIdRequest(ValidConversationId, EventStart, testFakeRequest()).toValidatedHeadersRequest(TestExtractedHeadersV1)
   private val mockAuthenticationConnector: AuthConnector = mock[AuthConnector]
   private val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
   private implicit val ec = Helpers.stubControllerComponents().executionContext
