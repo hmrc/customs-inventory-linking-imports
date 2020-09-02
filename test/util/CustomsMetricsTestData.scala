@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.services
+package util
 
-import java.time.{Clock, ZoneId, ZonedDateTime}
+import java.time.{ZoneId, ZonedDateTime}
 
-import org.joda.time.{DateTime, DateTimeZone}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.CustomsMetricsRequest
 
-class DateTimeService {
+object CustomsMetricsTestData {
+
   val UtcZoneId: ZoneId = ZoneId.of("UTC")
-  def nowUtc(): DateTime = new DateTime(Clock.systemUTC().instant().toEpochMilli, DateTimeZone.UTC)
-  def zonedDateTimeUtc: ZonedDateTime = ZonedDateTime.now(UtcZoneId)
+  val EventStart: ZonedDateTime = ZonedDateTime.of(2015, 11, 30, 23, 45,
+    59, 0, UtcZoneId)
+  val EventEnd: ZonedDateTime = EventStart.plusSeconds(2)
+
+  val ValidCustomsMetricsRequest: CustomsMetricsRequest =
+    CustomsMetricsRequest("ILI", TestData.ValidConversationId, EventStart, EventEnd)
 }

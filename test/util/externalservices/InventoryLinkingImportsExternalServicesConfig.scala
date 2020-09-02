@@ -21,5 +21,5 @@ object InventoryLinkingImportsExternalServicesConfig {
   val GoodsArrivalConnectorContext = "/inventorylinkingimports/goodsarrivalnotification"
   val ValidateMovementConnectorContext = "/inventorylinkingimports/validatemovementresponse"
   val ApiSubscriptionFieldsContext = "/api-subscription-fields/field"
-
+  val CustomsMetricsContext = "/log-times"
 }

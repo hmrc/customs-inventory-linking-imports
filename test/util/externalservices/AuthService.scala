@@ -33,7 +33,7 @@ trait AuthService {
   val authUrl = "/auth/authorise"
   private val authUrlMatcher = urlEqualTo(authUrl)
 
-  private val cspAuthorisationPredicate = Enrolment("write:customs-inventory-linking-imports") and AuthProviders(PrivilegedApplication)
+  private def cspAuthorisationPredicate(enrolment: Enrolment) = enrolment and AuthProviders(PrivilegedApplication)
 
   private def bearerTokenMatcher(bearerToken: String)= equalTo("Bearer " + bearerToken)
 
@@ -76,9 +76,9 @@ trait AuthService {
     )
   }
 
-  def verifyAuthServiceCalledForCsp(bearerToken: String = TestData.CspBearerToken): Unit = {
+  def verifyAuthServiceCalledForCsp(enrolment: Enrolment, bearerToken: String = TestData.CspBearerToken): Unit = {
     verify(1, postRequestedFor(authUrlMatcher)
-      .withRequestBody(equalToJson(authRequestJson(cspAuthorisationPredicate)))
+      .withRequestBody(equalToJson(authRequestJson(cspAuthorisationPredicate(enrolment))))
       .withHeader(AUTHORIZATION, bearerTokenMatcher(bearerToken))
     )
   }

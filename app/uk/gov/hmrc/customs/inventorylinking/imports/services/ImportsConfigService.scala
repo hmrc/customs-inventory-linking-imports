@@ -27,13 +27,14 @@ class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdap
 
   private val root = configValidatedNel.root
   private val apiSubscriptionFieldsService = configValidatedNel.service("api-subscription-fields")
+  private val apiSubscriptionFieldsServiceUrlNel = apiSubscriptionFieldsService.serviceUrl
+  private val customsMetricsService = configValidatedNel.service("customs-metrics")
+  private val customsMetricsServiceUrlNel = customsMetricsService.serviceUrl
   private val numberOfCallsToTriggerStateChangeNel = root.int("circuitBreaker.numberOfCallsToTriggerStateChange")
   private val unavailablePeriodDurationInMillisNel = root.int("circuitBreaker.unavailablePeriodDurationInMillis")
   private val unstablePeriodDurationInMillisNel = root.int("circuitBreaker.unstablePeriodDurationInMillis")
-  private val apiSubscriptionFieldsServiceUrlNel = apiSubscriptionFieldsService.serviceUrl
 
-  private val validatedImportsConfig: CustomsValidatedNel[ImportsConfig] = (apiSubscriptionFieldsServiceUrlNel
-  ) map  ImportsConfig.apply
+  private val validatedImportsConfig: CustomsValidatedNel[ImportsConfig] = (apiSubscriptionFieldsServiceUrlNel, customsMetricsServiceUrlNel) mapN  ImportsConfig.apply
 
   private val validatedImportsCircuitBreakerConfig: CustomsValidatedNel[ImportsCircuitBreakerConfig] = (
     numberOfCallsToTriggerStateChangeNel, unavailablePeriodDurationInMillisNel, unstablePeriodDurationInMillisNel

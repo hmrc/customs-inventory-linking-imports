@@ -24,6 +24,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedHeadersRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ClientId, HeaderConstants, VersionOne}
+import util.CustomsMetricsTestData.EventStart
 import util.UnitSpec
 import util.TestData._
 
@@ -35,6 +36,7 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
   private val conversationIdRequest =
     ConversationIdRequest(
       ValidConversationId,
+      EventStart,
       FakeRequest().withHeaders(
         CONTENT_TYPE -> "A",
         ACCEPT -> "B",
@@ -43,7 +45,7 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
         "IGNORE" -> "IGNORE"
       )
     )
-  private val validatedHeadersRequest = ValidatedHeadersRequest(Some(ValidBadgeIdentifier), ValidConversationId, VersionOne, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader), ClientId("some-client-id"), requestMock)
+  private val validatedHeadersRequest = ValidatedHeadersRequest(Some(ValidBadgeIdentifier), ValidConversationId, EventStart, VersionOne, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader), ClientId("some-client-id"), requestMock)
 
   "LoggingHelper" should {
 

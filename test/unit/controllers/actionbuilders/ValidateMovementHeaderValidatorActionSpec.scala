@@ -25,6 +25,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovement
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.CorrelationIdHeader
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeaders, ValidatedHeadersRequest}
+import util.CustomsMetricsTestData.EventStart
 import util.UnitSpec
 import util.TestData
 import util.TestData._
@@ -59,6 +60,6 @@ class ValidateMovementHeaderValidatorActionSpec extends UnitSpec with TableDrive
   }
 
   private def conversationIdRequest(requestMap: Map[String, String]): ConversationIdRequest[_] =
-    ConversationIdRequest(TestData.ValidConversationId, FakeRequest().withHeaders(requestMap.toSeq: _*))
+    ConversationIdRequest(TestData.ValidConversationId, EventStart, FakeRequest().withHeaders(requestMap.toSeq: _*))
 
 }

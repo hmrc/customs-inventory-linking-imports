@@ -34,6 +34,9 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
       |microservice.services.api-subscription-fields.host=some-host
       |microservice.services.api-subscription-fields.port=1111
       |microservice.services.api-subscription-fields.context=/some-context
+      |microservice.services.customs-metrics.host=some-host
+      |microservice.services.customs-metrics.port=1111
+      |microservice.services.customs-metrics.context=/some-context
       |circuitBreaker.numberOfCallsToTriggerStateChange=5
       |circuitBreaker.unstablePeriodDurationInMillis=1000
       |circuitBreaker.unavailablePeriodDurationInMillis=1000
@@ -63,6 +66,8 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
         """
           |Could not find config api-subscription-fields.host
           |Service configuration not found for key: api-subscription-fields.context
+          |Could not find config customs-metrics.host
+          |Service configuration not found for key: customs-metrics.context
           |Could not find config key 'circuitBreaker.numberOfCallsToTriggerStateChange'
           |Could not find config key 'circuitBreaker.unavailablePeriodDurationInMillis'
           |Could not find config key 'circuitBreaker.unstablePeriodDurationInMillis'""".stripMargin

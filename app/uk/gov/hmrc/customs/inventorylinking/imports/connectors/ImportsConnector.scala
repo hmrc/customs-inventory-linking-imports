@@ -24,7 +24,7 @@ import akka.actor.ActorSystem
 import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.http.HeaderNames._
-import play.api.http.MimeTypes
+import play.api.http.{MimeTypes, Status}
 import play.api.http.MimeTypes.XML
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.connectors.CircuitBreakerConnector
@@ -49,7 +49,7 @@ class ImportsConnector @Inject()(http: HttpClient,
                                  config: ImportsConfigService,
                                  override val cdsLogger: CdsLogger,
                                  override val actorSystem: ActorSystem)
-                                (implicit override val ec: ExecutionContext) extends CircuitBreakerConnector with HttpErrorFunctions {
+                                (implicit override val ec: ExecutionContext) extends CircuitBreakerConnector with HttpErrorFunctions with Status {
 
   override val configKey = "mdg-imports"
 
@@ -117,8 +117,8 @@ class ImportsConnector @Inject()(http: HttpClient,
 
   override protected def breakOnException(t: Throwable): Boolean = t match {
     case e: Non2xxResponseException => e.responseCode match {
-      case 400 => false //BadRequest
-      case 404 => false //NotFound
+      case BAD_REQUEST => false
+      case NOT_FOUND => false
       case _ => true
     }
     case _ => true

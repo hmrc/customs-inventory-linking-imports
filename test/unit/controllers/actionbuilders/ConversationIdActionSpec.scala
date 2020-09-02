@@ -16,11 +16,14 @@
 
 package unit.controllers.actionbuilders
 
+import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.ConversationIdAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.services.DateTimeService
+import util.CustomsMetricsTestData.EventStart
 import util.UnitSpec
 import util.TestData
 import util.TestData.ValidConversationId
@@ -29,14 +32,16 @@ class ConversationIdActionSpec extends UnitSpec with MockitoSugar {
 
   trait SetUp {
     private val mockImportsLogger = mock[ImportsLogger]
+    protected val mockDateTimeService: DateTimeService = mock[DateTimeService]
     val request = FakeRequest()
     implicit val ec = Helpers.stubControllerComponents().executionContext
-    val conversationIdAction = new ConversationIdAction(TestData.stubUniqueIdsService, mockImportsLogger)
-    val expected = ConversationIdRequest(ValidConversationId, request)
+    val conversationIdAction = new ConversationIdAction(TestData.stubUniqueIdsService, mockDateTimeService, mockImportsLogger)
+    val expected = ConversationIdRequest(ValidConversationId, EventStart, request)
   }
 
   "ConversationIdAction" should {
     "Generate a Request containing a unique correlation id" in new SetUp {
+      when(mockDateTimeService.zonedDateTimeUtc).thenReturn(EventStart)
 
       private val actual = await(conversationIdAction.transform(request))
 

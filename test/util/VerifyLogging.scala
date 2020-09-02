@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package integration
+package util
 
-import com.google.inject.AbstractModule
-import org.scalatest.concurrent.Eventually
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
-import play.api.inject.guice.GuiceableModule
+import org.mockito.ArgumentMatchers._
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import util.UnitSpec
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.HasConversationId
+import util.MockitoPassByNameHelper.PassByNameVerifier
 
-case class IntegrationTestModule(mockLogger: ImportsLogger) extends AbstractModule {
-  def configure(): Unit = {
-    bind(classOf[ImportsLogger]) toInstance mockLogger
+object VerifyLogging {
+
+  def verifyImportsLoggerError(message: String)(implicit logger: ImportsLogger): Unit = {
+    verifyImportsLogger("error", message)
   }
 
-  def asGuiceableModule: GuiceableModule = GuiceableModule.guiceable(this)
+  private def verifyImportsLogger(method: String, message: String)(implicit logger: ImportsLogger): Unit = {
+    PassByNameVerifier(logger, method)
+      .withByNameParam(message)
+      .withParamMatcher(any[HasConversationId])
+      .verify()
+  }
+
 }
-
-trait IntegrationTestSpec extends UnitSpec
-  with BeforeAndAfterEach with BeforeAndAfterAll with Eventually
-

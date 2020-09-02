@@ -27,6 +27,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedPayloadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService}
+import util.CustomsMetricsTestData.EventStart
 import util.UnitSpec
 import util.TestData.{TestAuthorisedRequest, _}
 
@@ -74,7 +75,7 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
       }
 
     "return 400 error response when XML is not well formed" in new SetUp {
-      private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, FakeRequest().withTextBody("<foo><foo>"))
+      private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest().withTextBody("<foo><foo>"))
         .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
 
       private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNonWellFormedXml))
@@ -110,7 +111,7 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
     }
 
     "return 400 error response when XML is not well formed" in new SetUp {
-      private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, FakeRequest().withTextBody("<foo><foo>"))
+      private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest().withTextBody("<foo><foo>"))
         .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
 
       private val actual = await(goodsArrivalPayloadValidationAction.refine(authorisedRequestWithNonWellFormedXml))

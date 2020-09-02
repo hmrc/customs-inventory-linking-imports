@@ -25,12 +25,13 @@ import play.api.test.Helpers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.CustomsMetricsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{Common, GoodsArrivalController, HeaderValidator}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, MessageSender}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, GoodsArrivalXmlValidationService, MessageSender}
 import uk.gov.hmrc.http.HeaderCarrier
 import util.UnitSpec
 import util.AuthConnectorStubbing
@@ -48,15 +49,17 @@ class ImportsControllerSpec extends UnitSpec
     override val mockAuthConnector: AuthConnector = mock[AuthConnector]
     protected val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
     protected val mockMessageSender: MessageSender = mock[MessageSender]
+    protected val mockMetricsConnector: CustomsMetricsConnector = mock[CustomsMetricsConnector]
+    protected val mockDateTimeService: DateTimeService = mock[DateTimeService]
     protected val mockResult: Result = mock[Result]
     protected val mockGoodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
     protected val mockGoodsArrival: GoodsArrival = mock[GoodsArrival]
 
-    protected val stubConversationIdAction: ConversationIdAction = new ConversationIdAction(stubUniqueIdsService, mockImportsLogger)
+    protected val stubConversationIdAction: ConversationIdAction = new ConversationIdAction(stubUniqueIdsService, mockDateTimeService,  mockImportsLogger)
     protected val stubGoodsArrivalAuthAction = new GoodsArrivalAuthAction(mockAuthConnector, mockGoodsArrival, mockImportsLogger)
     protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger), mockImportsLogger)
     protected val stubGoodsArrivalPayloadValidationAction: GoodsArrivalPayloadValidationAction = new GoodsArrivalPayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger)
-    protected val stubCommon: Common = new Common(stubConversationIdAction, mockMessageSender, Helpers.stubControllerComponents(), mockImportsLogger)
+    protected val stubCommon: Common = new Common(stubConversationIdAction, mockMessageSender, Helpers.stubControllerComponents(), mockMetricsConnector, mockImportsLogger)
     protected val enrolment: Enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
 
     protected val controller: GoodsArrivalController = new GoodsArrivalController(stubCommon, mockGoodsArrival, stubGoodsArrivalAuthAction, stubGoodsArrivalPayloadValidationAction, stubValidateAndExtractHeadersAction)

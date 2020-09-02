@@ -19,6 +19,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.http.MimeTypes
 import play.api.mvc.{Action, AnyContent, _}
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.CustomsMetricsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -33,6 +34,7 @@ import scala.concurrent.ExecutionContext
 class Common @Inject() (val conversationIdAction: ConversationIdAction,
                         val messageSender: MessageSender,
                         val cc: ControllerComponents,
+                        val metricsConnector: CustomsMetricsConnector,
                         val logger: ImportsLogger)
 
 abstract class ImportController(val common: Common,
@@ -55,6 +57,8 @@ abstract class ImportController(val common: Common,
       implicit vpr: ValidatedPayloadRequest[AnyContent] =>
         common.messageSender.send(importsMessageType) map {
         case Right(_) =>
+          common.metricsConnector.post(CustomsMetricsRequest(
+            "ILI", vpr.conversationId, vpr.start, common.conversationIdAction.timeService.zonedDateTimeUtc))
           Accepted.as(MimeTypes.XML).withConversationId
         case Left(errorResult) =>
           errorResult

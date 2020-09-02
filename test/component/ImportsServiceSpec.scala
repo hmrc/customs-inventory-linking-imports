@@ -17,19 +17,21 @@
 package component
 
 import org.scalatest._
+import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import util.TestData._
-import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML}
+import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML, validWrappedGoodsArrivalXml, validWrappedValidateMovementXml}
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
-import util.externalservices.{ApiSubscriptionFieldsService, AuthService, InventoryLinkingImportsService}
+import util.externalservices.{ApiSubscriptionFieldsService, AuthService, CustomsMetricsService, InventoryLinkingImportsService}
 
 import scala.concurrent.Future
 
 class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValues with BeforeAndAfterAll
   with BeforeAndAfterEach
+  with CustomsMetricsService
   with TableDrivenPropertyChecks
   with InventoryLinkingImportsService
   with ApiSubscriptionFieldsService
@@ -94,7 +96,8 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
     scenario(s"A valid Goods Arrival message submitted and successfully forwarded to the backend") {
       Given("a CSP is authorised to use the API endpoint")
-      authServiceAuthorisesCSP(new GoodsArrival())
+      val goodsArrival = new GoodsArrival()
+      authServiceAuthorisesCSP(goodsArrival)
 
       And("the Back End Service will return a successful response")
       startApiSubscriptionFieldsService(apiSubscriptionKeyImports)
@@ -106,6 +109,15 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       And("an Accepted (202) response is returned")
       status(result) shouldBe ACCEPTED
       header(XConversationIdHeaderName, result).get shouldNot be("")
+
+      And("the request was authorised with AuthService")
+      eventually(verifyAuthServiceCalledForCsp(goodsArrival.enrolment))
+
+      And("the payload is correct")
+      verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, validWrappedGoodsArrivalXml.toString())
+
+      And("Metrics logging call was made")
+      eventually(verifyCustomsMetricsServiceWasCalled())
     }
 
     scenario(s"A valid Goods Arrival submitted and the Back End service fails") {
@@ -212,7 +224,8 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
     scenario(s"A valid Validate Movement message submitted and successfully forwarded to the backend") {
       Given("a CSP is authorised to use the API endpoint")
-      authServiceAuthorisesCSP(new ValidateMovement())
+      val validateMovement = new ValidateMovement()
+      authServiceAuthorisesCSP(validateMovement)
 
       And("the Back End Service will return a successful response")
       startApiSubscriptionFieldsService(apiSubscriptionKeyImports)
@@ -224,6 +237,15 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       And("an Accepted (202) response is returned")
       status(result) shouldBe ACCEPTED
       header(XConversationIdHeaderName, result).get shouldNot be("")
+
+      And("the request was authorised with AuthService")
+      eventually(verifyAuthServiceCalledForCsp(validateMovement.enrolment))
+
+      And("the payload is correct")
+      verifyImportsConnectorServiceWasCalledWith(ValidateMovementConnectorContext, validWrappedValidateMovementXml.toString())
+
+      And("Metrics logging call was made")
+      eventually(verifyCustomsMetricsServiceWasCalled())
     }
 
     scenario(s"A valid Validate Movement submitted and the Back End service fails") {
