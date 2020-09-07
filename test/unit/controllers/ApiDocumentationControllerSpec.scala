@@ -26,6 +26,7 @@ import play.api.http.Status.OK
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsJson, status}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ApiDocumentationController
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 import util.UnitSpec
@@ -42,7 +43,9 @@ class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with Gui
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
     "api.access.version-1.0.whitelistedApplicationIds.0" -> whiteList0,
     "api.access.version-1.0.whitelistedApplicationIds.1" -> whiteList1,
-    "api.access.version-2.0.whitelistedApplicationIds.0" -> whiteList2
+    "api.access.version-2.0.whitelistedApplicationIds.0" -> whiteList2,
+    "api.access.version-1.0.enabled" -> "false",
+    "api.access.version-2.0.enabled" -> "false"
   )).build()
 
   "With valid configuration ApiDocumentationController.definition" should {
@@ -52,8 +55,8 @@ class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with Gui
       status(result) shouldBe OK
     }
 
-    "return definition in the body" in {
-      jsonBodyOf(result) shouldBe Json.parse(txt.definition(Some(Seq(whiteList0, whiteList1)) , Some(Seq(whiteList2))).toString())
+    "return definition in the body with v1 and v2 disabled" in {
+      jsonBodyOf(result) shouldBe Json.parse(txt.definition(Some(Seq(whiteList0, whiteList1)) , Some(Seq(whiteList2)), false, false).toString())
     }
   }
 
