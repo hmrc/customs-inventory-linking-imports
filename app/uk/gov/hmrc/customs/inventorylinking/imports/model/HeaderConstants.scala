@@ -26,4 +26,5 @@ object HeaderConstants {
   val XSubmitterIdentifier: String = "X-Submitter-Identifier"
 
   val Version1AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
+  val Version2AcceptHeaderValue = "application/vnd.hmrc.2.0+xml"
 }

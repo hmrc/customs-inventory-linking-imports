@@ -23,8 +23,8 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementHeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.CorrelationIdHeader
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeaders, ValidatedHeadersRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{CorrelationIdHeader, VersionOne}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ApiVersionRequest, ConversationIdRequest, ExtractedHeaders, ValidatedHeadersRequest}
 import util.CustomsMetricsTestData.EventStart
 import util.UnitSpec
 import util.TestData
@@ -38,8 +38,8 @@ class ValidateMovementHeaderValidatorActionSpec extends UnitSpec with TableDrive
     val validatedRequest: ValidatedHeadersRequest[AnyContent] = mock[ValidatedHeadersRequest[AnyContent]]
     val request: ConversationIdRequest[AnyContent] = mock[ConversationIdRequest[AnyContent]]
 
-    def validate(c: ConversationIdRequest[_]): Either[ErrorResponse, ExtractedHeaders] = {
-      validator.validateHeaders(c)
+    def validate(avr: ApiVersionRequest[_]): Either[ErrorResponse, ExtractedHeaders] = {
+      validator.validateHeaders(avr)
     }
   }
 
@@ -59,7 +59,7 @@ class ValidateMovementHeaderValidatorActionSpec extends UnitSpec with TableDrive
     }
   }
 
-  private def conversationIdRequest(requestMap: Map[String, String]): ConversationIdRequest[_] =
-    ConversationIdRequest(TestData.ValidConversationId, EventStart, FakeRequest().withHeaders(requestMap.toSeq: _*))
+  private def conversationIdRequest(requestMap: Map[String, String]): ApiVersionRequest[_] =
+    ApiVersionRequest(TestData.ValidConversationId, EventStart, VersionOne, FakeRequest().withHeaders(requestMap.toSeq: _*))
 
 }

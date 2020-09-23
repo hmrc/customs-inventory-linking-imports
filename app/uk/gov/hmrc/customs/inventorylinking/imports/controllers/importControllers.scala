@@ -32,6 +32,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class Common @Inject() (val conversationIdAction: ConversationIdAction,
+                        val shutterCheckAction: ShutterCheckAction,
                         val messageSender: MessageSender,
                         val cc: ControllerComponents,
                         val metricsConnector: CustomsMetricsConnector,
@@ -47,10 +48,11 @@ abstract class ImportController(val common: Common,
 
   def process(): Action[AnyContent] =  (
     Action andThen
-    common.conversationIdAction andThen
-    validateAndExtractHeadersAction andThen
-    authAction andThen
-    payloadValidationAction
+      common.conversationIdAction andThen
+      common.shutterCheckAction andThen
+      validateAndExtractHeadersAction andThen
+      authAction andThen
+      payloadValidationAction
     )
     .async(bodyParser = xmlOrEmptyBody) {
 

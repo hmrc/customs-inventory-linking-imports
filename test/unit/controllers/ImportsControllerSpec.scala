@@ -30,8 +30,8 @@ import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{Common, GoodsArrivalController, HeaderValidator}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, GoodsArrivalXmlValidationService, MessageSender}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ImportsShutterConfig}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, GoodsArrivalXmlValidationService, ImportsConfigService, MessageSender}
 import uk.gov.hmrc.http.HeaderCarrier
 import util.UnitSpec
 import util.AuthConnectorStubbing
@@ -54,12 +54,14 @@ class ImportsControllerSpec extends UnitSpec
     protected val mockResult: Result = mock[Result]
     protected val mockGoodsArrivalXmlValidationService: GoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
     protected val mockGoodsArrival: GoodsArrival = mock[GoodsArrival]
+    protected val mockImportsConfigService: ImportsConfigService = mock[ImportsConfigService]
 
-    protected val stubConversationIdAction: ConversationIdAction = new ConversationIdAction(stubUniqueIdsService, mockDateTimeService,  mockImportsLogger)
+    protected val stubConversationIdAction: ConversationIdAction = new ConversationIdAction(stubUniqueIdsService, mockDateTimeService, mockImportsLogger)
+    protected val stubShutterCheckAction: ShutterCheckAction = new ShutterCheckAction(mockImportsLogger, mockImportsConfigService)
     protected val stubGoodsArrivalAuthAction = new GoodsArrivalAuthAction(mockAuthConnector, mockGoodsArrival, mockImportsLogger)
     protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger), mockImportsLogger)
     protected val stubGoodsArrivalPayloadValidationAction: GoodsArrivalPayloadValidationAction = new GoodsArrivalPayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger)
-    protected val stubCommon: Common = new Common(stubConversationIdAction, mockMessageSender, Helpers.stubControllerComponents(), mockMetricsConnector, mockImportsLogger)
+    protected val stubCommon: Common = new Common(stubConversationIdAction, stubShutterCheckAction, mockMessageSender, Helpers.stubControllerComponents(), mockMetricsConnector, mockImportsLogger)
     protected val enrolment: Enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
 
     protected val controller: GoodsArrivalController = new GoodsArrivalController(stubCommon, mockGoodsArrival, stubGoodsArrivalAuthAction, stubGoodsArrivalPayloadValidationAction, stubValidateAndExtractHeadersAction)
@@ -72,6 +74,7 @@ class ImportsControllerSpec extends UnitSpec
       controller.post().apply(request)
     }
 
+    when(mockImportsConfigService.importsShutterConfig).thenReturn(ImportsShutterConfig(Some(false), Some(false)))
     when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(Future.successful(()))
     when(mockMessageSender.send(any[GoodsArrival])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(Right(())))
     when(mockGoodsArrival.enrolment).thenReturn(Enrolment("write:customs-il-imports-arrival-notifications"))

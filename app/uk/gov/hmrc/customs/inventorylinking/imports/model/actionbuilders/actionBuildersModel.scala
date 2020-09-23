@@ -78,6 +78,10 @@ trait HasConversationId {
   val conversationId: ConversationId
 }
 
+trait HasApiVersion {
+  val requestedApiVersion: ApiVersion
+}
+
 trait ExtractedHeaders {
   val maybeBadgeIdentifier: Option[BadgeIdentifier]
   val clientId: ClientId
@@ -112,6 +116,14 @@ case class ConversationIdRequest[A](
   request: Request[A]
 ) extends WrappedRequest[A](request) with HasConversationId
 
+// Available after ShutterCheckAction
+case class ApiVersionRequest[A](
+  conversationId: ConversationId,
+  start: ZonedDateTime,
+  requestedApiVersion: ApiVersion,
+  request: Request[A]
+) extends WrappedRequest[A](request) with HasConversationId with HasApiVersion
+
 // Available after ValidatedHeadersAction builder
 case class ValidatedHeadersRequest[A](
                                        maybeBadgeIdentifier: Option[BadgeIdentifier],
@@ -122,7 +134,7 @@ case class ValidatedHeadersRequest[A](
                                        maybeSubmitterIdentifier: Option[SubmitterIdentifier],
                                        clientId: ClientId,
                                        request: Request[A]
-) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders
+) extends WrappedRequest[A](request) with HasConversationId with HasApiVersion with ExtractedHeaders
 
 // Available after Authorise action builder
 case class AuthorisedRequest[A](
@@ -134,7 +146,7 @@ case class AuthorisedRequest[A](
                                  maybeSubmitterIdentifier: Option[SubmitterIdentifier],
                                  clientId: ClientId,
                                  request: Request[A]
-) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders
+) extends WrappedRequest[A](request) with HasConversationId with HasApiVersion with ExtractedHeaders
 
 // Available after ValidatedPayloadAction builder
 case class ValidatedPayloadRequest[A](
@@ -147,4 +159,4 @@ case class ValidatedPayloadRequest[A](
                                        clientId: ClientId,
                                        xmlBody: NodeSeq,
                                        request: Request[A]
-) extends WrappedRequest[A](request) with HasConversationId with ExtractedHeaders with HasXmlBody
+) extends WrappedRequest[A](request) with HasConversationId with HasApiVersion with ExtractedHeaders with HasXmlBody

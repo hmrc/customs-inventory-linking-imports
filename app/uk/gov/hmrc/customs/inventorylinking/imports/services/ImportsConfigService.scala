@@ -20,7 +20,7 @@ import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.customs.api.common.config.{ConfigValidatedNelAdaptor, CustomsValidatedNel}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsCircuitBreakerConfig, ImportsConfig}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.{ImportsCircuitBreakerConfig, ImportsConfig, ImportsShutterConfig}
 
 @Singleton
 class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdaptor, logger: ImportsLogger) {
@@ -33,15 +33,21 @@ class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdap
   private val numberOfCallsToTriggerStateChangeNel = root.int("circuitBreaker.numberOfCallsToTriggerStateChange")
   private val unavailablePeriodDurationInMillisNel = root.int("circuitBreaker.unavailablePeriodDurationInMillis")
   private val unstablePeriodDurationInMillisNel = root.int("circuitBreaker.unstablePeriodDurationInMillis")
+  private val v1ShutteredNel = root.maybeBoolean("shutter.v1")
+  private val v2ShutteredNel = root.maybeBoolean("shutter.v2")
 
   private val validatedImportsConfig: CustomsValidatedNel[ImportsConfig] = (apiSubscriptionFieldsServiceUrlNel, customsMetricsServiceUrlNel) mapN  ImportsConfig.apply
+
+  private val validatedImportsShutterConfig: CustomsValidatedNel[ImportsShutterConfig] = (
+    v1ShutteredNel, v2ShutteredNel
+  ) mapN ImportsShutterConfig
 
   private val validatedImportsCircuitBreakerConfig: CustomsValidatedNel[ImportsCircuitBreakerConfig] = (
     numberOfCallsToTriggerStateChangeNel, unavailablePeriodDurationInMillisNel, unstablePeriodDurationInMillisNel
     ) mapN ImportsCircuitBreakerConfig
 
   private val importsConfigHolder =
-    (validatedImportsConfig, validatedImportsCircuitBreakerConfig) mapN ImportsConfigHolder fold(
+    (validatedImportsConfig, validatedImportsShutterConfig, validatedImportsCircuitBreakerConfig) mapN ImportsConfigHolder fold(
       // error
       { nel =>
         // error case exposes nel (a NotEmptyList)
@@ -55,9 +61,12 @@ class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdap
 
   val importsConfig: ImportsConfig = importsConfigHolder.importsConfig
 
+  val importsShutterConfig: ImportsShutterConfig = importsConfigHolder.importsShutterConfig
+
   val importsCircuitBreakerConfig: ImportsCircuitBreakerConfig = importsConfigHolder.importsCircuitBreakerConfig
 
   private case class ImportsConfigHolder(importsConfig: ImportsConfig,
+                                        importsShutterConfig: ImportsShutterConfig,
                                          importsCircuitBreakerConfig: ImportsCircuitBreakerConfig)
 
 }

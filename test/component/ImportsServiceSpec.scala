@@ -19,8 +19,11 @@ package component
 import org.scalatest._
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.prop.TableDrivenPropertyChecks
+import play.api.Application
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
-import play.api.test.Helpers._
+import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import util.TestData._
 import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML, validWrappedGoodsArrivalXml, validWrappedValidateMovementXml}
@@ -73,6 +76,14 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       |    <code>UNAUTHORIZED</code>
       |    <message>Unauthorised request</message>
       |</errorResponse>""".stripMargin
+
+  protected val ServiceUnavailableError: String =
+    """<?xml version='1.0' encoding='UTF-8'?>
+      |<errorResponse>
+      |      <code>SERVER_ERROR</code>
+      |      <message>The 'customs/inventory-linking-imports' API is currently unavailable</message>
+      |</errorResponse>
+    """.stripMargin
 
   private val apiSubscriptionKeyImports =
     ApiSubscriptionKey(clientId = clientId, context = "customs%2Finventory-linking-imports", version = VersionOne)
@@ -342,6 +353,29 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)
+    }
+  }
+
+  feature("Customs Inventory Linking Imports API returns unavailable when a version is shuttered") {
+    scenario("An authorised CSP fails to submit a customs inventory linking imports request to a shuttered version") {
+      Given("A CSP wants to submit a customs inventory linking imports request to a shuttered version")
+
+      authServiceAuthorisesCSP(new ValidateMovement())
+
+      val configMap: Map[String, Any] = Map("shutter.v1" -> "true", "metrics.jvm" -> false)
+      implicit lazy val app: Application = new GuiceApplicationBuilder().configure(configMap).build()
+
+      When("a POST request with data is sent to the API")
+      val result: Option[Future[Result]] = route(app, ValidValidateMovementRequest.withBody("<xm> xml </xm>").fromCsp)
+
+      Then("a response with a 503 (SERVICE_UNAVAILABLE) status is received")
+      val resultFuture = result.get
+
+      status(resultFuture) shouldBe SERVICE_UNAVAILABLE
+
+      And("the response body is")
+      stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(ServiceUnavailableError)
+
     }
   }
 

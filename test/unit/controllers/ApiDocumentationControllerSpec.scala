@@ -26,7 +26,6 @@ import play.api.http.Status.OK
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsJson, status}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ApiDocumentationController
 import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
 import util.UnitSpec
