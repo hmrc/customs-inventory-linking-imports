@@ -26,7 +26,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ApiVer
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Action builder that validates headers.
-  * <li/>INPUT - `ConversationIdRequest`
+  * <li/>INPUT - `ApiVersionRequest`
   * <li/>OUTPUT - `ValidatedHeadersRequest`
   * <li/>ERROR - 4XX Result if is a header validation error. This terminates the action builder pipeline.
   */
