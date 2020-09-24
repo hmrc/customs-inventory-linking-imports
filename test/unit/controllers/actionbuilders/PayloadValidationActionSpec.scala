@@ -38,7 +38,7 @@ import scala.xml.SAXException
 class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
 
   trait SetUp{
-    implicit val forConversions: ConversationIdRequest[AnyContentAsXml] = TestConversationIdRequest
+    implicit val forConversions: ConversationIdRequest[AnyContentAsXml] = TestConversationIdRequestV1
     val saxException = new SAXException("Boom!")
 
     val expectedXmlSchemaErrorResult: Result = ErrorResponse

@@ -17,14 +17,13 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.controllers
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.mvc.Headers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorBadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeadersImpl}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ApiVersionRequest, ExtractedHeadersImpl}
 
 @Singleton
 class ValidateMovementHeaderValidator @Inject()(logger: ImportsLogger) extends HeaderValidator(logger) {
@@ -32,9 +31,9 @@ class ValidateMovementHeaderValidator @Inject()(logger: ImportsLogger) extends H
   private lazy val xCorrelationIdHeaderRegex = "^.{1,36}$".r
   private lazy val errorResponseCorrelationIdHeaderMissing = errorBadRequest(s"${HeaderConstants.XCorrelationId} header is missing or invalid")
 
-  override def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
+  override def validateHeaders[A](implicit apiVersionRequest: ApiVersionRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
 
-    implicit val headers: Headers = conversationIdRequest.headers
+    implicit val headers: Headers = apiVersionRequest.headers
 
     def hasXCorrelationId = validateHeader(XCorrelationId, xCorrelationIdHeaderRegex.findFirstIn(_).nonEmpty, errorResponseCorrelationIdHeaderMissing, optional = false)
 

@@ -21,19 +21,15 @@ import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.mvc.Headers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorAcceptHeaderInvalid, ErrorContentTypeHeaderInvalid, ErrorInternalServerError, errorBadRequest}
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorContentTypeHeaderInvalid, ErrorInternalServerError, errorBadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ExtractedHeadersImpl}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ApiVersionRequest, ExtractedHeadersImpl}
 
 @Singleton
 class HeaderValidator @Inject() (logger: ImportsLogger) {
 
-  protected val versionsByAcceptHeader: Map[String, ApiVersion] = Map(
-    "application/vnd.hmrc.1.0+xml" -> VersionOne,
-    "application/vnd.hmrc.2.0+xml" -> VersionTwo
-  )
   private lazy val validContentTypeHeaders = Seq(MimeTypes.XML + ";charset=utf-8", MimeTypes.XML + "; charset=utf-8")
   private lazy val xClientIdRegex = "^\\S+$".r
   private lazy val xBadgeIdentifierRegex = "^[0-9A-Z]{6,12}$".r
@@ -41,10 +37,8 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
   private lazy val errorResponseBadgeIdentifierHeaderInvalid = errorBadRequest(s"${HeaderConstants.XBadgeIdentifier} header is invalid")
   private lazy val errorResponseSubmitterIdentifierHeaderInvalid = errorBadRequest(s"${HeaderConstants.XSubmitterIdentifier} header is invalid")
 
-  def validateHeaders[A](implicit conversationIdRequest: ConversationIdRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
-    implicit val headers: Headers = conversationIdRequest.headers
-
-    def hasAccept = validateHeader(ACCEPT, versionsByAcceptHeader.keySet.contains(_), ErrorAcceptHeaderInvalid, optional = false)
+  def validateHeaders[A](implicit apiVersionRequest: ApiVersionRequest[A]): Either[ErrorResponse, ExtractedHeadersImpl] = {
+    implicit val headers: Headers = apiVersionRequest.headers
 
     def hasContentType = validateHeader(CONTENT_TYPE, s => validContentTypeHeaders.contains(s.toLowerCase()), ErrorContentTypeHeaderInvalid, optional = false)
 
@@ -55,7 +49,6 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
     def hasXSubmitterIdentifier = validateHeader(XSubmitterIdentifier, xSubmitterIdentifierHeaderRegex.findFirstIn(_).nonEmpty, errorResponseSubmitterIdentifierHeaderInvalid, optional = true)
 
     val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
-      accept <- hasAccept.right
       contentType <- hasContentType.right
       xClientId <- hasXClientId.right
       xBadgeIdentifier <- hasXBadgeIdentifier.right
@@ -63,19 +56,17 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
     } yield {
       val bid = xBadgeIdentifier.fold[Option[BadgeIdentifier]](None)(b => Some(BadgeIdentifier(b)))
       val sid = xSubmitterIdentifier.fold[Option[SubmitterIdentifier]](None)(s => Some(SubmitterIdentifier(s)))
-      logger.debug(
-        s"$ACCEPT header passed validation: $accept\n"
-      + s"$CONTENT_TYPE header passed validation: $contentType\n"
+      logger.debug(s"$CONTENT_TYPE header passed validation: $contentType\n"
       + s"$XClientId header passed validation: $xClientId\n"
       + s"$XBadgeIdentifier header passed validation: $xBadgeIdentifier"
       + s"$XSubmitterIdentifier header passed validation: $xSubmitterIdentifier")
-      ExtractedHeadersImpl(versionsByAcceptHeader(accept.get), bid, ClientId(xClientId.get), None, sid) // accept cannot be None
+      ExtractedHeadersImpl(apiVersionRequest.requestedApiVersion, bid, ClientId(xClientId.get), None, sid) // accept cannot be None
     }
     theResult
   }
 
   protected def validateHeader[A](headerName: String, rule: String => Boolean, errorResponse: ErrorResponse, optional: Boolean)
-                               (implicit conversationIdRequest: ConversationIdRequest[A], headers: Headers): Either[ErrorResponse, Option[String]] = {
+                               (implicit apiVersionRequest: ApiVersionRequest[A], headers: Headers): Either[ErrorResponse, Option[String]] = {
     val left = Left(errorResponse)
     def leftWithLog(headerName: String) = {
       logger.error(s"Error - header '$headerName' not present")

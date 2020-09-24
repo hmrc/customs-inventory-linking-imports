@@ -73,6 +73,9 @@ case class ImportsConfig (
   customsMetricsBaseUrl: String
 )
 
+case class ImportsShutterConfig(v1Shuttered: Option[Boolean],
+                                v2Shuttered: Option[Boolean])
+
 case class ImportsCircuitBreakerConfig(numberOfCallsToTriggerStateChange: Int,
                                        unavailablePeriodDurationInMillis: Int,
                                        unstablePeriodDurationInMillis: Int)

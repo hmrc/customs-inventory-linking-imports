@@ -21,12 +21,12 @@ import play.api.mvc.{ActionRefiner, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedHeadersRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ApiVersionRequest, ValidatedHeadersRequest}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /** Action builder that validates headers.
-  * <li/>INPUT - `ConversationIdRequest`
+  * <li/>INPUT - `ApiVersionRequest`
   * <li/>OUTPUT - `ValidatedHeadersRequest`
   * <li/>ERROR - 4XX Result if is a header validation error. This terminates the action builder pipeline.
   */
@@ -34,17 +34,17 @@ import scala.concurrent.{ExecutionContext, Future}
 class ValidateAndExtractHeadersAction @Inject()(validator: HeaderValidator,
                                                 logger: ImportsLogger)
                                                (implicit ec: ExecutionContext)
-  extends ActionRefiner[ConversationIdRequest, ValidatedHeadersRequest] {
+  extends ActionRefiner[ApiVersionRequest, ValidatedHeadersRequest] {
 
   protected def executionContext: ExecutionContext = ec
 
-  override def refine[A](cr: ConversationIdRequest[A]): Future[Either[Result, ValidatedHeadersRequest[A]]] = Future.successful {
-    implicit val id: ConversationIdRequest[A] = cr
+  override def refine[A](avr: ApiVersionRequest[A]): Future[Either[Result, ValidatedHeadersRequest[A]]] = Future.successful {
+    implicit val id: ApiVersionRequest[A] = avr
 
-    validator.validateHeaders(cr) match {
+    validator.validateHeaders(avr) match {
       case Left(result) => Left(result.XmlResult.withConversationId)
       case Right(extracted) =>
-        val vhr = ValidatedHeadersRequest(extracted.maybeBadgeIdentifier, cr.conversationId, cr.start, extracted.requestedApiVersion, extracted.maybeCorrelationIdHeader, extracted.maybeSubmitterIdentifier, extracted.clientId, cr.request)
+        val vhr = ValidatedHeadersRequest(extracted.maybeBadgeIdentifier, avr.conversationId, avr.start, extracted.requestedApiVersion, extracted.maybeCorrelationIdHeader, extracted.maybeSubmitterIdentifier, extracted.clientId, avr.request)
         Right(vhr)
     }
   }

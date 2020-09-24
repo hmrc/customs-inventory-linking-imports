@@ -72,7 +72,11 @@ object TestData {
   val InvalidBadgeIdentifierValue = "INVALIDBADGEID123456789"
   val ValidBadgeIdentifier: BadgeIdentifier = BadgeIdentifier(ValidBadgeIdentifierValue)
 
-  val AcceptHeaderValue = "application/vnd.hmrc.1.0+xml"
+  val AcceptHeaderValueV1 = "application/vnd.hmrc.1.0+xml"
+  val AcceptHeaderValueV2 = "application/vnd.hmrc.2.0+xml"
+  val AcceptHeaderV1: (String, String) = ACCEPT -> AcceptHeaderValueV1
+  val AcceptHeaderV2: (String, String) = ACCEPT -> AcceptHeaderValueV2
+
   val ConnectorContentTypeHeaderValue = s"$XML; charset=UTF-8"
 
   val TestExtractedHeadersV1 = ExtractedHeadersImpl(VersionOne, Some(ValidBadgeIdentifier), ApiSubscriptionFieldsTestData.clientId, Some(ValidCorrelationIdHeader), Some(ValidSubmitterIdentifierHeader))
@@ -92,7 +96,7 @@ object TestData {
   lazy val InvalidXSubmitterIdentifierLongerThan17: (String, String) = XSubmitterIdentifierHeaderName -> "12345678901234567890"
   lazy val InvalidXSubmitterIdentifierEmpty: (String, String) = XSubmitterIdentifierHeaderName -> ""
 
-  lazy val ValidAcceptHeader: (String, String) = ACCEPT -> AcceptHeaderValue
+  lazy val ValidAcceptHeader: (String, String) = ACCEPT -> AcceptHeaderValueV1
   lazy val ValidContentTypeHeader: (String, String) = CONTENT_TYPE -> (XML + "; charset=utf-8")
   lazy val ValidXClientIdHeader: (String, String) = XClientIdHeaderName -> ApiSubscriptionFieldsTestData.clientId.value
   lazy val ValidXBadgeIdentifierHeader: (String, String) = XBadgeIdentifierHeaderName -> ValidBadgeIdentifierValue
@@ -169,16 +173,20 @@ object TestData {
   }
 
   val TestXmlPayload: Elem = <foo>bar</foo>
-  val TestFakeRequest: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(TestXmlPayload)
-  val TestConversationIdRequest: ConversationIdRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, EventStart, TestFakeRequest)
-  val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersV1)
-  val TestValidatedHeadersRequestV2: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersV2)
-  val TestValidatedHeadersNoIdsRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequest.toValidatedHeadersRequest(TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId)
+  val TestFakeRequestV1: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(TestXmlPayload).withHeaders(AcceptHeaderV1)
+  val TestFakeRequestV2: FakeRequest[AnyContentAsXml] = FakeRequest().withXmlBody(TestXmlPayload).withHeaders(AcceptHeaderV2)
+  val TestConversationIdRequestV1: ConversationIdRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, EventStart, TestFakeRequestV1)
+  val TestConversationIdRequestV2: ConversationIdRequest[AnyContentAsXml] = ConversationIdRequest(ValidConversationId, EventStart, TestFakeRequestV2)
+  val TestApiVersionRequestV1: ApiVersionRequest[AnyContentAsXml] = ApiVersionRequest(ValidConversationId, EventStart, VersionOne, TestFakeRequestV1)
+  val TestApiVersionRequestV2: ApiVersionRequest[AnyContentAsXml] = ApiVersionRequest(ValidConversationId, EventStart, VersionTwo, TestFakeRequestV2)
+  val TestValidatedHeadersRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequestV1.toValidatedHeadersRequest(TestExtractedHeadersV1)
+  val TestValidatedHeadersRequestV2: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequestV1.toValidatedHeadersRequest(TestExtractedHeadersV2)
+  val TestValidatedHeadersNoIdsRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequestV1.toValidatedHeadersRequest(TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId)
   val TestAuthorisedRequest: AuthorisedRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest
   val TestCspValidatedPayloadRequest: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
   val TestCspValidatedPayloadRequestV2: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequestV2.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
   val TestCspValidatedPayloadRequestNoIds: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersNoIdsRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
-  val ValidRequest: FakeRequest[AnyContentAsXml] = TestFakeRequest.withHeaders(ValidHeaders.toSeq: _*)
+  val ValidRequest: FakeRequest[AnyContentAsXml] = TestFakeRequestV1.withHeaders(ValidHeaders.toSeq: _*)
 
   def testFakeRequest(badgeIdString: String = ValidBadgeIdentifier.value): FakeRequest[AnyContentAsXml] =
     FakeRequest().withXmlBody(TestXmlPayload)
