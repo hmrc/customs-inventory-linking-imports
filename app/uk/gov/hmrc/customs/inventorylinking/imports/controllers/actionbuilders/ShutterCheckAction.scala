@@ -45,7 +45,7 @@ class ShutterCheckAction @Inject()(logger: ImportsLogger,
   extends ActionRefiner[ConversationIdRequest, ApiVersionRequest] {
     actionName =>
 
-  private val errorResponseVersionShuttered: Result = ErrorResponse(SERVICE_UNAVAILABLE, "SERVER_ERROR", "The 'customs/inventory-linking-imports' API is currently unavailable").XmlResult
+  private val errorResponseVersionShuttered: Result = ErrorResponse(SERVICE_UNAVAILABLE, "SERVER_ERROR", "Service unavailable").XmlResult
 
   protected val versionsByAcceptHeader: Map[String, ApiVersion] = Map(
       Version1AcceptHeaderValue -> VersionOne,

@@ -40,7 +40,7 @@ class ShutterCheckActionSpec extends UnitSpec with MockitoSugar {
     protected implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
     val mockConfigService = mock[ImportsConfigService]
     val mockLogger = mock[ImportsLogger]
-    val errorResponseVersionShuttered: Result = ErrorResponse(SERVICE_UNAVAILABLE, "SERVER_ERROR", "The 'customs/inventory-linking-imports' API is currently unavailable").XmlResult
+    val errorResponseVersionShuttered: Result = ErrorResponse(SERVICE_UNAVAILABLE, "SERVER_ERROR", "Service unavailable").XmlResult
 
     val allVersionsUnshuttered = ImportsShutterConfig(Some(false), Some(false))
     val allVersionsShuttered = ImportsShutterConfig(Some(true), Some(true))
