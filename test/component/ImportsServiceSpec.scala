@@ -81,7 +81,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
     """<?xml version='1.0' encoding='UTF-8'?>
       |<errorResponse>
       |      <code>SERVER_ERROR</code>
-      |      <message>The 'customs/inventory-linking-imports' API is currently unavailable</message>
+      |      <message>Service unavailable</message>
       |</errorResponse>
     """.stripMargin
 
