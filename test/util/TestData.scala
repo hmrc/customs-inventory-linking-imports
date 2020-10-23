@@ -159,7 +159,7 @@ object TestData {
   val ValidateMovementAuthPredicate: Predicate = Enrolment("write:customs-il-imports-movement-validation") and AuthProviders(PrivilegedApplication)
 
   object TestModule extends AbstractModule {
-    def configure(): Unit = {
+    override def configure(): Unit = {
       bind(classOf[UuidService]) toInstance mockUuidService
     }
 

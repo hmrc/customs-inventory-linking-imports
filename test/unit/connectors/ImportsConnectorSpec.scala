@@ -36,8 +36,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig, SeqOfHeader}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
-import uk.gov.hmrc.play.bootstrap.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import util.UnitSpec
 import unit.logging.StubImportsLogger
 import util.TestData._
