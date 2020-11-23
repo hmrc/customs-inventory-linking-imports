@@ -24,8 +24,8 @@ import akka.actor.ActorSystem
 import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.http.HeaderNames._
-import play.api.http.{MimeTypes, Status}
 import play.api.http.MimeTypes.XML
+import play.api.http.{MimeTypes, Status}
 import uk.gov.hmrc.customs.api.common.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.api.common.connectors.CircuitBreakerConnector
 import uk.gov.hmrc.customs.api.common.logging.CdsLogger
@@ -34,12 +34,12 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{HasConversationId, ValidatedPayloadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, ImportsMessageType}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{NodeSeq, PrettyPrinter, TopScope}
+import scala.xml.NodeSeq
 
 @Singleton
 class ImportsConnector @Inject()(http: HttpClient,
@@ -110,7 +110,7 @@ class ImportsConnector @Inject()(http: HttpClient,
     if (responseBody.isEmpty) {
       "<empty>"
     } else {
-      new PrettyPrinter(120, 2).format(xml.XML.loadString(responseBody), TopScope)
+      responseBody
     }
   }
 
