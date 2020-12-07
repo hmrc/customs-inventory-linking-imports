@@ -42,9 +42,9 @@ trait ComponentTestSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
     "microservice.services.goodsarrival.port" -> ExternalServicesConfig.Port,
     "microservice.services.goodsarrival.context" -> InventoryLinkingImportsExternalServicesConfig.GoodsArrivalConnectorContext,
     "microservice.services.goodsarrival.bearer-token" -> ExternalServicesConfig.AuthToken,
-    "microservice.services.customs-metrics.host" -> ExternalServicesConfig.Host,
-    "microservice.services.customs-metrics.port" -> ExternalServicesConfig.Port,
-    "microservice.services.customs-metrics.context" -> InventoryLinkingImportsExternalServicesConfig.CustomsMetricsContext
+    "microservice.services.customs-declarations-metrics.host" -> ExternalServicesConfig.Host,
+    "microservice.services.customs-declarations-metrics.port" -> ExternalServicesConfig.Port,
+    "microservice.services.customs-declarations-metrics.context" -> InventoryLinkingImportsExternalServicesConfig.CustomsMetricsContext
   )).build()
 
   def stringToXml(str: String): Node = {
