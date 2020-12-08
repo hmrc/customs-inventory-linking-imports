@@ -31,7 +31,7 @@ import util.TestData._
 class LoggingHelperSpec extends UnitSpec with MockitoSugar {
 
   private def expectedMessage(message: String) = s"[conversationId=${ValidConversationId.toString}]" +
-    s"[clientId=some-client-id][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] $message"
+    s"[clientId=some-client-id][requestedApiVersion=1.0][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] $message"
   private val requestMock = mock[Request[_]]
   private val conversationIdRequest =
     ConversationIdRequest(

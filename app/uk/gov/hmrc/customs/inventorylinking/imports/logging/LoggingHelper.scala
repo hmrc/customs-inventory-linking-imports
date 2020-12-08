@@ -56,7 +56,7 @@ object LoggingHelper {
       case h: ExtractedHeaders =>
         val bid = h.maybeBadgeIdentifier.map(b => s"[badgeIdentifier=${b.value}]").getOrElse("")
         val sid = h.maybeSubmitterIdentifier.map(s => s"[submitterIdentifier=${s.value}]").getOrElse("")
-        s"${defaultMsg}[clientId=${h.clientId}]$bid$sid"
+        s"$defaultMsg[clientId=${h.clientId}][requestedApiVersion=${h.requestedApiVersion.value}]$bid$sid"
       case _ => defaultMsg
     }
   }
