@@ -23,12 +23,16 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
 import play.api.test.Helpers.{status, _}
+import uk.gov.hmrc.customs.api.common.xml.ValidateXmlAgainstSchema
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import util.TestData._
 import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML, validWrappedGoodsArrivalXml, validWrappedValidateMovementXml}
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 import util.externalservices.{ApiSubscriptionFieldsService, AuthService, CustomsMetricsService, InventoryLinkingImportsService}
 
+import java.io.StringReader
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.Schema
 import scala.concurrent.Future
 
 class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValues with BeforeAndAfterAll
@@ -38,6 +42,9 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
   with InventoryLinkingImportsService
   with ApiSubscriptionFieldsService
   with AuthService {
+
+  protected val xsdErrorLocationV1: String = "/api/conf/1.0/schemas/customs/error.xsd"
+  private val schemaErrorV1: Schema = ValidateXmlAgainstSchema.getSchema(xsdErrorLocationV1).get
 
   private val internalServerError =
     """<?xml version="1.0" encoding="UTF-8"?>
@@ -145,6 +152,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       status(result) shouldBe INTERNAL_SERVER_ERROR
       stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
       header(XConversationIdHeaderName, result).get shouldNot be("")
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
     }
   }
 
@@ -167,6 +175,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       And("the response body is a \"invalid xml\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(unAuthorisedError)
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(unAuthorisedError)))
     }
 
     scenario(s"Response status 400 when user submits a Goods Arrival message with an XML payload that does not adhere to schema") {
@@ -185,7 +194,9 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
       And("the response body is a \"Bad request\" XML")
-      stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(badRequestError(new GoodsArrival()))
+      val actual = contentAsString(resultFuture)
+      stringToXml(actual) shouldBe stringToXml(badRequestError(new GoodsArrival()))
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(actual)))
     }
 
     scenario(s"Response status 400 when user submits a Goods Arrival message with a malformed XML payload") {
@@ -205,6 +216,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(malformedXmlAndNonXmlPayloadError)))
     }
 
     scenario(s"Response status 400 when user submits a Goods Arrival message with a non-xml payload") {
@@ -224,6 +236,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(malformedXmlAndNonXmlPayloadError)))
     }
   }
 
@@ -273,6 +286,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       status(result) shouldBe INTERNAL_SERVER_ERROR
       stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
       header(XConversationIdHeaderName, result).get shouldNot be("")
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
     }
   }
 
@@ -295,6 +309,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       And("the response body is a \"invalid xml\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(unAuthorisedError)
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(unAuthorisedError)))
     }
 
     scenario(s"Response status 400 when user submits a Validate Movement message with an XML payload that does not adhere to schema") {
@@ -313,7 +328,9 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
 
       And("the response body is a \"Bad request\" XML")
-      stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(badRequestError(new ValidateMovement()))
+      val actual = contentAsString(resultFuture)
+      stringToXml(actual) shouldBe stringToXml(badRequestError(new ValidateMovement()))
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(actual)))
     }
 
     scenario(s"Response status 400 when user submits a Validate Movement message with a malformed XML payload") {
@@ -333,6 +350,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(malformedXmlAndNonXmlPayloadError)))
     }
 
     scenario(s"Response status 400 when user submits a Validate Movement message with a non-xml payload") {
@@ -352,6 +370,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(malformedXmlAndNonXmlPayloadError)))
     }
   }
 
@@ -374,6 +393,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       And("the response body is")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(ServiceUnavailableError)
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(ServiceUnavailableError)))
 
     }
   }
