@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns="http://gov.uk/customs/inventoryLinkingImport/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" targetNamespace="http://gov.uk/customs/inventoryLinkingImport/v1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="0.5" vc:minVersion="1.1">
-	<xs:annotation>
-		<xs:documentation>Version 1.1</xs:documentation>
-		<!-- Added new simpletype UUID 20/09/2018 -->
-		<!-- Updated regex pattern for inventoryConsignmentReference 21/09/2018 -->
-		<!-- Updated traderReference field size to "35" 17/10/2018 -->
-	</xs:annotation>
+	<!-- Added new simple type UUID 20/09/2018 -->
+	<!-- Updated traderReference field size to "35" 17/10/2018 -->
+	<!-- Updated regex pattern for inventoryConsignmentReference to include space character 12/01/2021 -->
 	<xs:simpleType name="messageCode">
 		<xs:restriction base="xs:string">
 			<xs:maxLength value="3"/>
@@ -29,7 +26,7 @@
 	<xs:simpleType name="inventoryConsignmentReference">
 		<xs:restriction base="xs:string">
 			<xs:maxLength value="35"/>
-			<xs:pattern value="([A-Za-z0-9/:-])*"/>
+			<xs:pattern value="([A-Za-z 0-9/:-])*"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="irc">
