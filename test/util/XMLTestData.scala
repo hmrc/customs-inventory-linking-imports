@@ -40,7 +40,7 @@ object XMLTestData {
     <InventoryLinkingImportsValidateMovementResponse xmlns="http://gov.uk/customs/inventoryLinkingImport/v1">
       <entryNumber>string</entryNumber>
       <entryVersionNumber>3</entryVersionNumber>
-      <inventoryConsignmentReference>string</inventoryConsignmentReference>
+      <inventoryConsignmentReference>string with space</inventoryConsignmentReference>
       <irc>str</irc>
     </InventoryLinkingImportsValidateMovementResponse>
 
