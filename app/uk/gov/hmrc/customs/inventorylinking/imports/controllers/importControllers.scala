@@ -59,10 +59,12 @@ abstract class ImportController(val common: Common,
       implicit vpr: ValidatedPayloadRequest[AnyContent] =>
         common.messageSender.send(importsMessageType) map {
         case Right(_) =>
+          common.logger.info("Inventory linking imports request processed successfully")
           common.metricsConnector.post(CustomsMetricsRequest(
             "ILI", vpr.conversationId, vpr.start, common.conversationIdAction.timeService.zonedDateTimeUtc))
           Accepted.as(MimeTypes.XML).withConversationId
         case Left(errorResult) =>
+          common.logger.info("Inventory linking imports request failed")
           errorResult
       }
   }
