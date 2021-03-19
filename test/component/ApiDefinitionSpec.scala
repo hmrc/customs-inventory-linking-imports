@@ -64,8 +64,7 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |        "status": "BETA",
           |        "endpointsEnabled": true,
           |        "access": {
-          |          "type": "PRIVATE",
-          |          "whitelistedApplicationIds": ["99999999-9999-9999-9999-999999999999"]
+          |          "type": "PRIVATE"
           |        },
           |        "fieldDefinitions": [
           |          {
@@ -102,8 +101,7 @@ class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppP
           |        "status": "BETA",
           |        "endpointsEnabled": true,
           |        "access": {
-          |          "type": "PRIVATE",
-          |          "whitelistedApplicationIds": ["99999999-9999-9999-9999-999999999999"]
+          |          "type": "PRIVATE"
           |        },
           |        "fieldDefinitions": [
           |          {

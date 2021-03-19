@@ -1,8 +1,5 @@
 @import play.api.libs.json.Json
-@(
-    mayBeV1WhitelistedApplicationIds:  Option[Seq[String]],
-    mayBeV2WhitelistedApplicationIds:  Option[Seq[String]],
-    v1Enabled: Boolean,
+@(  v1Enabled: Boolean,
     v2Enabled: Boolean
     )
 {
@@ -28,12 +25,7 @@
         "status": "BETA",
         "endpointsEnabled": @v1Enabled,
         "access": {
-          @mayBeV1WhitelistedApplicationIds.fold(""" "type": "PUBLIC" """)( ids =>
-                s"""
-                    "type": "PRIVATE",
-                    "whitelistedApplicationIds": ${Json.toJson(ids)}
-                """
-            )
+          "type": "PRIVATE"
         },
         "fieldDefinitions": [
           {
@@ -70,12 +62,7 @@
         "status": "BETA",
         "endpointsEnabled": @v2Enabled,
         "access": {
-            @mayBeV2WhitelistedApplicationIds.fold(""" "type": "PUBLIC" """)( ids =>
-                s"""
-                    "type": "PRIVATE",
-                    "whitelistedApplicationIds": ${Json.toJson(ids)}
-                """
-            )
+          "type": "PRIVATE"
         },
         "fieldDefinitions": [
           {

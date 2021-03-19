@@ -32,17 +32,11 @@ import util.UnitSpec
 
 class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
 
-  private val whiteList0 = "whiteList0"
-  private val whiteList1 = "whiteList1"
-  private val whiteList2 = "whiteList2"
   private implicit val materializer: Materializer = app.materializer
   private lazy val applicationRamlContent = getResourceFileContent("/public/api/conf/1.0/application.raml")
   private lazy val controller = app.injector.instanceOf[ApiDocumentationController]
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
-    "api.access.version-1.0.whitelistedApplicationIds.0" -> whiteList0,
-    "api.access.version-1.0.whitelistedApplicationIds.1" -> whiteList1,
-    "api.access.version-2.0.whitelistedApplicationIds.0" -> whiteList2,
     "api.access.version-1.0.enabled" -> "false",
     "api.access.version-2.0.enabled" -> "false"
   )).build()
@@ -55,7 +49,7 @@ class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with Gui
     }
 
     "return definition in the body with v1 and v2 disabled" in {
-      jsonBodyOf(result) shouldBe Json.parse(txt.definition(Some(Seq(whiteList0, whiteList1)) , Some(Seq(whiteList2)), false, false).toString())
+      jsonBodyOf(result) shouldBe Json.parse(txt.definition(false, false).toString())
     }
   }
 
