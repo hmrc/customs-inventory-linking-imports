@@ -28,7 +28,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionB
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ValidatedHeadersRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Left
@@ -61,7 +61,7 @@ abstract class AuthAction @Inject()(override val authConnector: AuthConnector,
 
     override def refine[A](vhr: ValidatedHeadersRequest[A]): Future[Either[Result, AuthorisedRequest[A]]] = {
       implicit val implicitVhr: ValidatedHeadersRequest[A] = vhr
-      implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromHeadersAndSession(rh.headers)
+      implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromRequest(rh)
 
       authorised(importsMessageType.enrolment and AuthProviders(PrivilegedApplication)) {
         logger.debug(s"Successfully authorised CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment")
