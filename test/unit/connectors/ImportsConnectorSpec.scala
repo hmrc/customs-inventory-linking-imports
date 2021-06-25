@@ -123,10 +123,10 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
 
         awaitRequest
 
-        val headersCaptor: ArgumentCaptor[HeaderCarrier] = ArgumentCaptor.forClass(classOf[HeaderCarrier])
-        verify(mockWsPost).POSTString(anyString, anyString, any[SeqOfHeader])(
-          any[HttpReads[HttpResponse]](), headersCaptor.capture(), any[ExecutionContext])
-        headersCaptor.getValue.extraHeaders should contain(HeaderNames.CONTENT_TYPE -> s"${MimeTypes.XML}; charset=UTF-8")
+        val headersCaptor: ArgumentCaptor[Seq[(String, String)]] = ArgumentCaptor.forClass(classOf[Seq[(String, String)]])
+        verify(mockWsPost).POSTString(anyString, anyString, headersCaptor.capture())(
+          any[HttpReads[HttpResponse]](), any[HeaderCarrier], any[ExecutionContext])
+        headersCaptor.getValue should contain(HeaderNames.CONTENT_TYPE -> s"${MimeTypes.XML}; charset=UTF-8")
       }
 
       "set the accept header" in {
@@ -134,10 +134,10 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
 
         awaitRequest
 
-        val headersCaptor: ArgumentCaptor[HeaderCarrier] = ArgumentCaptor.forClass(classOf[HeaderCarrier])
-        verify(mockWsPost).POSTString(anyString, anyString, any[SeqOfHeader])(
-          any[HttpReads[HttpResponse]](), headersCaptor.capture(), any[ExecutionContext])
-        headersCaptor.getValue.extraHeaders should contain(HeaderNames.ACCEPT -> MimeTypes.XML)
+        val headersCaptor: ArgumentCaptor[Seq[(String, String)]] = ArgumentCaptor.forClass(classOf[Seq[(String, String)]])
+        verify(mockWsPost).POSTString(anyString, anyString, headersCaptor.capture())(
+          any[HttpReads[HttpResponse]](), any[HeaderCarrier], any[ExecutionContext])
+        headersCaptor.getValue should contain(HeaderNames.ACCEPT -> MimeTypes.XML)
       }
 
       "set the date header" in {
@@ -145,10 +145,10 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
 
         awaitRequest
 
-        val headersCaptor: ArgumentCaptor[HeaderCarrier] = ArgumentCaptor.forClass(classOf[HeaderCarrier])
-        verify(mockWsPost).POSTString(anyString, anyString, any[SeqOfHeader])(
-          any[HttpReads[HttpResponse]](), headersCaptor.capture(), any[ExecutionContext])
-        headersCaptor.getValue.extraHeaders should contain(HeaderNames.DATE -> httpFormattedDate)
+        val headersCaptor: ArgumentCaptor[Seq[(String, String)]] = ArgumentCaptor.forClass(classOf[Seq[(String, String)]])
+        verify(mockWsPost).POSTString(anyString, anyString, headersCaptor.capture())(
+          any[HttpReads[HttpResponse]](), any[HeaderCarrier], any[ExecutionContext])
+        headersCaptor.getValue should contain(HeaderNames.DATE -> httpFormattedDate)
       }
 
       "set the X-Forwarded-Host header" in {
@@ -156,10 +156,10 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
 
         awaitRequest
 
-        val headersCaptor: ArgumentCaptor[HeaderCarrier] = ArgumentCaptor.forClass(classOf[HeaderCarrier])
-        verify(mockWsPost).POSTString(anyString, anyString, any[SeqOfHeader])(
-          any[HttpReads[HttpResponse]](), headersCaptor.capture(), any[ExecutionContext])
-        headersCaptor.getValue.extraHeaders should contain(HeaderNames.X_FORWARDED_HOST -> "MDTP")
+        val headersCaptor: ArgumentCaptor[Seq[(String, String)]] = ArgumentCaptor.forClass(classOf[Seq[(String, String)]])
+        verify(mockWsPost).POSTString(anyString, anyString, headersCaptor.capture())(
+          any[HttpReads[HttpResponse]](), any[HeaderCarrier], any[ExecutionContext])
+        headersCaptor.getValue should contain(HeaderNames.X_FORWARDED_HOST -> "MDTP")
       }
 
       "set the X-Correlation-Id header" in {
@@ -167,10 +167,10 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
 
         awaitRequest
 
-        val headersCaptor: ArgumentCaptor[HeaderCarrier] = ArgumentCaptor.forClass(classOf[HeaderCarrier])
-        verify(mockWsPost).POSTString(anyString, anyString, any[SeqOfHeader])(
-          any[HttpReads[HttpResponse]](), headersCaptor.capture(), any[ExecutionContext])
-        headersCaptor.getValue.extraHeaders should contain("X-Correlation-ID" -> correlationId.toString)
+        val headersCaptor: ArgumentCaptor[Seq[(String, String)]] = ArgumentCaptor.forClass(classOf[Seq[(String, String)]])
+        verify(mockWsPost).POSTString(anyString, anyString, headersCaptor.capture())(
+          any[HttpReads[HttpResponse]](), any[HeaderCarrier], any[ExecutionContext])
+        headersCaptor.getValue should contain("X-Correlation-ID" -> correlationId.toString)
       }
 
       "set the X-Conversation-Id header" in {
@@ -178,10 +178,10 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
 
         awaitRequest
 
-        val headersCaptor: ArgumentCaptor[HeaderCarrier] = ArgumentCaptor.forClass(classOf[HeaderCarrier])
-        verify(mockWsPost).POSTString(anyString, anyString, any[SeqOfHeader])(
-          any[HttpReads[HttpResponse]](), headersCaptor.capture(), any[ExecutionContext])
-        headersCaptor.getValue.extraHeaders should contain("X-Conversation-ID" -> ConversationIdValue)
+        val headersCaptor: ArgumentCaptor[Seq[(String, String)]] = ArgumentCaptor.forClass(classOf[Seq[(String, String)]])
+        verify(mockWsPost).POSTString(anyString, anyString,  headersCaptor.capture())(
+          any[HttpReads[HttpResponse]](), any[HeaderCarrier], any[ExecutionContext])
+        headersCaptor.getValue should contain("X-Conversation-ID" -> ConversationIdValue)
       }
 
       "prefix the config key with the prefix if passed" in {

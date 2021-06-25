@@ -29,7 +29,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.model.GoodsArrival
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.Authorization
 import util.ExternalServicesConfig.{AuthToken, Host, Port}
 import util.TestData
 import util.XMLTestData.ValidInventoryLinkingMovementRequestXML

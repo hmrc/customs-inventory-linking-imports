@@ -64,7 +64,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
     "when making a successful request" should {
       "use the correct URL for valid path parameters and config" in {
         val futureResponse = Future.successful(apiSubscriptionFieldsResponse)
-        when(mockWSGetImpl.GET[ApiSubscriptionFieldsResponse](ameq(expectedUrl))
+        when(mockWSGetImpl.GET[ApiSubscriptionFieldsResponse](ameq(expectedUrl), any(), any())
           (any[HttpReads[ApiSubscriptionFieldsResponse]](), any[HeaderCarrier](), any[ExecutionContext])).thenReturn(futureResponse)
 
         awaitRequest shouldBe apiSubscriptionFieldsResponse
@@ -99,7 +99,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   }
 
   private def returnResponseForRequest(eventualResponse: Future[ApiSubscriptionFieldsResponse]) = {
-    when(mockWSGetImpl.GET[ApiSubscriptionFieldsResponse](anyString())
+    when(mockWSGetImpl.GET[ApiSubscriptionFieldsResponse](anyString(), any(), any())
       (any[HttpReads[ApiSubscriptionFieldsResponse]](), any[HeaderCarrier](), any[ExecutionContext])).thenReturn(eventualResponse)
   }
 

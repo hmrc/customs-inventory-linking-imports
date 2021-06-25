@@ -36,8 +36,6 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, Impor
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.logging.Authorization
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.NodeSeq
 
@@ -59,9 +57,11 @@ class ImportsConnector @Inject()(http: HttpClient,
   def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${vpr.requestedApiVersion.configPrefix}${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
-    implicit val headerCarrier: HeaderCarrier = hc.copy(extraHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId), authorization = Some(Authorization(bearerToken)))
+
+    implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = None)
+    val importsHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId) ++ Seq(HeaderNames.authorisation -> bearerToken)
     val startTime = LocalDateTime.now
-    withCircuitBreaker(post(xml, config.url)(vpr, headerCarrier))
+    withCircuitBreaker(post(xml, config.url, importsHeaders)(vpr, headerCarrier))
       .map{ response =>
         logCallDuration(startTime)
         logger.debug(s"Response status ${response.status} and response body ${formatResponseBody(response.body)}")
@@ -80,13 +80,12 @@ class ImportsConnector @Inject()(http: HttpClient,
       (XCorrelationId, correlationId.toString))
   }
 
-  private def post[A](xml: NodeSeq, url: String)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
+  private def post[A](xml: NodeSeq, url: String, importsHeaders: Seq[(String, String)])(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
     logger.debug(s"Sending request to backend. Url: $url\nPayload: ${xml.toString()}")
-    http.POSTString[HttpResponse](url, xml.toString()).map{ response =>
+    http.POSTString[HttpResponse](url, xml.toString(), headers = importsHeaders).map{ response =>
       response.status match {
         case status if is2xx(status) =>
           response
-
         case status => //1xx, 3xx, 4xx, 5xx
           logger.error(s"Failed inventory linking imports backend call response body=${formatResponseBody(response.body)}")
           throw new Non2xxResponseException(status)
@@ -95,7 +94,6 @@ class ImportsConnector @Inject()(http: HttpClient,
       case httpError: HttpException =>
         logger.error(s"Call to inventory linking imports failed. url = $url status=${httpError.responseCode}")
           Future.failed(httpError)
-
         case e: Throwable =>
           logger.error(s"Call to backend failed. url=$url")
           Future.failed(e)
