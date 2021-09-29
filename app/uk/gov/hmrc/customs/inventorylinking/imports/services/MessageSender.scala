@@ -106,7 +106,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                                 importsMessageType: ImportsMessageType,
                                 dateTime: DateTime,
                                 correlationId: UUID)
-                               (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): NodeSeq = {
+                               (implicit vpr: ValidatedPayloadRequest[A]): NodeSeq = {
     logger.debug(s"preparePayload called")
     payloadDecorator.wrap(xml, apiSubscriptionFieldsResponse, correlationIdHeader, importsMessageType.wrapperRootElementLabel, dateTime, correlationId)
   }

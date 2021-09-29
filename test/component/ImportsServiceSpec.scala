@@ -22,6 +22,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
+import org.scalatest.matchers.should.Matchers
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.customs.api.common.xml.ValidateXmlAgainstSchema
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -106,12 +107,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
     stopMockServer()
   }
 
-  feature(s"CSP Submits Goods Arrival Message") {
+  Feature(s"CSP Submits Goods Arrival Message") {
     info("As a CSP")
     info(s"I want to submit an import inventory linking Goods Arrival message")
     info("So that my consignment can continue on its journey")
 
-    scenario(s"A valid Goods Arrival message submitted and successfully forwarded to the backend") {
+    Scenario(s"A valid Goods Arrival message submitted and successfully forwarded to the backend") {
       Given("a CSP is authorised to use the API endpoint")
       val goodsArrival = new GoodsArrival()
       authServiceAuthorisesCSP(goodsArrival)
@@ -137,7 +138,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       eventually(verifyCustomsMetricsServiceWasCalled())
     }
 
-    scenario(s"A valid Goods Arrival submitted and the Back End service fails") {
+    Scenario(s"A valid Goods Arrival submitted and the Back End service fails") {
       Given("a CSP is authorised to use the API endpoint")
       authServiceAuthorisesCSP(new GoodsArrival())
 
@@ -156,9 +157,9 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
     }
   }
 
-  feature(s"The Goods Arrival endpoint handles errors as expected") {
+  Feature(s"The Goods Arrival endpoint handles errors as expected") {
 
-    scenario(s"Response status 401 when non authorised user submits a valid Goods Arrival message") {
+    Scenario(s"Response status 401 when non authorised user submits a valid Goods Arrival message") {
 
       Given(s"an un-authorised CSP wants to submit a customs Goods Arrival message with an invalid XML payload")
       authServiceUnAuthorisesScopeForCSP(new GoodsArrival())
@@ -178,7 +179,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(unAuthorisedError)))
     }
 
-    scenario(s"Response status 400 when user submits a Goods Arrival message with an XML payload that does not adhere to schema") {
+    Scenario(s"Response status 400 when user submits a Goods Arrival message with an XML payload that does not adhere to schema") {
 
       Given(s"an authorised CSP wants to submit a customs Goods Arrival message with an invalid XML payload")
       authServiceAuthorisesCSP(new GoodsArrival())
@@ -199,7 +200,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(actual)))
     }
 
-    scenario(s"Response status 400 when user submits a Goods Arrival message with a malformed XML payload") {
+    Scenario(s"Response status 400 when user submits a Goods Arrival message with a malformed XML payload") {
 
       Given(s"an authorised CSP wants to submit a customs Goods Arrival message with a malformed XML payload")
       authServiceAuthorisesCSP(new GoodsArrival())
@@ -219,7 +220,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(malformedXmlAndNonXmlPayloadError)))
     }
 
-    scenario(s"Response status 400 when user submits a Goods Arrival message with a non-xml payload") {
+    Scenario(s"Response status 400 when user submits a Goods Arrival message with a non-xml payload") {
 
       Given(s"an authorised CSP wants to submit a customs Goods Arrival message with a non-XML payload")
       authServiceAuthorisesCSP(new GoodsArrival())
@@ -240,12 +241,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
     }
   }
 
-  feature(s"CSP Submits Validate Movement Message") {
+  Feature(s"CSP Submits Validate Movement Message") {
     info("As a CSP")
     info(s"I want to submit an import inventory linking Validate Movement message")
     info("So that my consignment can continue on its journey")
 
-    scenario(s"A valid Validate Movement message submitted and successfully forwarded to the backend") {
+    Scenario(s"A valid Validate Movement message submitted and successfully forwarded to the backend") {
       Given("a CSP is authorised to use the API endpoint")
       val validateMovement = new ValidateMovement()
       authServiceAuthorisesCSP(validateMovement)
@@ -271,7 +272,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       eventually(verifyCustomsMetricsServiceWasCalled())
     }
 
-    scenario(s"A valid Validate Movement submitted and the Back End service fails") {
+    Scenario(s"A valid Validate Movement submitted and the Back End service fails") {
       Given("a CSP is authorised to use the API endpoint")
       authServiceAuthorisesCSP(new ValidateMovement())
 
@@ -290,9 +291,9 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
     }
   }
 
-  feature(s"The Validate Movement endpoint handles errors as expected") {
+  Feature(s"The Validate Movement endpoint handles errors as expected") {
 
-    scenario(s"Response status 401 when non authorised user submits a valid Validate Movement message") {
+    Scenario(s"Response status 401 when non authorised user submits a valid Validate Movement message") {
 
       Given(s"an un-authorised CSP wants to submit a customs Validate Movement message with an invalid XML payload")
       authServiceUnAuthorisesScopeForCSP(new ValidateMovement())
@@ -312,7 +313,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(unAuthorisedError)))
     }
 
-    scenario(s"Response status 400 when user submits a Validate Movement message with an XML payload that does not adhere to schema") {
+    Scenario(s"Response status 400 when user submits a Validate Movement message with an XML payload that does not adhere to schema") {
 
       Given(s"an authorised CSP wants to submit a customs Validate Movement message with an invalid XML payload")
       authServiceAuthorisesCSP(new ValidateMovement())
@@ -333,7 +334,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(actual)))
     }
 
-    scenario(s"Response status 400 when user submits a Validate Movement message with a malformed XML payload") {
+    Scenario(s"Response status 400 when user submits a Validate Movement message with a malformed XML payload") {
 
       Given(s"an authorised CSP wants to submit a customs Validate Movement message with a malformed XML payload")
       authServiceAuthorisesCSP(new ValidateMovement())
@@ -353,7 +354,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(malformedXmlAndNonXmlPayloadError)))
     }
 
-    scenario(s"Response status 400 when user submits a Validate Movement message with a non-xml payload") {
+    Scenario(s"Response status 400 when user submits a Validate Movement message with a non-xml payload") {
 
       Given(s"an authorised CSP wants to submit a customs Validate Movement message with a non-XML payload")
       authServiceAuthorisesCSP(new ValidateMovement())
@@ -374,8 +375,8 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
     }
   }
 
-  feature("Customs Inventory Linking Imports API returns unavailable when a version is shuttered") {
-    scenario("An authorised CSP fails to submit a customs inventory linking imports request to a shuttered version") {
+  Feature("Customs Inventory Linking Imports API returns unavailable when a version is shuttered") {
+    Scenario("An authorised CSP fails to submit a customs inventory linking imports request to a shuttered version") {
       Given("A CSP wants to submit a customs inventory linking imports request to a shuttered version")
 
       authServiceAuthorisesCSP(new ValidateMovement())

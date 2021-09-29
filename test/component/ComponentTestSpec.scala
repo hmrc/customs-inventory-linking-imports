@@ -16,7 +16,8 @@
 
 package component
 
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FeatureSpec, GivenWhenThen}
+import org.scalatest.featurespec.AnyFeatureSpec
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -25,7 +26,7 @@ import util.externalservices.InventoryLinkingImportsExternalServicesConfig
 
 import scala.xml.{Node, Utility, XML}
 
-trait ComponentTestSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
+trait ComponentTestSpec extends AnyFeatureSpec with GivenWhenThen with GuiceOneAppPerSuite
   with BeforeAndAfterAll with BeforeAndAfterEach {
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
