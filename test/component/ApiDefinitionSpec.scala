@@ -16,7 +16,9 @@
 
 package component
 
-import org.scalatest.{FeatureSpec, GivenWhenThen, Matchers}
+import org.scalatest.GivenWhenThen
+import org.scalatest.featurespec.AnyFeatureSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
@@ -24,11 +26,11 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-class ApiDefinitionSpec extends FeatureSpec with GivenWhenThen with GuiceOneAppPerSuite with Matchers {
+class ApiDefinitionSpec extends AnyFeatureSpec with GivenWhenThen with GuiceOneAppPerSuite with Matchers {
   override implicit lazy val app: Application = new GuiceApplicationBuilder().build()
 
-  feature("API Definition") {
-    scenario("can be read") {
+  Feature("API Definition") {
+    Scenario("can be read") {
       Given("the API is available")
 
       When("the api definition is requested")

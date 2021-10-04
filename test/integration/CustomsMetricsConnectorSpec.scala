@@ -66,27 +66,27 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
 
       val response: Unit = await(sendValidRequest())
 
-      response shouldBe ()
+      response shouldBe
       verifyCustomsMetricsServiceWasCalledWith(ValidCustomsMetricsRequest)
     }
 
     "return a failed future when external service returns 404" in {
       setupCustomsMetricsServiceToReturn(NOT_FOUND)
-      await(sendValidRequest()) shouldBe ()
+      await(sendValidRequest()) shouldBe
       verifyImportsLoggerError("Call to customs metrics failed. url=http://localhost:11111/log-times, status=404, error=received a non 2XX response")
     }
 
     "return a failed future when external service returns 400" in {
       setupCustomsMetricsServiceToReturn(BAD_REQUEST)
 
-      await(sendValidRequest()) shouldBe ()
+      await(sendValidRequest()) shouldBe
       verifyImportsLoggerError("Call to customs metrics failed. url=http://localhost:11111/log-times, status=400, error=received a non 2XX response")
     }
 
     "return a failed future when external service returns 500" in {
       setupCustomsMetricsServiceToReturn(INTERNAL_SERVER_ERROR)
 
-      await(sendValidRequest()) shouldBe ()
+      await(sendValidRequest()) shouldBe
       verifyImportsLoggerError("Call to customs metrics failed. url=http://localhost:11111/log-times, status=500, error=received a non 2XX response")
     }
 

@@ -6,7 +6,6 @@ import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
 import sbt.{IO, Path, Resolver, Setting, SimpleFileFilter, taskKey, _}
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, targetJvm}
-import uk.gov.hmrc.PublishingSettings._
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 
@@ -38,7 +37,6 @@ lazy val microservice = (project in file("."))
     commonSettings,
     unitTestSettings,
     integrationComponentTestSettings,
-    playPublishingSettings,
     allTest,
     scoverageSettings
   )
@@ -66,9 +64,6 @@ lazy val integrationComponentTestSettings =
 
 lazy val commonSettings: Seq[Setting[_]] = publishingSettings ++ gitStampSettings
 
-lazy val playPublishingSettings: Seq[sbt.Setting[_]] = Seq(credentials += SbtCredentials) ++
-  publishAllArtefacts
-
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   coverageExcludedPackages := "<empty>;models/.data/..*;view.*;models.*;config.*;.*(Reverse|AuthService|BuildInfo|Routes).*;uk.gov.hmrc.customs.inventorylinking.imports.views.*",
   coverageMinimumStmtTotal := 98,
@@ -84,7 +79,7 @@ scalastyleConfig := baseDirectory.value / "project" / "scalastyle-config.xml"
 
 val compileDependencies = Seq(customsApiCommon, silencerLib, silencerPlugin)
 
-val testDependencies = Seq(scalaTestPlusPlay, wireMock, mockito, customsApiCommonTests)
+val testDependencies = Seq(scalaTestPlusPlay, scalatestplusMockito, wireMock, mockito, flexmark, Jackson, customsApiCommonTests )
 
 Compile / unmanagedResourceDirectories += baseDirectory.value / "public"
 (Runtime / managedClasspath) += (Assets / packageBin).value
