@@ -101,7 +101,11 @@ zipXsds := { mappings: Seq[PathMapping] =>
         val exampleMessagesPaths = Path.selectSubpaths(dir / "examples", exampleMessagesFilter)
         val zipFile = targetDir / "api" / "conf" / dir.getName / "inventory-linking-imports-schemas.zip"
         IO.zip(xsdPaths ++ exampleMessagesPaths, zipFile, None)
+        val sizeInMb = (BigDecimal(zipFile.length) / BigDecimal(1024 * 1024)).setScale(1, BigDecimal.RoundingMode.UP)
         println(s"Created zip $zipFile")
+        println(s"Update the file size in ${dir.getParent}/${dir.getName}/docs/schema.md to be ${sizeInMb}MB")
+        println(s"Check the raml renders correctly file://${dir.getParent}/${dir.getName}/application.raml")
+        println("")
         zipFile
       }
   zipFiles.pair(Path.relativeTo(targetDir)) ++ mappings
