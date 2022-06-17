@@ -9,6 +9,8 @@ import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, targetJvm}
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import scala.language.postfixOps
 
 name := "customs-inventory-linking-imports"
@@ -103,7 +105,10 @@ zipXsds := { mappings: Seq[PathMapping] =>
         IO.zip(xsdPaths ++ exampleMessagesPaths, zipFile, None)
         val sizeInMb = (BigDecimal(zipFile.length) / BigDecimal(1024 * 1024)).setScale(1, BigDecimal.RoundingMode.UP)
         println(s"Created zip $zipFile")
-        println(s"Update the file size in ${dir.getParent}/${dir.getName}/docs/schema.md to be ${sizeInMb}MB")
+        val today = Calendar.getInstance().getTime()
+        val dateFormat = new SimpleDateFormat("dd/MM/YYYY")
+        val lastUpdated = dateFormat.format(today)
+        println(s"Update the file size in ${dir.getParent}/${dir.getName}/docs/schema.md to be [ZIP, ${sizeInMb}MB last updated $lastUpdated]")
         println(s"Check the raml renders correctly file://${dir.getParent}/${dir.getName}/application.raml")
         println("")
         zipFile
