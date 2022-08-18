@@ -4,6 +4,6 @@ Schema definitions for all the API endpoints request and response payloads can b
   <a href="/api-documentation/docs/api/download/customs-inventory-linking-imports/2.0/inventory-linking-imports-schemas.zip" class="govuk-link">Schemas and example messages</a>
 </p>
 
-<p class="govuk-body-s" style="font-size: 16px;margin-bottom: 15px;">ZIP, 2.0MB last updated 20/07/2022</p>
+<p class="govuk-body-s" style="font-size: 16px;margin-bottom: 15px;">ZIP, 2.0MB last updated 18/08/2022</p>
 
 <p class="govuk-body-s" style="font-size: 16px;margin-bottom: 15px;">The ZIP file contains XML files. Open in your preferred file viewer.</p>
