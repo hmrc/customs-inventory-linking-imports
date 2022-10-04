@@ -45,7 +45,8 @@ trait ComponentTestSpec extends AnyFeatureSpec with GivenWhenThen with GuiceOneA
     "microservice.services.goodsarrival.bearer-token" -> ExternalServicesConfig.AuthToken,
     "microservice.services.customs-declarations-metrics.host" -> ExternalServicesConfig.Host,
     "microservice.services.customs-declarations-metrics.port" -> ExternalServicesConfig.Port,
-    "microservice.services.customs-declarations-metrics.context" -> InventoryLinkingImportsExternalServicesConfig.CustomsMetricsContext
+    "microservice.services.customs-declarations-metrics.context" -> InventoryLinkingImportsExternalServicesConfig.CustomsMetricsContext,
+    "metrics.enabled" -> false
   )).build()
 
   def stringToXml(str: String): Node = {

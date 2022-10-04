@@ -56,7 +56,8 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
     GuiceApplicationBuilder(overrides = Seq(IntegrationTestModule(mockImportsLogger).asGuiceableModule)).configure(Map(
       "microservice.services.customs-declarations-metrics.host" -> Host,
       "microservice.services.customs-declarations-metrics.port" -> Port,
-      "microservice.services.customs-declarations-metrics.context" -> InventoryLinkingImportsExternalServicesConfig.CustomsMetricsContext
+      "microservice.services.customs-declarations-metrics.context" -> InventoryLinkingImportsExternalServicesConfig.CustomsMetricsContext,
+      "metrics.enabled" -> false
     )).build()
 
   "MetricsConnector" should {

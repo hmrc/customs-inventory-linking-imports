@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 class ApiDefinitionSpec extends AnyFeatureSpec with GivenWhenThen with GuiceOneAppPerSuite with Matchers {
-  override implicit lazy val app: Application = new GuiceApplicationBuilder().build()
+  override implicit lazy val app: Application = new GuiceApplicationBuilder().configure("metrics.enabled" -> false).build()
 
   Feature("API Definition") {
     Scenario("can be read") {
