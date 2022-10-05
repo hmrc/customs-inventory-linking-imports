@@ -18,6 +18,8 @@ package integration
 
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{GoodsArrivalPayloadValidationAction, ValidateMovementPayloadValidationAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalController, ValidateMovementController}
@@ -32,6 +34,11 @@ class ControllersWiringSpec extends IntegrationTestSpec with GuiceOneAppPerSuite
   private lazy val mockImportLogger = mock[ImportsLogger]
   private lazy val goodsArrivalController = app.injector.instanceOf[GoodsArrivalController]
   private lazy val validateMovementController = app.injector.instanceOf[ValidateMovementController]
+
+  override implicit lazy val app: Application =
+    new GuiceApplicationBuilder().configure(Map(
+      "metrics.enabled" -> false
+    )).build()
 
   "The correct XmlValidationAction"  should {
     "be wired into goodsArrivalController" in {
