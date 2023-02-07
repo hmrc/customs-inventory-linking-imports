@@ -381,7 +381,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
 
       authServiceAuthorisesCSP(new ValidateMovement())
 
-      val configMap: Map[String, Any] = Map("shutter.v1" -> "true", "metrics.jvm" -> false)
+      val configMap: Map[String, Any] = Map("shutter.v1" -> "true", "metrics.enabled" -> false)
       implicit lazy val app: Application = new GuiceApplicationBuilder().configure(configMap).build()
 
       When("a POST request with data is sent to the API")

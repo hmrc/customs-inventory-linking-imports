@@ -37,6 +37,7 @@ class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with Gui
   private lazy val controller = app.injector.instanceOf[ApiDocumentationController]
 
   override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
+    "metrics.enabled" -> false,
     "api.access.version-1.0.enabled" -> "false",
     "api.access.version-2.0.enabled" -> "false"
   )).build()

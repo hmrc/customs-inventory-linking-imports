@@ -46,7 +46,8 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
       "microservice.services.goodsarrival.host" -> Host,
       "microservice.services.goodsarrival.port" -> Port,
       "microservice.services.goodsarrival.context" -> GoodsArrivalConnectorContext,
-      "microservice.services.goodsarrival.bearer-token" -> AuthToken
+      "microservice.services.goodsarrival.bearer-token" -> AuthToken,
+      "metrics.enabled" -> false
     )).build()
 
   private lazy val connector = app.injector.instanceOf[ImportsConnector]
