@@ -14,8 +14,6 @@ import java.util.Calendar
 import scala.language.postfixOps
 
 name := "customs-inventory-linking-imports"
-scalaVersion := "2.12.13"
-targetJvm := "jvm-1.8"
 
 lazy val CdsIntegrationComponentTest = config("it") extend Test
 
@@ -36,6 +34,8 @@ lazy val microservice = (project in file("."))
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .configs(testConfig: _*)
   .settings(
+    scalaVersion := "2.13.10",
+    targetJvm := "jvm-11",
     commonSettings,
     unitTestSettings,
     integrationComponentTestSettings,
@@ -43,8 +43,6 @@ lazy val microservice = (project in file("."))
     scoverageSettings
   )
   .settings(majorVersion := 0)
-  .settings(scalacOptions += "-P:silencer:pathFilters=routes")
-  .settings(scalacOptions += "-P:silencer:globalFilters=Unused import")
   .settings(playDefaultPort := 9824)
 
 lazy val unitTestSettings =
@@ -79,7 +77,7 @@ def unitTestFilter(name: String): Boolean = name startsWith "unit"
 
 scalastyleConfig := baseDirectory.value / "project" / "scalastyle-config.xml"
 
-val compileDependencies = Seq(customsApiCommon, silencerLib, silencerPlugin)
+val compileDependencies = Seq(customsApiCommon)
 
 val testDependencies = Seq(scalaTestPlusPlay, scalatestplusMockito, wireMock, mockito, flexmark, Jackson, customsApiCommonTests )
 
