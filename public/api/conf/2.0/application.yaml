@@ -1,0 +1,311 @@
+openapi: 3.0.3
+info:
+  title: Customs Inventory Linking Imports
+  contact: {}
+  version: '2.0'
+  description: |
+    # XML Schemas
+    Schema definitions for all the API endpoints request and response payloads can be found in the following zip archive: [Schemas and example messages](/api-documentation/docs/api/download/customs-inventory-linking-imports/2.0/inventory-linking-imports-schemas.zip) (ZIP, 2.2MB last updated 20/04/2023).
+    
+    The ZIP file contains XML files. Open in your preferred file viewer.
+servers:
+  - url: https://test-api.service.hmrc.gov.uk
+    description: Sandbox
+  - url: https://api.service.hmrc.gov.uk/
+    description: Production
+    variables: {}
+paths:
+  /customs/inventory-linking-imports/movement-validation:
+    post:
+      tags:
+        - Endpoints
+      summary: Inventory Linking Imports Validate Movement Response
+      description: This validate movement response message is provided by the CSP as a result of a previous validate movement request. It represents the (positive/negative) outcome of matching a declaration Id (MRN) against the provided Inventory Consignment Reference (ICR)
+      operationId: InventoryLinkingImportsValidateMovementResponse
+      parameters:
+        - name: Accept
+          in: header
+          description: Specifies the version of the API that you want to call. See [versioning](https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/versioning.md).
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: application/vnd.hmrc.2.0+xml
+        - name: Content-Type
+          in: header
+          description: Specifies the format of the request body, which must be XML.
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: application/xml; charset=UTF-8
+        - name: X-Badge-Identifier
+          in: header
+          description: >-
+            Represents the end-user who is interacting with the subscribed application.
+            Must be 6 to 12 characters, consisting of any combination of numeric digits and/or upper-case letters.
+          style: simple
+          schema:
+            type: string
+            example: ABC123
+        - name: X-Submitter-Identifier
+          in: header
+          description: >-
+            The EORI associated with the originating owner of the declaration.
+            Must have a maximum length of 17 characters, consisting of any combination of numeric digits and/or letters.
+          style: simple
+          schema:
+            type: string
+            example: GB123456789000
+        - name: X-Correlation-ID
+          in: header
+          description: Alpha-numeric, maximum length is 36. Specifies the correlation id sent in the movement validation request. Returning the request correlation id in the movement validation response permits backend reconciliation of request and response.
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: ABC123
+      responses:
+        '202':
+          description: ''
+          headers: { }
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/InventoryLinkingImportsValidateMovementResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/InventoryLinkingImportsValidateMovementResponseExample'
+        '400':
+          description: ''
+          headers: { }
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/400Response'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/400ResponseExample'
+        '500':
+          description: ''
+          headers: { }
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/500Response'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/500ResponseExample'
+      deprecated: false
+      security:
+        - userRestricted: [ "write:customs-il-imports-movement-validation" ]
+  /customs/inventory-linking-imports/arrival-notifications:
+    post:
+      tags:
+        - Endpoints
+      summary: Inventory Linking Imports Goods Arrival
+      description: CSPs requesting to present their goods to Customs.
+      operationId: InventoryLinkingImportsGoodsArrival
+      parameters:
+        - name: Accept
+          in: header
+          description: Specifies the version of the API that you want to call. See [versioning](https://developer.service.hmrc.gov.uk/api-documentation/assets/common/docs/versioning.md).
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: application/vnd.hmrc.2.0+xml
+        - name: Content-Type
+          in: header
+          description: Specifies the format of the request body, which must be XML.
+          required: true
+          style: simple
+          schema:
+            type: string
+            example: application/xml; charset=UTF-8
+        - name: X-Badge-Identifier
+          in: header
+          description: >-
+            Represents the end-user who is interacting with the subscribed application.
+            Must be 6 to 12 characters, consisting of any combination of numeric digits and/or upper-case letters.
+          style: simple
+          schema:
+            type: string
+            example: ABC123
+        - name: X-Submitter-Identifier
+          in: header
+          description: >-
+            The EORI associated with the originating owner of the declaration.
+            Must have a maximum length of 17 characters, consisting of any combination of numeric digits and/or letters.
+          style: simple
+          schema:
+            type: string
+            example: GB123456789000
+      responses:
+        '202':
+          description: ''
+          headers: { }
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/inventoryLinkingImportsGoodsArrival'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/inventoryLinkingImportsGoodsArrivalExample'
+        '400':
+          description: ''
+          headers: { }
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/400Response'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/400ResponseExample'
+        '500':
+          description: ''
+          headers: { }
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/500Response'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/500ResponseExample'
+      deprecated: false
+      security:
+        - userRestricted: [ "write:customs-il-imports-movement-validation" ]
+components:
+  securitySchemes:
+    userRestricted:
+      type: oauth2
+      description: |
+        HMRC supports OAuth 2.0 for authenticating user restricted API requests using an OAuth 2.0 Bearer Token in the AUTHORIZATION header.
+        See https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints for details.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.service.hmrc.gov.uk/oauth/authorize
+          tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
+          refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
+          scopes:
+            "write:customs-il-imports-movement-validation": "write:customs-il-imports-movement-validation"
+  schemas:
+    InventoryLinkingImportsValidateMovementResponse:
+      type: object
+      xml:
+        namespace: 'http://gov.uk/customs/inventoryLinkingImport/v1'
+        prefix: 'inv'
+      properties:
+        entryNumber:
+          type: string
+          xml:
+            prefix: 'inv'
+        entryVersionNumber:
+          type: string
+          xml:
+            prefix: 'inv'
+        inventoryConsignmentReference:
+          type: string
+          xml:
+            prefix: 'inv'
+        irc:
+          type: string
+          xml:
+            prefix: 'inv'
+
+    inventoryLinkingImportsGoodsArrival:
+      type: object
+      xml:
+        namespace: 'http://gov.uk/customs/inventoryLinkingImport/v1'
+        prefix: 'inv'
+      properties:
+        entryNumber:
+          type: string
+          xml:
+            prefix: 'inv'
+        entryVersionNumber:
+          type: string
+          xml:
+            prefix: 'inv'
+        inventoryConsignmentReference:
+          type: string
+          xml:
+            prefix: 'inv'
+
+    400Response:
+      type: object
+      xml:
+        name: errorResponse
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/error'
+    error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    500Response:
+      type: object
+      xml:
+        name: errorResponse
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+  examples:
+    InventoryLinkingImportsValidateMovementResponseExample:
+      summary: An example InventoryLinkingImportsValidateMovementResponse
+      value: |
+        <inv:InventoryLinkingImportsValidateMovementResponse xmlns:inv="http://gov.uk/customs/inventoryLinkingImport/v1">
+        	<!--ID of the declaration assigned by Customs, being a specific customs ID or a Movement Reference Number (MRN)-->
+        	<inv:entryNumber>19GB9QRSR372ZFGVR4</inv:entryNumber>
+        	<!--Version number of the declaration before processing the amendment -->
+        	<inv:entryVersionNumber>1</inv:entryVersionNumber>
+        	<!--Inventory Consignment Reference number which matches that within the declaration payload MUCR-->
+        	<inv:inventoryConsignmentReference>GB/1234-:3333HB</inv:inventoryConsignmentReference>
+        	<!--001 indicates that the consignment has been mis-matched to the declaration which should cause CDS to stop processing the declaration further. -->
+        	<inv:irc>001</inv:irc>
+        </inv:InventoryLinkingImportsValidateMovementResponse>
+    inventoryLinkingImportsGoodsArrivalExample:
+      summary: An example InventoryLinkingImportsGoodsArrivalResponse
+      value: |
+        <inv:inventoryLinkingImportsGoodsArrival xmlns:inv="http://gov.uk/customs/inventoryLinkingImport/v1">
+        	<!--ID of the declaration assigned by Customs, being a specific customs ID or a Movement Reference Number (MRN)-->
+        	<inv:entryNumber>19GB9QWJDL941FGVR9</inv:entryNumber>
+        	<!-- Version number of the declaration before processing the amendment -->
+        	<inv:entryVersionNumber>2</inv:entryVersionNumber>
+        	<!-- Inventory Consignment Reference number which matches that within the declaration payload MUCR -->
+        	<inv:inventoryConsignmentReference>GB/1234-:3333HB</inv:inventoryConsignmentReference>
+        </inv:inventoryLinkingImportsGoodsArrival>
+    400ResponseExample:
+      summary: A sample Resource
+      value: |
+        <errorResponse>
+          <code>BAD_REQUEST</code>
+          <message>Payload is not valid according to schema</message>
+          <errors>
+            <error>
+              <code>xml_validation_error</code>
+              <message>Error at line 13, column 13: no declaration found for element 'unknown'</message>
+            </error>
+          </errors>
+        </errorResponse>
+    500ResponseExample:
+      summary: A sample Resource
+      value: |
+        <errorResponse>
+          <code>INTERNAL_SERVER_ERROR</code>
+          <message>Internal server error</message>
+        </errorResponse>
+tags:
+  - name: Endpoints
+    description: ''
