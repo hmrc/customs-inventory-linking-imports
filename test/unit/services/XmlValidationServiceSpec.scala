@@ -17,7 +17,6 @@
 package unit.services
 
 import java.io.FileNotFoundException
-
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
@@ -29,14 +28,14 @@ import util.{TestData, UnitSpec}
 import util.XMLTestData._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.xml.{Node, SAXException}
+import scala.xml.{Elem, Node, SAXException}
 
 class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
 
   trait SetUp {
     protected val importsMessageType: ImportsMessageType
     protected lazy val mockConfiguration: Configuration = mock[Configuration]
-    protected lazy val mockXml: Node = mock[Node]
+    protected lazy val mockXml: Node = <mockXml></mockXml>
 
     protected lazy val xsdPropertyPathLocation = s"xsd.locations.${importsMessageType.name}"
 
