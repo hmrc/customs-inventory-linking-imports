@@ -85,6 +85,8 @@ Compile / unmanagedResourceDirectories += baseDirectory.value / "public"
 (Runtime / managedClasspath) += (Assets / packageBin).value
 
 libraryDependencies ++= compileDependencies ++ testDependencies
+// To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
+libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
 // Task to create a ZIP file containing all xsds for each version, under the version directory
 val zipXsds = taskKey[Pipeline.Stage]("Zips up all inventory linking imports XSDs")
