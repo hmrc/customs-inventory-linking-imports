@@ -70,7 +70,7 @@ class LoggingHelperSpec extends UnitSpec with MockitoSugar {
     }
 
     "testFormatDebugFull" in {
-      LoggingHelper.formatDebugFull("Debug message.", conversationIdRequest) shouldBe s"[conversationId=$ConversationIdValue] Debug message. headers=Map(Accept -> B, X-Client-ID -> D, Content-Type -> A, X-Conversation-ID -> C)"
+      LoggingHelper.formatDebugFull("Debug message.", conversationIdRequest) shouldBe s"[conversationId=$ConversationIdValue] Debug message. headers=TreeMap(Accept -> B, X-Client-ID -> D, Content-Type -> A, X-Conversation-ID -> C)"
     }
   }
 
