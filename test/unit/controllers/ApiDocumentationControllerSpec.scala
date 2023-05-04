@@ -16,68 +16,151 @@
 
 package unit.controllers
 
-import java.io.FileNotFoundException
-
-import akka.stream.Materializer
+import controllers.Assets
+import org.mockito.Mockito.reset
+import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.http.Status.OK
-import play.api.inject.guice.GuiceApplicationBuilder
+import org.scalatestplus.play._
+import play.api.http.HttpErrorHandler
 import play.api.libs.json.Json
-import play.api.test.FakeRequest
+import play.api.mvc._
+import play.api.test.Helpers._
+import play.api.test._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ApiDocumentationController
-import uk.gov.hmrc.customs.inventorylinking.imports.views.txt
-import util.UnitSpec
 
-class ApiDocumentationControllerSpec extends UnitSpec with MockitoSugar with GuiceOneAppPerSuite {
+class ApiDocumentationControllerSpec extends PlaySpec with MockitoSugar with Results with BeforeAndAfterEach {
 
-  private implicit val materializer: Materializer = app.materializer
-  private lazy val applicationRamlContent = getResourceFileContent("/public/api/conf/1.0/application.raml")
-  private lazy val controller = app.injector.instanceOf[ApiDocumentationController]
+  private val mockService = mock[HttpErrorHandler]
 
-  override def fakeApplication(): Application  = new GuiceApplicationBuilder().configure(Map(
+  private val v1AndV2Disabled = Map(
     "metrics.enabled" -> false,
     "api.access.version-1.0.enabled" -> "false",
-    "api.access.version-2.0.enabled" -> "false"
-  )).build()
+    "api.access.version-2.0.enabled" -> "false")
 
-  "With valid configuration ApiDocumentationController.definition" should {
-    val result = getDefinition(controller)
+  private def getApiDefinitionWith(configMap: Map[String, Any]) =
+    new ApiDocumentationController(mock[Assets], Helpers.stubControllerComponents(), play.api.Configuration.from(configMap))
+      .definition()
 
-    "return OK status" in {
-      status(result) shouldBe OK
-    }
-
-    "return definition in the body with v1 and v2 disabled" in {
-      jsonBodyOf(result) shouldBe Json.parse(txt.definition(false, false).toString())
-    }
+  override def beforeEach() {
+    reset(mockService)
   }
 
-  "With valid configuration ApiDocumentationController.conf" should {
-    lazy val result = getDocumentation(controller)
+  "API Definition" should {
 
-    "return OK status" in {
-      status(result) shouldBe OK
+    "be correct when V1 is not enabled and V2 is not enabled" in {
+      val result = getApiDefinitionWith(v1AndV2Disabled)(FakeRequest())
+
+      status(result) mustBe 200
+      contentAsJson(result) mustBe expectedJson(false, false)
     }
 
-    "return application.raml in the body" in {
-      bodyOf(result) shouldBe applicationRamlContent
-    }
   }
 
-  private def getDefinition(controller: ApiDocumentationController) = {
-    await(controller.definition().apply(FakeRequest()))
-  }
-
-  private def getDocumentation(controller: ApiDocumentationController) = {
-    await(controller.conf("1.0","application.raml").apply(FakeRequest("GET", "/api/conf/1.0/application.raml")))
-  }
-
-  private def getResourceFileContent(resourceFile: String): String = {
-    val is = Option(getClass.getResourceAsStream(resourceFile)).getOrElse(
-      throw new FileNotFoundException(s"Resource file not found: $resourceFile"))
-    scala.io.Source.fromInputStream(is).mkString
+  private def expectedJson(v1Enabled: Boolean, v2Enabled: Boolean) = {
+//    "{\"scopes\":[{\"key\":\"write:customs-il-imports-movement-validation\",\"name\":\"Customs Inventory Linking Imports - Movement Validation\",\"description\":\"Send validated movement response messages provided by the CSP as a result of a previous validate movement request\"},{\"key\":\"write:customs-il-imports-arrival-notifications\",\"name\":\"Customs Inventory Linking Imports - Arrival Notifications\",\"description\":\"CSPs requesting to present their goods to Customs\"}],\"api\":{\"name\":\"Customs Inventory Linking Imports\",\"description\":\"Single WCO-compliant Customs Inventory Linking Import Declaration API\",\"context\":\"customs/inventory-linking-imports\",\"versions\":[{\"version\":\"1.0\",\"status\":\"BETA\",\"endpointsEnabled\":false,\"access\":{\"type\":\"PRIVATE\"},\"fieldDefinitions\":[{\"name\":\"callbackUrl\",\"description\":\"The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.\",\"type\":\"URL\",\"hint\":\"This is how we'll notify you when we've processed them. It must include https and port 443\",\"shortDescription\":\"Callback URL\",\"validation\":{\"errorMessage\":\"Enter a URL in the correct format, like 'https://your.domain.name/some/path' \",\"rules\":[{\"UrlValidationRule\":{}}]}},{\"name\":\"securityToken\",\"description\":\"The full value of Authorization HTTP header that will be used when notifying you.\",\"type\":\"SecureToken\",\"hint\":\"For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk\",\"shortDescription\":\"Authorization Token\"},{\"name\":\"authenticatedEori\",\"description\":\"What's your Economic Operator Registration and Identification (EORI) number?\",\"type\":\"STRING\",\"hint\":\"This is your EORI that will associate your application with you as a CSP\",\"shortDescription\":\"EORI\"}]},{\"version\":\"2.0\",\"status\":\"BETA\",\"endpointsEnabled\":false,\"access\":{\"type\":\"PRIVATE\"},\"fieldDefinitions\":[{\"name\":\"callbackUrl\",\"description\":\"The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.\",\"type\":\"URL\",\"hint\":\"This is how we'll notify you when we've processed them. It must include https and port 443\",\"shortDescription\":\"Callback URL\",\"validation\":{\"errorMessage\":\"Enter a URL in the correct format, like 'https://your.domain.name/some/path' \",\"rules\":[{\"UrlValidationRule\":{}}]}},{\"name\":\"securityToken\",\"description\":\"The full value of Authorization HTTP header that will be used when notifying you.\",\"type\":\"SecureToken\",\"hint\":\"For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk\",\"shortDescription\":\"Authorization Token\"},{\"name\":\"authenticatedEori\",\"description\":\"What's your Economic Operator Registration and Identification (EORI) number?\",\"type\":\"STRING\",\"hint\":\"This is your EORI that will associate your application with you as a CSP\",\"shortDescription\":\"EORI\"}]}]}}"
+    Json.parse(
+      s"""
+         |{
+         |  "scopes":[
+         |    {
+         |      "key":"write:customs-il-imports-movement-validation",
+         |      "name":"Customs Inventory Linking Imports - Movement Validation",
+         |      "description":"Send validated movement response messages provided by the CSP as a result of a previous validate movement request"
+         |    },
+         |    {
+         |      "key":"write:customs-il-imports-arrival-notifications",
+         |      "name":"Customs Inventory Linking Imports - Arrival Notifications",
+         |      "description":"CSPs requesting to present their goods to Customs"
+         |    }
+         |  ],
+         |  "api":{
+         |    "name":"Customs Inventory Linking Imports",
+         |    "description":"Single WCO-compliant Customs Inventory Linking Import Declaration API",
+         |    "context":"customs/inventory-linking-imports",
+         |    "versions":[
+         |      {
+         |        "version":"1.0",
+         |        "status":"BETA",
+         |        "endpointsEnabled":$v1Enabled,
+         |        "access":{
+         |          "type":"PRIVATE"
+         |        },
+         |        "fieldDefinitions":[
+         |          {
+         |            "name":"callbackUrl",
+         |            "description":"The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.",
+         |            "type":"URL",
+         |            "hint":"This is how we'll notify you when we've processed them. It must include https and port 443",
+         |            "shortDescription":"Callback URL",
+         |            "validation":{
+         |              "errorMessage":"Enter a URL in the correct format, like 'https://your.domain.name/some/path' ",
+         |              "rules":[
+         |                {
+         |                  "UrlValidationRule":{}
+         |                }
+         |              ]
+         |            }
+         |          },
+         |          {
+         |            "name":"securityToken",
+         |            "description":"The full value of Authorization HTTP header that will be used when notifying you.",
+         |            "type":"SecureToken",
+         |            "hint":"For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk",
+         |            "shortDescription":"Authorization Token"
+         |          },
+         |          {
+         |            "name":"authenticatedEori",
+         |            "description":"What's your Economic Operator Registration and Identification (EORI) number?",
+         |            "type":"STRING",
+         |            "hint":"This is your EORI that will associate your application with you as a CSP",
+         |            "shortDescription":"EORI"
+         |          }
+         |        ]
+         |      },
+         |      {
+         |        "version":"2.0",
+         |        "status":"BETA",
+         |        "endpointsEnabled":$v2Enabled,
+         |        "access":{
+         |          "type":"PRIVATE"
+         |        },
+         |        "fieldDefinitions":[
+         |          {
+         |            "name":"callbackUrl",
+         |            "description":"The URL of your HTTPS webservice that HMRC calls to notify you regarding request submission.",
+         |            "type":"URL",
+         |            "hint":"This is how we'll notify you when we've processed them. It must include https and port 443",
+         |            "shortDescription":"Callback URL",
+         |            "validation":{
+         |              "errorMessage":"Enter a URL in the correct format, like 'https://your.domain.name/some/path' ",
+         |              "rules":[
+         |                {
+         |                  "UrlValidationRule":{}
+         |                }
+         |              ]
+         |            }
+         |          },
+         |          {
+         |            "name":"securityToken",
+         |            "description":"The full value of Authorization HTTP header that will be used when notifying you.",
+         |            "type":"SecureToken",
+         |            "hint":"For example: Basic YXNkZnNhZGZzYWRmOlZLdDVOMVhk",
+         |            "shortDescription":"Authorization Token"
+         |          },
+         |          {
+         |            "name":"authenticatedEori",
+         |            "description":"What's your Economic Operator Registration and Identification (EORI) number?",
+         |            "type":"STRING",
+         |            "hint":"This is your EORI that will associate your application with you as a CSP",
+         |            "shortDescription":"EORI"
+         |          }
+         |        ]
+         |      }
+         |    ]
+         |  }
+         |}
+      """.stripMargin)
   }
 
 }
+
