@@ -41,7 +41,7 @@ class ApiDocumentationControllerSpec extends PlaySpec with MockitoSugar with Res
     new ApiDocumentationController(mock[Assets], Helpers.stubControllerComponents(), play.api.Configuration.from(configMap))
       .definition()
 
-  override def beforeEach() {
+  override def beforeEach(): Unit = {
     reset(mockService)
   }
 

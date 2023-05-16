@@ -95,15 +95,15 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
   private val apiSubscriptionKeyImports =
     ApiSubscriptionKey(clientId = clientId, context = "customs%2Finventory-linking-imports", version = VersionOne)
 
-  override protected def beforeAll() {
+  override protected def beforeAll(): Unit = {
     startMockServer()
   }
 
-  override protected def beforeEach() {
+  override protected def beforeEach(): Unit = {
     resetMockServer()
   }
 
-  override protected def afterAll() {
+  override protected def afterAll(): Unit = {
     stopMockServer()
   }
 
@@ -167,12 +167,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidGoodsArrivalRequest.fromCsp)
 
       Then("a response with a 401 status is returned by the API")
-      result shouldBe 'defined
+      result shouldBe Symbol("defined")
 
       val resultFuture = result.get
 
       status(resultFuture) shouldBe UNAUTHORIZED
-      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe Symbol("defined")
 
       And("the response body is a \"invalid xml\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(unAuthorisedError)
@@ -187,12 +187,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidGoodsArrivalRequest.withXmlBody(InvalidInventoryLinkingGoodsArrivalRequestXML).fromCsp)
 
       Then("a response with a 400 status is returned by the API")
-      result shouldBe 'defined
+      result shouldBe Symbol("defined")
 
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe Symbol("defined")
 
       And("the response body is a \"Bad request\" XML")
       val actual = contentAsString(resultFuture)
@@ -208,12 +208,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidGoodsArrivalRequest.withBody("<xm> malformed xml <xm>").fromCsp)
 
       Then("a response with a 400 status is received")
-      result shouldBe 'defined
+      result shouldBe Symbol("defined")
 
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe Symbol("defined")
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)
@@ -228,12 +228,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidGoodsArrivalRequest.withBody("""  {"valid": "json payload" }  """).fromCsp)
 
       Then("a response with a 400 status is received")
-      result shouldBe 'defined
+      result shouldBe Symbol("defined")
 
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe Symbol("defined")
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)
@@ -301,12 +301,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidValidateMovementRequest.fromCsp)
 
       Then("a response with a 401 status is returned by the API")
-      result shouldBe 'defined
+      result shouldBe Symbol("defined")
 
       val resultFuture = result.get
 
       status(resultFuture) shouldBe UNAUTHORIZED
-      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe Symbol("defined")
 
       And("the response body is a \"invalid xml\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(unAuthorisedError)
@@ -321,12 +321,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidValidateMovementRequest.withXmlBody(InvalidInventoryLinkingMovementRequestXML).fromCsp)
 
       Then("a response with a 400 status is returned by the API")
-      result shouldBe 'defined
+      result shouldBe Symbol("defined")
 
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe Symbol("defined")
 
       And("the response body is a \"Bad request\" XML")
       val actual = contentAsString(resultFuture)
@@ -342,12 +342,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidValidateMovementRequest.withBody("<xm> malformed xml <xm>").fromCsp)
 
       Then("a response with a 400 status is received")
-      result shouldBe 'defined
+      result shouldBe Symbol("defined")
 
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe Symbol("defined")
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)
@@ -362,12 +362,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidValidateMovementRequest.withBody("""  {"valid": "json payload" }  """).fromCsp)
 
       Then("a response with a 400 status is received")
-      result shouldBe 'defined
+      result shouldBe Symbol("defined")
 
       val resultFuture = result.get
 
       status(resultFuture) shouldBe BAD_REQUEST
-      headers(resultFuture).get(XConversationIdHeaderName) shouldBe 'defined
+      headers(resultFuture).get(XConversationIdHeaderName) shouldBe Symbol("defined")
 
       And("the response body is a \"malformed xml body\" XML")
       stringToXml(contentAsString(resultFuture)) shouldBe stringToXml(malformedXmlAndNonXmlPayloadError)

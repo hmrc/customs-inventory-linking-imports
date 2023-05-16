@@ -59,7 +59,7 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
 
   private implicit val hc: HeaderCarrier = HeaderCarrier(authorization = Some(Authorization(incomingAuthToken)))
 
-  override protected def beforeAll() {
+  override protected def beforeAll(): Unit = {
     startMockServer()
   }
 
@@ -67,7 +67,7 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
     resetMockServer()
   }
 
-  override protected def afterAll() {
+  override protected def afterAll(): Unit = {
     stopMockServer()
   }
 

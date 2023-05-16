@@ -36,7 +36,7 @@ trait InventoryLinkingImportsService extends WireMockRunner {
   def verifyImportsConnectorServiceWasCalledWith(requestPath: String,
                                                  requestBody: String,
                                                  expectedAuthToken: String = ExternalServicesConfig.AuthToken,
-                                                 maybeUnexpectedAuthToken: Option[String] = None) {
+                                                 maybeUnexpectedAuthToken: Option[String] = None): Unit = {
     verify(1, postRequestedFor(urlMatching(requestPath))
       .withHeader(CONTENT_TYPE, equalTo(ConnectorContentTypeHeaderValue))
       .withHeader(ACCEPT, equalTo(XML))
