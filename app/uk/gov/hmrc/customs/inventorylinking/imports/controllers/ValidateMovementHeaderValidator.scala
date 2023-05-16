@@ -40,7 +40,7 @@ class ValidateMovementHeaderValidator @Inject()(logger: ImportsLogger) extends H
     super.validateHeaders match {
       case Right(b) =>
         val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
-          xCorrelationId <- hasXCorrelationId.right
+          xCorrelationId <- hasXCorrelationId
         } yield {
           val cid = xCorrelationId.map( CorrelationIdHeader(_) )
           logger.debug(s"$XCorrelationId header passed validation: $xCorrelationId")

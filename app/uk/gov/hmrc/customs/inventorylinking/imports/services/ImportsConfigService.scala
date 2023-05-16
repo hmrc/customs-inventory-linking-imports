@@ -46,7 +46,7 @@ class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdap
     numberOfCallsToTriggerStateChangeNel, unavailablePeriodDurationInMillisNel, unstablePeriodDurationInMillisNel
     ) mapN ImportsCircuitBreakerConfig
 
-  private val importsConfigHolder =
+  private val importsConfigHolder: ImportsConfigHolder =
     (validatedImportsConfig, validatedImportsShutterConfig, validatedImportsCircuitBreakerConfig) mapN ImportsConfigHolder fold(
       // error
       { nel =>
