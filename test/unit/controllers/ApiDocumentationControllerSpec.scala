@@ -32,10 +32,10 @@ class ApiDocumentationControllerSpec extends PlaySpec with MockitoSugar with Res
 
   private val mockService = mock[HttpErrorHandler]
 
-  private val v1AndV2Disabled = Map(
+  private val v1AndV2Disabled: Map[String, Boolean] = Map(
     "metrics.enabled" -> false,
-    "api.access.version-1.0.enabled" -> "false",
-    "api.access.version-2.0.enabled" -> "false")
+    "api.access.version-1.0.enabled" -> false,
+    "api.access.version-2.0.enabled" -> false)
 
   private def getApiDefinitionWith(configMap: Map[String, Any]) =
     new ApiDocumentationController(mock[Assets], Helpers.stubControllerComponents(), play.api.Configuration.from(configMap))
