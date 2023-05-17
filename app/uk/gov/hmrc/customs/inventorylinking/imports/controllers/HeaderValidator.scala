@@ -49,10 +49,10 @@ class HeaderValidator @Inject() (logger: ImportsLogger) {
     def hasXSubmitterIdentifier = validateHeader(XSubmitterIdentifier, xSubmitterIdentifierHeaderRegex.findFirstIn(_).nonEmpty, errorResponseSubmitterIdentifierHeaderInvalid, optional = true)
 
     val theResult: Either[ErrorResponse, ExtractedHeadersImpl] = for {
-      contentType <- hasContentType.right
-      xClientId <- hasXClientId.right
-      xBadgeIdentifier <- hasXBadgeIdentifier.right
-      xSubmitterIdentifier <- hasXSubmitterIdentifier.right
+      contentType <- hasContentType
+      xClientId <- hasXClientId
+      xBadgeIdentifier <- hasXBadgeIdentifier
+      xSubmitterIdentifier <- hasXSubmitterIdentifier
     } yield {
       val bid = xBadgeIdentifier.fold[Option[BadgeIdentifier]](None)(b => Some(BadgeIdentifier(b)))
       val sid = xSubmitterIdentifier.fold[Option[SubmitterIdentifier]](None)(s => Some(SubmitterIdentifier(s)))

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   private val httpException = new NotFoundException("Emulated 404 response from a web call")
   private val expectedUrl = s"http://$Host:$Port$ApiSubscriptionFieldsContext/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
 
-  override protected def beforeEach() {
+  override protected def beforeEach(): Unit = {
     when(mockImportsConfigService.importsConfig).thenReturn(mockImportsConfig)
     when(mockImportsConfigService.importsConfig.apiSubscriptionFieldsBaseUrl).thenReturn(s"http://$Host:$Port$ApiSubscriptionFieldsContext")
     reset(mockLogger, mockWSGetImpl)

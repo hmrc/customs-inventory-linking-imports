@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,6 +83,15 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
       actual shouldBe Left(errorNotWellFormedResult)
     }
 
+    "return 400 error response when there is no request body" in new SetUp {
+      private val authorisedRequestWithNoneRequestBody = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest().withBody(None))
+        .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
+
+      private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNoneRequestBody))
+
+      actual shouldBe Left(errorNotWellFormedResult)
+    }
+
 
     "propagates downstream errors by returning a 500 error response" in new SetUp {
       when(mockValidateMovementXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(emulatedServiceFailure))
@@ -119,6 +128,14 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
       actual shouldBe Left(errorNotWellFormedResult)
     }
 
+    "return 400 error response when there is no request body" in new SetUp {
+      private val authorisedRequestWithNoneRequestBody = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest().withBody(None))
+        .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
+
+      private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNoneRequestBody))
+
+      actual shouldBe Left(errorNotWellFormedResult)
+    }
 
     "propagates downstream errors by returning a 500 error response" in new SetUp {
       when(mockGoodsArrivalXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(emulatedServiceFailure))

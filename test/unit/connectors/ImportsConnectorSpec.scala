@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
 
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
 
-  override protected def beforeEach() {
+  override protected def beforeEach(): Unit = {
     reset(mockWsPost, mockServiceConfigProvider)
     when(mockServiceConfigProvider.getConfig("goodsarrival")).thenReturn(goodsArrivalConfig)
     when(mockImportsConfigService.importsCircuitBreakerConfig).thenReturn(mockImportsCircuitBreakerConfig)

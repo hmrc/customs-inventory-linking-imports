@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,14 +35,14 @@ trait CustomsMetricsService extends WireMockRunner {
       willReturn aResponse()
       .withStatus(status))
 
-  def verifyCustomsMetricsServiceWasCalled() {
+  def verifyCustomsMetricsServiceWasCalled(): Unit = {
     verify(1, postRequestedFor(urlMatchingRequestPath)
       .withHeader(ACCEPT, equalTo(MimeTypes.JSON))
       .withHeader(CONTENT_TYPE, equalTo(MimeTypes.JSON))
     )
   }
 
-  def verifyCustomsMetricsServiceWasCalledWith(request: CustomsMetricsRequest) {
+  def verifyCustomsMetricsServiceWasCalledWith(request: CustomsMetricsRequest): Unit = {
     verify(
       1,
       postRequestedFor(urlMatchingRequestPath)

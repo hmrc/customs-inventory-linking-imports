@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package unit.services
 
 import java.io.FileNotFoundException
-
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
@@ -36,7 +35,7 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
   trait SetUp {
     protected val importsMessageType: ImportsMessageType
     protected lazy val mockConfiguration: Configuration = mock[Configuration]
-    protected lazy val mockXml: Node = mock[Node]
+    protected lazy val mockXml: Node = <mockXml></mockXml>
 
     protected lazy val xsdPropertyPathLocation = s"xsd.locations.${importsMessageType.name}"
 
@@ -159,23 +158,23 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
         }
 
         caught.getMessage shouldBe "cvc-type.3.1.3: The value 'A' of element 'entryVersionNumber' is not valid."
-        Option(caught.getException) shouldBe 'nonEmpty
+        Option(caught.getException) shouldBe Symbol("nonEmpty")
 
         private val wrapped1 = caught.getException
         wrapped1.getMessage shouldBe "cvc-datatype-valid.1.2.1: 'A' is not a valid value for 'integer'."
         wrapped1.isInstanceOf[SAXException] shouldBe true
 
-        Option(wrapped1.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
+        Option(wrapped1.asInstanceOf[SAXException].getException) shouldBe Symbol("nonEmpty")
         private val wrapped2 = wrapped1.asInstanceOf[SAXException].getException
         wrapped2.getMessage shouldBe "cvc-type.3.1.3: The value 'abc_123' of element 'entryNumber' is not valid."
         wrapped2.isInstanceOf[SAXException] shouldBe true
 
-        Option(wrapped2.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
+        Option(wrapped2.asInstanceOf[SAXException].getException) shouldBe Symbol("nonEmpty")
         private val wrapped3 = wrapped2.asInstanceOf[SAXException].getException
         wrapped3.getMessage shouldBe "cvc-pattern-valid: Value 'abc_123' is not facet-valid with respect to pattern '([a-zA-Z0-9])*' for type 'entryNumber'."
         wrapped3.isInstanceOf[SAXException] shouldBe true
 
-        Option(wrapped3.asInstanceOf[SAXException].getException) shouldBe 'nonEmpty
+        Option(wrapped3.asInstanceOf[SAXException].getException) shouldBe Symbol("nonEmpty")
         private val wrapped4 = wrapped3.asInstanceOf[SAXException].getException
         wrapped4.getMessage shouldBe s"cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element '$elementName'."
         wrapped4.isInstanceOf[SAXException] shouldBe true
@@ -195,7 +194,7 @@ class XmlValidationServiceSpec extends UnitSpec with MockitoSugar with TableDriv
 
         caught.getMessage shouldBe "cvc-pattern-valid: Value 'abc_123' is not facet-valid with respect to pattern '([a-zA-Z0-9])*' for type 'entryNumber'."
 
-        Option(caught.getException) shouldBe 'nonEmpty
+        Option(caught.getException) shouldBe Symbol("nonEmpty")
         private val wrapped1 = caught.getException
         wrapped1.getMessage shouldBe s"cvc-complex-type.3.2.2: Attribute 'foo' is not allowed to appear in element '$elementName'."
         wrapped1.isInstanceOf[SAXException] shouldBe true
