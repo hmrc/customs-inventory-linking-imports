@@ -126,11 +126,13 @@ object TestData {
   def elementName(messageType: ImportsMessageType): String = messageType match {
     case _: GoodsArrival => GoodsArrivalXsdElementName
     case _: ValidateMovement => ValidateMovementsXsdElementName
+    case _: ImportsMessageType => ""
   }
 
   def otherElementName(messageType: ImportsMessageType): String = messageType match {
     case _: GoodsArrival => ValidateMovementsXsdElementName
     case _: ValidateMovement => GoodsArrivalXsdElementName
+    case _: ImportsMessageType => ""
   }
 
   private val year = 2017

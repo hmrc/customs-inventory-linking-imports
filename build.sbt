@@ -44,6 +44,9 @@ lazy val microservice = (project in file("."))
   )
   .settings(majorVersion := 0)
   .settings(playDefaultPort := 9824)
+  .settings(scalacOptions ++= List(
+    "-Wconf:cat=unused-imports&src=target/scala-2\\.13/routes/.*:s"
+  ))
 
 lazy val unitTestSettings =
   inConfig(Test)(Defaults.testTasks) ++
