@@ -57,7 +57,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   override protected def beforeEach(): Unit = {
     when(mockImportsConfigService.importsConfig).thenReturn(mockImportsConfig)
     when(mockImportsConfigService.importsConfig.apiSubscriptionFieldsBaseUrl).thenReturn(s"http://$Host:$Port$ApiSubscriptionFieldsContext")
-    reset(mockLogger, mockWSGetImpl)
+    reset[Any](mockLogger, mockWSGetImpl)
   }
 
   "ApiSubscriptionFieldsConnector" can {

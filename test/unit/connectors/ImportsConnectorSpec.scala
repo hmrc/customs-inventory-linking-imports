@@ -17,7 +17,6 @@
 package unit.connectors
 
 import java.util.UUID
-
 import akka.actor.ActorSystem
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentCaptor
@@ -27,6 +26,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.HeaderNames
+import play.api.http.Status.OK
 import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers
 import play.mvc.Http.MimeTypes
@@ -66,11 +66,11 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
 
   override protected def beforeEach(): Unit = {
-    reset(mockWsPost, mockServiceConfigProvider)
+    reset[Any](mockWsPost, mockServiceConfigProvider)
     when(mockServiceConfigProvider.getConfig("goodsarrival")).thenReturn(goodsArrivalConfig)
     when(mockImportsConfigService.importsCircuitBreakerConfig).thenReturn(mockImportsCircuitBreakerConfig)
     when(mockResponse.body).thenReturn("<foo/>")
-    when(mockResponse.status).thenReturn(200)
+    when(mockResponse.status).thenReturn(OK)
   }
 
   private val year = 2017
