@@ -29,14 +29,15 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
                                                servicesConfig: ImportsConfigService,
-                                               logger: ImportsLogger) {
+                                               logger: ImportsLogger)
+                                              (implicit ec: ExecutionContext) {
 
-  def getSubscriptionFields[A](apiSubsKey: ApiSubscriptionKey)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier, ec: ExecutionContext): Future[ApiSubscriptionFieldsResponse] = {
+  def getSubscriptionFields[A](apiSubsKey: ApiSubscriptionKey)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
     val url = ApiSubscriptionFieldsPath.url(servicesConfig.importsConfig.apiSubscriptionFieldsBaseUrl, apiSubsKey)
     get(url)
   }
 
-  private def get[A](url: String)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier, ec: ExecutionContext): Future[ApiSubscriptionFieldsResponse] = {
+  private def get[A](url: String)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
     logger.debug(s"Getting fields id from api subscription fields service. url=$url")
 
     http.GET[ApiSubscriptionFieldsResponse](url)

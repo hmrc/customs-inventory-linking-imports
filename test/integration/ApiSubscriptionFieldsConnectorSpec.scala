@@ -41,8 +41,6 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
-
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
   override protected def beforeAll(): Unit = {
