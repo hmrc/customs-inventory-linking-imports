@@ -45,6 +45,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   private val mockWSGetImpl = mock[HttpClient]
   private val mockLogger = mock[ImportsLogger]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
   private val mockImportsConfigService: ImportsConfigService = mock[ImportsConfigService]

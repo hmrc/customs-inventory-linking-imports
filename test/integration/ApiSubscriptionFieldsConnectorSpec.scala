@@ -32,7 +32,7 @@ import util.TestData._
 import util._
 import util.externalservices.{ApiSubscriptionFieldsService, InventoryLinkingImportsExternalServicesConfig}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar
   with BeforeAndAfterAll with ApiSubscriptionFieldsService with ApiSubscriptionFieldsTestData {
@@ -40,6 +40,8 @@ class ApiSubscriptionFieldsConnectorSpec extends IntegrationTestSpec with GuiceO
   private lazy val connector = app.injector.instanceOf[ApiSubscriptionFieldsConnector]
 
   private implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
 
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 

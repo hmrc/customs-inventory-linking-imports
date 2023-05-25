@@ -18,7 +18,6 @@ package unit.services
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import akka.pattern.CircuitBreakerOpenException
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}
@@ -42,7 +41,7 @@ import util.ApiSubscriptionFieldsTestData._
 import util.TestData.{TestCspValidatedPayloadRequest, TestXmlPayload, _}
 import util.UnitSpec
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
 import scala.xml.NodeSeq
 
@@ -52,6 +51,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
   private implicit val ec = Helpers.stubControllerComponents().executionContext
   private val dateTime = new DateTime()
   private val headerCarrier: HeaderCarrier = HeaderCarrier()
+  private val executionContext: ExecutionContext = scala.concurrent.ExecutionContext.global
   private val expectedApiSubscriptionKeyV1 = ApiSubscriptionKey(clientId, "customs%2Finventory-linking-imports", VersionOne)
   private val expectedApiSubscriptionKeyV2 = expectedApiSubscriptionKeyV1.copy(version = VersionTwo)
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
@@ -86,7 +86,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
 
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(mockHttpResponse)
-    when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
+    when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
   }
 
   "MessageSender" should {
@@ -94,14 +94,14 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     "send transformed xml to connector" in new SetUp() {
       callSend() shouldBe Right(())
 
-      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier], any[ExecutionContext])
       verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
     "ensure that correct version is used in call to subscription service" in new SetUp() {
       callSend(vpr = TestCspValidatedPayloadRequestV2) shouldBe Right(())
 
-      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(expectedApiSubscriptionKeyV2)(TestCspValidatedPayloadRequestV2, headerCarrier)
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(expectedApiSubscriptionKeyV2)(TestCspValidatedPayloadRequestV2, headerCarrier, executionContext)
       verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
@@ -109,7 +109,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       callSend() shouldBe Right(())
 
       verify(mockImportsConnector).send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
-      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier], any[ExecutionContext])
     }
 
     "call payload decorator passing incoming xml" in new SetUp() {
@@ -122,11 +122,11 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         meq(importsMessageType.wrapperRootElementLabel),
         any[DateTime],
         meq(CorrelationIdUuid))(any[ValidatedPayloadRequest[_]])
-      verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKeyV1))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKeyV1))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return InternalServerError ErrorResponse when subscription fields call fails" in new SetUp() {
-      when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(emulatedServiceFailure))
+      when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.failed(emulatedServiceFailure))
       callSend() shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
 
       verifyNoMoreInteractions(mockPayloadDecorator)
@@ -134,7 +134,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     }
 
     "return InternalServerError ErrorResponse when subscription fields call succeeds but does not return a authenticatedEori value" in new SetUp() {
-      when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponseWithoutAuthenticatedEori))
+      when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(apiSubscriptionFieldsResponseWithoutAuthenticatedEori))
       callSend() shouldBe Left(errorResponseMissingEori.XmlResult.withConversationId)
 
       verifyNoMoreInteractions(mockPayloadDecorator)
@@ -145,14 +145,14 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(emulatedServiceFailure))
       callSend() shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
 
-      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier], any[ExecutionContext])
     }
 
     "return InternalServerError ErrorResponse when backend circuit breaker trips" in new SetUp() {
       when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new CircuitBreakerOpenException(FiniteDuration(10, TimeUnit.SECONDS))))
       callSend() shouldBe Left(errorResponseServiceUnavailable.XmlResult)
 
-      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier], any[ExecutionContext])
     }
 
   }
