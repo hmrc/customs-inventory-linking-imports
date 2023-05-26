@@ -41,7 +41,7 @@ import util.ApiSubscriptionFieldsTestData._
 import util.TestData.{TestCspValidatedPayloadRequest, TestXmlPayload, _}
 import util.UnitSpec
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.xml.NodeSeq
 
