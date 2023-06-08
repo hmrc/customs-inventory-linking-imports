@@ -45,6 +45,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   private val mockWSGetImpl = mock[HttpClient]
   private val mockLogger = mock[ImportsLogger]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
+  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
   private val mockImportsConfigService: ImportsConfigService = mock[ImportsConfigService]
@@ -57,7 +58,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   override protected def beforeEach(): Unit = {
     when(mockImportsConfigService.importsConfig).thenReturn(mockImportsConfig)
     when(mockImportsConfigService.importsConfig.apiSubscriptionFieldsBaseUrl).thenReturn(s"http://$Host:$Port$ApiSubscriptionFieldsContext")
-    reset(mockLogger, mockWSGetImpl)
+    reset[Any](mockLogger, mockWSGetImpl)
   }
 
   "ApiSubscriptionFieldsConnector" can {

@@ -24,13 +24,13 @@ import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigServic
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpException}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
                                                servicesConfig: ImportsConfigService,
-                                               logger: ImportsLogger) {
+                                               logger: ImportsLogger)
+                                              (implicit ec: ExecutionContext) {
 
   def getSubscriptionFields[A](apiSubsKey: ApiSubscriptionKey)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
     val url = ApiSubscriptionFieldsPath.url(servicesConfig.importsConfig.apiSubscriptionFieldsBaseUrl, apiSubsKey)

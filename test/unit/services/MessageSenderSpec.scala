@@ -18,7 +18,6 @@ package unit.services
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import akka.pattern.CircuitBreakerOpenException
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}

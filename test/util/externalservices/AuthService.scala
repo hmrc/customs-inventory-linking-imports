@@ -22,7 +22,7 @@ import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.authorise.{EmptyPredicate, Predicate}
 import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsMessageType, ValidateMovement}
 import util.TestData
@@ -86,6 +86,7 @@ trait AuthService {
   private def predicateForMessageType(messageType: ImportsMessageType) = messageType match {
     case _: GoodsArrival => GoodsArrivalAuthPredicate
     case _: ValidateMovement => ValidateMovementAuthPredicate
+    case _: ImportsMessageType => EmptyPredicate
   }
 
 }
