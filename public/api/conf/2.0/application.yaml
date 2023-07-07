@@ -86,6 +86,16 @@ paths:
               examples:
                 objectExample:
                   $ref: '#/components/examples/400ResponseExample'
+        '403':
+          description: ''
+          headers: { }
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/403Response'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/403ResponseExample'
         '500':
           description: ''
           headers: { }
@@ -162,6 +172,16 @@ paths:
               examples:
                 objectExample:
                   $ref: '#/components/examples/400ResponseExample'
+        '403':
+          description: ''
+          headers: { }
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/403Response'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/403ResponseExample'
         '500':
           description: ''
           headers: { }
@@ -252,6 +272,15 @@ components:
           type: string
         message:
           type: string
+    403Response:
+      type: object
+      xml:
+        name: errorResponse
+      properties:
+        code:
+          type: string
+        message:
+          type: string
     500Response:
       type: object
       xml:
@@ -298,6 +327,13 @@ components:
               <message>Error at line 13, column 13: no declaration found for element 'unknown'</message>
             </error>
           </errors>
+        </errorResponse>
+    403ResponseExample:
+      summary: A sample Resource
+      value: |
+        <errorResponse>
+          <code>PAYLOAD_FORBIDDEN</code>
+          <message>A firewall rejected the request</message>
         </errorResponse>
     500ResponseExample:
       summary: A sample Resource
