@@ -16,8 +16,6 @@
 
 package integration
 
-import java.util.UUID
-
 import org.joda.time.DateTime
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
@@ -28,14 +26,14 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, Non2xxResponseException}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.GoodsArrival
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
-import uk.gov.hmrc.http._
-import uk.gov.hmrc.http.Authorization
+import uk.gov.hmrc.http.{Authorization, _}
 import util.ExternalServicesConfig.{AuthToken, Host, Port}
 import util.TestData
 import util.XMLTestData.ValidInventoryLinkingMovementRequestXML
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 import util.externalservices.{ApiSubscriptionFieldsService, InventoryLinkingImportsService}
 
+import java.util.UUID
 import scala.xml.NodeSeq
 
 class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImportsService with GuiceOneAppPerSuite with MockitoSugar
@@ -79,6 +77,11 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
         await(sendValidXml(ValidInventoryLinkingMovementRequestXML))
 
         verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, ValidInventoryLinkingMovementRequestXML.toString())
+      }
+
+      "return a failed future when service returns 403" in {
+        startBackendService(FORBIDDEN)
+        checkCorrectExceptionStatus(FORBIDDEN)
       }
       
       "return a failed future when service returns 404" in {

@@ -25,10 +25,11 @@ import org.mockito.Mockito.{atLeastOnce, verify, verifyNoMoreInteractions, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.http.Status.FORBIDDEN
 import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.Helpers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorInternalServerError
+import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorInternalServerError, ErrorPayloadForbidden, errorInternalServerError}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -36,7 +37,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionB
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.services._
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 import util.ApiSubscriptionFieldsTestData._
 import util.TestData.{TestCspValidatedPayloadRequest, TestXmlPayload, _}
 import util.UnitSpec
@@ -65,10 +66,12 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     protected val mockApiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
     protected val mockPayloadDecorator: PayloadDecorator = mock[PayloadDecorator]
     protected val mockDateTimeProvider: DateTimeService = mock[DateTimeService]
+    protected val mockConfigService: ImportsConfigService = mock[ImportsConfigService]
+    protected val importsConfig: ImportsConfig = mock[ImportsConfig]
     protected val mockHttpResponse: HttpResponse = mock[HttpResponse]
 
     protected lazy val service: MessageSender = new MessageSender(mockApiSubscriptionFieldsConnector, mockPayloadDecorator, mockImportsConnector,
-      mockDateTimeProvider, stubUniqueIdsService, mockLogger)
+      mockDateTimeProvider, stubUniqueIdsService, mockLogger, mockConfigService)
 
     protected def callSend(vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest, hc: HeaderCarrier = headerCarrier): Either[Result, Unit] = {
       await(service.send(importsMessageType)(vpr, hc))
@@ -84,6 +87,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     ).thenReturn(wrappedValidXML)
 
     when(mockDateTimeProvider.nowUtc()).thenReturn(dateTime)
+    when(mockConfigService.importsConfig).thenReturn(importsConfig)
     when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], meq(dateTime), any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(mockHttpResponse)
     when(mockApiSubscriptionFieldsConnector.getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(apiSubscriptionFieldsResponse))
   }
@@ -142,7 +146,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
 
     "return InternalServerError ErrorResponse when Mdg Import call fails" in new SetUp() {
       when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(emulatedServiceFailure))
-      callSend() shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+      callSend() shouldBe Left(ErrorInternalServerError.XmlResult.withConversationId)
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
@@ -154,5 +158,19 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
+    "return InternalServerError ErrorResponse when backend returns 403 with payloadForbidden flag off" in new SetUp() {
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Forbidden", FORBIDDEN)))
+      callSend() shouldBe Left(ErrorInternalServerError.XmlResult.withConversationId)
+
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+    }
+
+    "return Forbidden ErrorResponse when backend returns 403 with payloadForbidden flag on" in new SetUp() {
+      when(importsConfig.payloadForbiddenEnabled).thenReturn(true)
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Forbidden", FORBIDDEN)))
+      callSend() shouldBe Left(ErrorPayloadForbidden.XmlResult.withConversationId)
+
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+    }
   }
 }

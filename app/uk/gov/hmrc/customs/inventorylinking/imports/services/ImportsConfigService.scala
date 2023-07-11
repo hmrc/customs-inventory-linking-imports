@@ -33,10 +33,13 @@ class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdap
   private val numberOfCallsToTriggerStateChangeNel = root.int("circuitBreaker.numberOfCallsToTriggerStateChange")
   private val unavailablePeriodDurationInMillisNel = root.int("circuitBreaker.unavailablePeriodDurationInMillis")
   private val unstablePeriodDurationInMillisNel = root.int("circuitBreaker.unstablePeriodDurationInMillis")
+  private val payloadForbidden = root.boolean("payloadForbidden.enable")
   private val v1ShutteredNel = root.maybeBoolean("shutter.v1")
   private val v2ShutteredNel = root.maybeBoolean("shutter.v2")
 
-  private val validatedImportsConfig: CustomsValidatedNel[ImportsConfig] = (apiSubscriptionFieldsServiceUrlNel, customsMetricsServiceUrlNel) mapN  ImportsConfig.apply
+  private val validatedImportsConfig: CustomsValidatedNel[ImportsConfig] = (
+    apiSubscriptionFieldsServiceUrlNel, customsMetricsServiceUrlNel, payloadForbidden
+  ) mapN  ImportsConfig.apply
 
   private val validatedImportsShutterConfig: CustomsValidatedNel[ImportsShutterConfig] = (
     v1ShutteredNel, v2ShutteredNel

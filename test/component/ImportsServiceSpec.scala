@@ -18,11 +18,12 @@ package component
 
 import org.scalatest._
 import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.Application
+import play.api.http.Status.FORBIDDEN
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
-import org.scalatest.matchers.should.Matchers
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.customs.api.common.xml.ValidateXmlAgainstSchema
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -145,6 +146,24 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       And("the Back End Service will return an error response")
       startApiSubscriptionFieldsService(apiSubscriptionKeyImports)
       setupBackendServiceToReturn(GoodsArrivalConnectorContext, NOT_FOUND)
+
+      When(s"a valid Goods Arrival message request is submitted")
+      val result = route(app, ValidGoodsArrivalRequest.fromCsp).get
+
+      Then("an 500 Internal Server Error response is returned")
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
+      header(XConversationIdHeaderName, result).get shouldNot be("")
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
+    }
+
+    Scenario(s"PayloadForbidden flag is off and a valid Goods Arrival submitted and the Back End service fails with 403") {
+      Given("a CSP is authorised to use the API endpoint")
+      authServiceAuthorisesCSP(new GoodsArrival())
+
+      And("the Back End Service will return an error response")
+      startApiSubscriptionFieldsService(apiSubscriptionKeyImports)
+      setupBackendServiceToReturn(GoodsArrivalConnectorContext, FORBIDDEN)
 
       When(s"a valid Goods Arrival message request is submitted")
       val result = route(app, ValidGoodsArrivalRequest.fromCsp).get
@@ -279,6 +298,24 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       And("the Back End Service will return an error response")
       startApiSubscriptionFieldsService(apiSubscriptionKeyImports)
       setupBackendServiceToReturn(ValidateMovementConnectorContext, NOT_FOUND)
+
+      When(s"a valid Validate Movement message request is submitted")
+      val result = route(app, ValidValidateMovementRequest.fromCsp).get
+
+      Then("an 500 Internal Server Error response is returned")
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
+      header(XConversationIdHeaderName, result).get shouldNot be("")
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
+    }
+
+    Scenario(s"PayloadForbidden flag is off and a valid Validate Movement submitted and the Back End service fails with 403") {
+      Given("a CSP is authorised to use the API endpoint")
+      authServiceAuthorisesCSP(new ValidateMovement())
+
+      And("the Back End Service will return an error response")
+      startApiSubscriptionFieldsService(apiSubscriptionKeyImports)
+      setupBackendServiceToReturn(ValidateMovementConnectorContext, FORBIDDEN)
 
       When(s"a valid Validate Movement message request is submitted")
       val result = route(app, ValidValidateMovementRequest.fromCsp).get
