@@ -157,7 +157,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
     }
 
-    Scenario(s"PayloadForbidden flag is off and a valid Goods Arrival submitted and the Back End service fails with 403") {
+    Scenario(s"Return InternalServiceError response when payloadForbidden flag is off and the Back End service fails with 403") {
       Given("a CSP is authorised to use the API endpoint")
       authServiceAuthorisesCSP(new GoodsArrival())
 
@@ -309,7 +309,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
     }
 
-    Scenario(s"PayloadForbidden flag is off and a valid Validate Movement submitted and the Back End service fails with 403") {
+    Scenario(s"Return InternalServiceError response when payloadForbidden flag is off and the Back End service fails with 403") {
       Given("a CSP is authorised to use the API endpoint")
       authServiceAuthorisesCSP(new ValidateMovement())
 
