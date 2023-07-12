@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import java.net.URLEncoder
-import java.util.UUID
-
 import akka.pattern.CircuitBreakerOpenException
-import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
+import play.api.http.Status.FORBIDDEN
 import play.api.mvc.Result
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorInternalServerError
@@ -31,10 +28,12 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException}
 
+import java.net.URLEncoder
+import java.util.UUID
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Left
 import scala.util.control.NonFatal
 import scala.xml.NodeSeq
 
@@ -44,7 +43,8 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               connector: ImportsConnector,
                               dateTimeProvider: DateTimeService,
                               uniqueIdsService: UniqueIdsService,
-                              logger: ImportsLogger
+                              logger: ImportsLogger,
+                              configService: ImportsConfigService
                              )
                              (implicit ex: ExecutionContext) {
 
@@ -94,6 +94,9 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
       case _: CircuitBreakerOpenException =>
         logger.error("unhealthy state entered")
         Left(errorResponseServiceUnavailable.XmlResult)
+      case httpError: HttpException if configService.importsConfig.payloadForbiddenEnabled && httpError.responseCode == FORBIDDEN =>
+        logger.warn(s"Inventory linking imports request failed with 403: ${httpError.getMessage}")
+        Left(ErrorResponse.ErrorPayloadForbidden.XmlResult.withConversationId)
       case NonFatal(e) =>
         logger.error(s"Inventory linking imports request failed: ${e.getMessage}", e)
         Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
