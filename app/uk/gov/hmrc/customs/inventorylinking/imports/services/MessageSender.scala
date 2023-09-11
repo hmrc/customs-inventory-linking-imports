@@ -94,7 +94,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
       case _: CircuitBreakerOpenException =>
         logger.error("unhealthy state entered")
         Left(errorResponseServiceUnavailable.XmlResult)
-      case httpError: HttpException if configService.importsConfig.payloadForbiddenEnabled && httpError.responseCode == FORBIDDEN =>
+      case httpError: HttpException if httpError.responseCode == FORBIDDEN =>
         logger.warn(s"Inventory linking imports request failed with 403: ${httpError.getMessage}")
         Left(ErrorResponse.ErrorPayloadForbidden.XmlResult.withConversationId)
       case NonFatal(e) =>

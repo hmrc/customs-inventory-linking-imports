@@ -56,6 +56,14 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       |</errorResponse>
     """.stripMargin
 
+  private val payloadForbiddenError =
+    """<?xml version="1.0" encoding="UTF-8"?>
+      |<errorResponse>
+      |  <code>PAYLOAD_FORBIDDEN</code>
+      |  <message>A firewall rejected the request</message>
+      |</errorResponse>
+    """.stripMargin
+
   private def badRequestError(messageType: ImportsMessageType) =
     s"""<?xml version="1.0" encoding="UTF-8"?>
        |<errorResponse>
@@ -157,7 +165,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
     }
 
-    Scenario(s"Return InternalServiceError response when payloadForbidden flag is off and the Back End service fails with 403") {
+    Scenario(s"Return Payload Forbidden response when the Back End service fails with 403") {
       Given("a CSP is authorised to use the API endpoint")
       authServiceAuthorisesCSP(new GoodsArrival())
 
@@ -168,11 +176,11 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       When(s"a valid Goods Arrival message request is submitted")
       val result = route(app, ValidGoodsArrivalRequest.fromCsp).get
 
-      Then("an 500 Internal Server Error response is returned")
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-      stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
+      Then("an 403 Payload Forbidden Error response is returned")
+      status(result) shouldBe FORBIDDEN
+      stringToXml(contentAsString(result)) shouldEqual stringToXml(payloadForbiddenError)
       header(XConversationIdHeaderName, result).get shouldNot be("")
-      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(payloadForbiddenError)))
     }
   }
 
@@ -309,7 +317,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
     }
 
-    Scenario(s"Return InternalServiceError response when payloadForbidden flag is off and the Back End service fails with 403") {
+    Scenario(s"Return PayloadForbiddenError response when the Back End service fails with 403") {
       Given("a CSP is authorised to use the API endpoint")
       authServiceAuthorisesCSP(new ValidateMovement())
 
@@ -321,10 +329,10 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       val result = route(app, ValidValidateMovementRequest.fromCsp).get
 
       Then("an 500 Internal Server Error response is returned")
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-      stringToXml(contentAsString(result)) shouldEqual stringToXml(internalServerError)
+      status(result) shouldBe FORBIDDEN
+      stringToXml(contentAsString(result)) shouldEqual stringToXml(payloadForbiddenError)
       header(XConversationIdHeaderName, result).get shouldNot be("")
-      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(internalServerError)))
+      schemaErrorV1.newValidator().validate(new StreamSource(new StringReader(payloadForbiddenError)))
     }
   }
 

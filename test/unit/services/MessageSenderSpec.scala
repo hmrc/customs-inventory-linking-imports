@@ -158,15 +158,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
-    "return InternalServerError ErrorResponse when backend returns 403 with payloadForbidden flag off" in new SetUp() {
-      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Forbidden", FORBIDDEN)))
-      callSend() shouldBe Left(ErrorInternalServerError.XmlResult.withConversationId)
-
-      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
-    }
-
-    "return Forbidden ErrorResponse when backend returns 403 with payloadForbidden flag on" in new SetUp() {
-      when(importsConfig.payloadForbiddenEnabled).thenReturn(true)
+    "return Forbidden ErrorResponse when backend returns 403" in new SetUp() {
       when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Forbidden", FORBIDDEN)))
       callSend() shouldBe Left(ErrorPayloadForbidden.XmlResult.withConversationId)
 

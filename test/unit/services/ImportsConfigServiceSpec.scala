@@ -40,7 +40,6 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
       |circuitBreaker.numberOfCallsToTriggerStateChange=5
       |circuitBreaker.unstablePeriodDurationInMillis=1000
       |circuitBreaker.unavailablePeriodDurationInMillis=1000
-      |payloadForbidden.enable=false
     """.stripMargin)
 
   private val emptyAppConfig: Config = ConfigFactory.parseString("")
@@ -57,7 +56,6 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
       val configService = customsConfigService(validServicesConfiguration)
 
       configService.importsConfig.apiSubscriptionFieldsBaseUrl shouldBe "http://some-host:1111/some-context"
-      configService.importsConfig.payloadForbiddenEnabled shouldBe false
       configService.importsCircuitBreakerConfig.numberOfCallsToTriggerStateChange shouldBe 5
       configService.importsCircuitBreakerConfig.unavailablePeriodDurationInMillis shouldBe 1000
       configService.importsCircuitBreakerConfig.unstablePeriodDurationInMillis shouldBe 1000
@@ -70,7 +68,6 @@ class ImportsConfigServiceSpec extends UnitSpec with MockitoSugar {
           |Service configuration not found for key: api-subscription-fields.context
           |Could not find config key 'customs-declarations-metrics.host'
           |Service configuration not found for key: customs-declarations-metrics.context
-          |Could not find config key 'payloadForbidden.enable'
           |Could not find config key 'circuitBreaker.numberOfCallsToTriggerStateChange'
           |Could not find config key 'circuitBreaker.unavailablePeriodDurationInMillis'
           |Could not find config key 'circuitBreaker.unstablePeriodDurationInMillis'""".stripMargin
