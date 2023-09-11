@@ -70,8 +70,7 @@ object VersionTwo extends ApiVersion {
 
 case class ImportsConfig (
   apiSubscriptionFieldsBaseUrl: String,
-  customsMetricsBaseUrl: String,
-  payloadForbiddenEnabled: Boolean
+  customsMetricsBaseUrl: String
 )
 
 case class ImportsShutterConfig(v1Shuttered: Option[Boolean],
