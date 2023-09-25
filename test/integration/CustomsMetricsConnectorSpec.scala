@@ -40,6 +40,10 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
   private implicit val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
 
+  def localhostString: String = {
+    if (System.getenv("HOME") == "/home/jenkins") "127.0.0.1" else "0:0:0:0:0:0:0:1"
+  }
+
   override protected def beforeAll(): Unit = {
     startMockServer()
   }
@@ -96,7 +100,7 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
 
       intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
       //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
-      verifyImportsLoggerError("Call to customs metrics failed. url=http://localhost:11111/log-times, status=502, error=POST of 'http://localhost:11111/log-times' failed. Caused by: 'Connection refused: localhost/127.0.0.1:11111'")
+      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:11111/log-times, status=502, error=POST of 'http://localhost:11111/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:11111'")
 
       startMockServer()
     }
