@@ -41,10 +41,6 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
 
   private implicit val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
 
-  private def localhostString: String = {
-    if (System.getenv("HOME") == "/home/jenkins") "127.0.0.1" else "0:0:0:0:0:0:0:1"
-  }
-
   override protected def beforeAll(): Unit = {
     startMockServer()
   }
@@ -110,5 +106,8 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
   private def sendValidRequest() = {
     connector.post(ValidCustomsMetricsRequest)
   }
-  
+
+  private def localhostString: String = {
+    if (System.getenv("HOME") == "/home/jenkins") "127.0.0.1" else "0:0:0:0:0:0:0:1"
+  }
 }
