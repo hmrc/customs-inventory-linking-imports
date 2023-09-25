@@ -38,9 +38,10 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
   private lazy val connector = app.injector.instanceOf[CustomsMetricsConnector]
 
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
+
   private implicit val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
 
-  def localhostString: String = {
+  private def localhostString: String = {
     if (System.getenv("HOME") == "/home/jenkins") "127.0.0.1" else "0:0:0:0:0:0:0:1"
   }
 
