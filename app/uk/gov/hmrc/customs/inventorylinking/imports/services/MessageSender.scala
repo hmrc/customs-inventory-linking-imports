@@ -18,7 +18,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import akka.pattern.CircuitBreakerOpenException
 import org.joda.time.DateTime
-import play.api.http.Status.FORBIDDEN
+import play.api.http.Status.{FORBIDDEN, NOT_FOUND}
 import play.api.mvc.Result
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorInternalServerError
@@ -95,8 +95,13 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
         logger.error("unhealthy state entered")
         Left(errorResponseServiceUnavailable.XmlResult)
       case httpError: HttpException if httpError.responseCode == FORBIDDEN =>
-        logger.warn(s"Inventory linking imports request failed with 403: ${httpError.getMessage}")
+        logger.warn(s"Inventory linking imports request failed with [${httpError.responseCode}] [${httpError.getMessage}]")
         Left(ErrorResponse.ErrorPayloadForbidden.XmlResult.withConversationId)
+
+      case httpError: HttpException if httpError.responseCode == NOT_FOUND =>
+        logger.warn(s"Inventory linking imports request failed with [${httpError.responseCode}] [${httpError.getMessage}]")
+        Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+
       case NonFatal(e) =>
         logger.error(s"Inventory linking imports request failed: ${e.getMessage}", e)
         Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
