@@ -64,7 +64,6 @@ abstract class ImportController(val common: Common,
             "ILI", vpr.conversationId, vpr.start, common.conversationIdAction.timeService.zonedDateTimeUtc))
           Accepted.as(MimeTypes.XML).withConversationId
         case Left(errorResult) =>
-          common.logger.info("Inventory linking imports request failed")
           errorResult
       }
   }
