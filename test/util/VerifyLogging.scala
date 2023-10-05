@@ -34,4 +34,12 @@ object VerifyLogging {
       .verify()
   }
 
+  def verifyImportsLoggerThrowable(method: String, message: String)(implicit logger: ImportsLogger): Unit = {
+    PassByNameVerifier(logger, method)
+      .withByNameParam(message)
+      .withByNameParamMatcher(any[Throwable]) // order/position of this matcher is important
+      .withParamMatcher(any[HasConversationId])
+      .verify()
+  }
+
 }
