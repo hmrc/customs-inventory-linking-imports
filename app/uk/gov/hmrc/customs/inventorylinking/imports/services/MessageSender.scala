@@ -103,9 +103,6 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
       case httpError: HttpException if httpError.responseCode == FORBIDDEN =>
         handleResult(httpError, ErrorResponse.ErrorPayloadForbidden)
 
-      case httpError: HttpException =>
-        handleResult(httpError, ErrorResponse.ErrorInternalServerError)
-
       case NonFatal(t) =>
         handleResult(t, ErrorResponse.ErrorInternalServerError)
     }
