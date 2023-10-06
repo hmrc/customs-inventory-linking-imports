@@ -88,18 +88,23 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
     val correlationId = uniqueIdsService.correlation
     val xmlToSend = preparePayload(vpr.xmlBody, apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse, vpr.maybeCorrelationIdHeader, importsMessageType, dateTime, correlationId.uuid)
 
-    connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map[Either[Result, Unit]]{
+    def handleResult(t: Throwable, errorResponse: ErrorResponse ) ={
+      logger.warn(s"Returning status=[${errorResponse.httpStatusCode}]. ${t.getMessage}", t)
+      Left(errorResponse.XmlResult.withConversationId)
+    }
+
+    connector.send(importsMessageType, xmlToSend, dateTime, correlationId.uuid).map[Either[Result, Unit]] {
       _ => Right(())
-    }.recover{
+    }.recover {
       case _: CircuitBreakerOpenException =>
         logger.error("unhealthy state entered")
         Left(errorResponseServiceUnavailable.XmlResult)
+
       case httpError: HttpException if httpError.responseCode == FORBIDDEN =>
-        logger.warn(s"Inventory linking imports request failed with 403: ${httpError.getMessage}")
-        Left(ErrorResponse.ErrorPayloadForbidden.XmlResult.withConversationId)
-      case NonFatal(e) =>
-        logger.error(s"Inventory linking imports request failed: ${e.getMessage}", e)
-        Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+        handleResult(httpError, ErrorResponse.ErrorPayloadForbidden)
+
+      case NonFatal(t) =>
+        handleResult(t, ErrorResponse.ErrorInternalServerError)
     }
   }
 

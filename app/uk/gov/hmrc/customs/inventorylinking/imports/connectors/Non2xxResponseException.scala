@@ -26,4 +26,4 @@ import uk.gov.hmrc.http.HttpException
   *
   * @param status that we received
   */
-class Non2xxResponseException(status: Int) extends HttpException("Received a non 2XX response", status)
+class Non2xxResponseException(message: String,  status: Int) extends HttpException(message, status)

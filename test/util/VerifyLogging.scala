@@ -27,9 +27,17 @@ object VerifyLogging {
     verifyImportsLogger("error", message)
   }
 
-  private def verifyImportsLogger(method: String, message: String)(implicit logger: ImportsLogger): Unit = {
+  def verifyImportsLogger(method: String, message: String)(implicit logger: ImportsLogger): Unit = {
     PassByNameVerifier(logger, method)
       .withByNameParam(message)
+      .withParamMatcher(any[HasConversationId])
+      .verify()
+  }
+
+  def verifyImportsLoggerThrowable(method: String, message: String)(implicit logger: ImportsLogger): Unit = {
+    PassByNameVerifier(logger, method)
+      .withByNameParam(message)
+      .withByNameParamMatcher(any[Throwable]) // order/position of this matcher is important
       .withParamMatcher(any[HasConversationId])
       .verify()
   }

@@ -19,8 +19,8 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
 import akka.actor.ActorSystem
+
 import javax.inject.{Inject, Singleton}
 import org.joda.time.DateTime
 import play.api.http.HeaderNames._
@@ -36,7 +36,9 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, Impor
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
+
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 import scala.xml.NodeSeq
 
 @Singleton
@@ -59,15 +61,14 @@ class ImportsConnector @Inject()(http: HttpClient,
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
 
     implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = None)
-    val importsHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId) ++ Seq(HeaderNames.authorisation -> bearerToken)
+    val importsHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId) ++ Seq(HeaderNames.authorisation -> bearerToken) ++ hc.headers(List("Accept", "Gov-Test-Scenario"))
     val startTime = LocalDateTime.now
     withCircuitBreaker(post(xml, config.url, importsHeaders)(vpr, headerCarrier))
-      .map{ response =>
+      .map { response =>
         logCallDuration(startTime)
         logger.debug(s"Response status ${response.status} and response body ${formatResponseBody(response.body)}")
-
         response
-    }
+      }
   }
 
   private def getHeaders(date: DateTime, correlationId: UUID, conversationId: ConversationId) = {
@@ -82,25 +83,23 @@ class ImportsConnector @Inject()(http: HttpClient,
 
   private def post[A](xml: NodeSeq, url: String, importsHeaders: Seq[(String, String)])(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
     logger.debug(s"Sending request to backend. Url: $url\nPayload: ${xml.toString()}")
-    http.POSTString[HttpResponse](url, xml.toString(), headers = importsHeaders).map{ response =>
+    http.POSTString[HttpResponse](url, xml.toString(), headers = importsHeaders).map { response =>
       response.status match {
         case status if is2xx(status) =>
           response
         case status => //1xx, 3xx, 4xx, 5xx
-          logger.error(s"Failed inventory linking imports backend call response body=${formatResponseBody(response.body)}")
-          throw new Non2xxResponseException(status)
+          throw new Non2xxResponseException(s"Call to Inventory Linking Imports backend failed. Status=[$status] url=[$url] response body=[${formatResponseBody(response.body)}]", status)
       }
     }.recoverWith {
       case httpError: HttpException =>
-        logger.error(s"Call to inventory linking imports failed. url = $url status=${httpError.responseCode}")
-          Future.failed(httpError)
-        case e: Throwable =>
-          logger.error(s"Call to backend failed. url=$url")
-          Future.failed(e)
-      }
+        Future.failed(httpError)
+      case NonFatal(e) =>
+        logger.error(s"Call to backend failed. url=[$url]", e)
+        Future.failed(e)
+    }
   }
 
-  protected def logCallDuration(startTime: LocalDateTime)(implicit r: HasConversationId): Unit ={
+  protected def logCallDuration(startTime: LocalDateTime)(implicit r: HasConversationId): Unit = {
     val callDuration = ChronoUnit.MILLIS.between(startTime, LocalDateTime.now)
     logger.info(s"Outbound call duration was ${callDuration} ms")
   }

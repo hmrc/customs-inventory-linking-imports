@@ -16,8 +16,6 @@
 
 package unit.services
 
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 import akka.pattern.CircuitBreakerOpenException
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}
@@ -25,7 +23,7 @@ import org.mockito.Mockito.{atLeastOnce, verify, verifyNoMoreInteractions, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.Status.FORBIDDEN
+import play.api.http.Status.{BAD_GATEWAY, FORBIDDEN, NOT_FOUND}
 import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.Helpers
 import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
@@ -40,8 +38,10 @@ import uk.gov.hmrc.customs.inventorylinking.imports.xml.PayloadDecorator
 import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse}
 import util.ApiSubscriptionFieldsTestData._
 import util.TestData.{TestCspValidatedPayloadRequest, TestXmlPayload, _}
-import util.UnitSpec
+import util.{UnitSpec, VerifyLogging}
 
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.xml.NodeSeq
@@ -61,7 +61,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
 
   trait SetUp {
     protected val importsMessageType: ImportsMessageType = new GoodsArrival()
-    protected val mockLogger: ImportsLogger = mock[ImportsLogger]
+    implicit protected val mockLogger: ImportsLogger = mock[ImportsLogger]
     protected val mockImportsConnector: ImportsConnector = mock[ImportsConnector]
     protected val mockApiSubscriptionFieldsConnector: ApiSubscriptionFieldsConnector = mock[ApiSubscriptionFieldsConnector]
     protected val mockPayloadDecorator: PayloadDecorator = mock[PayloadDecorator]
@@ -163,6 +163,24 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       callSend() shouldBe Left(ErrorPayloadForbidden.XmlResult.withConversationId)
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      VerifyLogging.verifyImportsLoggerThrowable("warn", "Returning status=[403]. Forbidden")
+
+    }
+
+    "return InternalServerError ErrorResponse when backend returns 404 NOT_FOUND" in new SetUp() {
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Not Found", NOT_FOUND)))
+      callSend() shouldBe Left(ErrorInternalServerError.XmlResult.withConversationId)
+
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      VerifyLogging.verifyImportsLoggerThrowable("warn", "Returning status=[500]. Not Found")
+    }
+
+    "return InternalServerError ErrorResponse when backend returns 502 BAD_GATEWAY" in new SetUp() {
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("BAD_GATEWAY", BAD_GATEWAY)))
+      callSend() shouldBe Left(ErrorInternalServerError.XmlResult.withConversationId)
+
+      verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      VerifyLogging.verifyImportsLoggerThrowable("warn", "Returning status=[500]. BAD_GATEWAY")
     }
   }
 }
