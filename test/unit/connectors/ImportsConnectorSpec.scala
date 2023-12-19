@@ -97,7 +97,6 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
           any[HttpReads[HttpResponse]](), any[HeaderCarrier](), any[ExecutionContext])
       }
 
-
       "pass URL for v2 from config" in {
         implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequestV2
         returnResponseForRequest(Future.successful(mockResponse))
