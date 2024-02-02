@@ -80,9 +80,9 @@ def unitTestFilter(name: String): Boolean = name startsWith "unit"
 
 scalastyleConfig := baseDirectory.value / "project" / "scalastyle-config.xml"
 
-val compileDependencies = Seq(customsApiCommon)
+val compileDependencies = Seq(bootstrapBackendPlay28, cats)
 
-val testDependencies = Seq(scalaTestPlusPlay, scalatestplusMockito, wireMock, mockito, flexmark, Jackson, customsApiCommonTests)
+val testDependencies = Seq(scalaTestPlusPlay, scalatestplusMockito, wireMock, mockito, flexmark, Jackson)
 
 Compile / unmanagedResourceDirectories += baseDirectory.value / "public"
 (Runtime / managedClasspath) += (Assets / packageBin).value

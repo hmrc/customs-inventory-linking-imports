@@ -20,8 +20,8 @@ import akka.pattern.CircuitBreakerOpenException
 import org.joda.time.DateTime
 import play.api.http.Status.FORBIDDEN
 import play.api.mvc.Result
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorInternalServerError
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.errorInternalServerError
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -43,8 +43,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                               connector: ImportsConnector,
                               dateTimeProvider: DateTimeService,
                               uniqueIdsService: UniqueIdsService,
-                              logger: ImportsLogger,
-                              configService: ImportsConfigService
+                              logger: ImportsLogger
                              )
                              (implicit ex: ExecutionContext) {
 

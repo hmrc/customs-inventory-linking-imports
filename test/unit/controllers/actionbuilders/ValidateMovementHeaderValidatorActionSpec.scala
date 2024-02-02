@@ -20,7 +20,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.AnyContent
 import play.api.test.FakeRequest
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementHeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{CorrelationIdHeader, VersionOne}

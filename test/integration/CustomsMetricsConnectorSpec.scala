@@ -22,7 +22,7 @@ import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND}
-import uk.gov.hmrc.customs.inventorylinking.imports.connectors.CustomsMetricsConnector
+import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{CustomsMetricsConnector, ImportsConnector}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.http._
@@ -35,7 +35,8 @@ import util.externalservices.{CustomsMetricsService, InventoryLinkingImportsExte
 class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar
  with CustomsMetricsService {
 
-  private lazy val connector = app.injector.instanceOf[CustomsMetricsConnector]
+  private lazy val customsMetricsConnector = app.injector.instanceOf[CustomsMetricsConnector]
+  private lazy val ImportsConnector = app.injector.instanceOf[ImportsConnector]
 
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
@@ -104,7 +105,7 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
   }
 
   private def sendValidRequest() = {
-    connector.post(ValidCustomsMetricsRequest)
+    customsMetricsConnector.post(ValidCustomsMetricsRequest)
   }
 
   private def localhostString: String = {

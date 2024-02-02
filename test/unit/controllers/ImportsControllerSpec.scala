@@ -25,7 +25,7 @@ import play.api.mvc._
 import play.api.test.Helpers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.CustomsMetricsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{Common, GoodsArrivalController, HeaderValidator}

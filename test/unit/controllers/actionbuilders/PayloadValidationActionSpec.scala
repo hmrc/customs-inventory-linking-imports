@@ -21,7 +21,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.customs.api.common.controllers.{ErrorResponse, ResponseContents}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{ErrorResponse, ResponseContents}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.PayloadValidationAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._

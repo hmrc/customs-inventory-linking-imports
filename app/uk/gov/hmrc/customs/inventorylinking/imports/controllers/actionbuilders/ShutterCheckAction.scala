@@ -20,8 +20,8 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.HeaderNames.ACCEPT
 import play.api.http.Status.SERVICE_UNAVAILABLE
 import play.api.mvc.{ActionRefiner, _}
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.ErrorAcceptHeaderInvalid
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.ErrorAcceptHeaderInvalid
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants.{Version1AcceptHeaderValue, Version2AcceptHeaderValue}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper.AddConversationId
