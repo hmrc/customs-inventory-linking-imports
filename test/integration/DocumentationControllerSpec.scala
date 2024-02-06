@@ -25,6 +25,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.play.audit.AuditModule
 import uk.gov.hmrc.play.bootstrap.backend.BackendModule
+import util.ExternalServicesConfig.{Host, Port}
+import util.TestData.TestModule
+import util.externalservices.InventoryLinkingImportsExternalServicesConfig
 
 import java.io.FileNotFoundException
 import scala.concurrent.Future
@@ -37,7 +40,7 @@ class DocumentationControllerSpec extends IntegrationTestSpec with MockitoSugar 
   private val applicationRamlContent = getResourceFileContent("/public/api/conf/1.0/application.raml")
 
   override implicit lazy val app: Application = GuiceApplicationBuilder(
-    modules = Seq(GuiceableModule.guiceable(new AuditModule), GuiceableModule.guiceable(new BackendModule))).
+    modules = Seq()).
     configure(
       Map(
         "play.http.router" -> "definition.Routes",
