@@ -19,15 +19,10 @@ package integration
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
-import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.play.audit.AuditModule
-import uk.gov.hmrc.play.bootstrap.backend.BackendModule
-import util.ExternalServicesConfig.{Host, Port}
-import util.TestData.TestModule
-import util.externalservices.InventoryLinkingImportsExternalServicesConfig
 
 import java.io.FileNotFoundException
 import scala.concurrent.Future

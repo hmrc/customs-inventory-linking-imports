@@ -16,11 +16,7 @@
 
 package util
 
-import play.api.Application
-import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
-import uk.gov.hmrc.play.audit.AuditModule
-import uk.gov.hmrc.play.bootstrap.backend.BackendModule
-import util.externalservices.InventoryLinkingImportsExternalServicesConfig
+import play.api.inject.guice.GuiceApplicationBuilder
 
 trait DynamicServiceTestData {
 
