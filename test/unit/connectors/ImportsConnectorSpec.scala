@@ -30,8 +30,8 @@ import play.api.http.Status.OK
 import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers
 import play.mvc.Http.MimeTypes
-import uk.gov.hmrc.customs.api.common.config.{ServiceConfig, ServiceConfigProvider}
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.config.{ServiceConfig, ServiceConfigProvider}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig, SeqOfHeader}

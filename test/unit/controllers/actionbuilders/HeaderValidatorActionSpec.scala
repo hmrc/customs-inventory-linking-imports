@@ -21,8 +21,8 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.mvc.AnyContent
 import play.api.test.FakeRequest
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse._
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse._
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.VersionOne

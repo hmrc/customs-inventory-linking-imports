@@ -18,7 +18,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{ActionRefiner, AnyContent, Result}
-import uk.gov.hmrc.customs.api.common.controllers.{ErrorResponse, ResponseContents}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{ErrorResponse, ResponseContents}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ValidatedPayloadRequest}

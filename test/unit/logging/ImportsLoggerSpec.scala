@@ -19,7 +19,7 @@ package unit.logging
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.AnyContentAsXml
 import play.api.test.FakeRequest
-import uk.gov.hmrc.customs.api.common.logging.CdsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{AuthorisedRequest, ConversationIdRequest}

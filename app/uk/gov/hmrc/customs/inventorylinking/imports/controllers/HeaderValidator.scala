@@ -20,8 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes
 import play.api.mvc.Headers
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorContentTypeHeaderInvalid, ErrorInternalServerError, errorBadRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.{ErrorContentTypeHeaderInvalid, ErrorInternalServerError, errorBadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model._

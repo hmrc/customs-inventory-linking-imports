@@ -22,7 +22,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.test.Helpers
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.ErrorInternalServerError
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.ErrorInternalServerError
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{GoodsArrivalAuthAction, ValidateMovementAuthAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._

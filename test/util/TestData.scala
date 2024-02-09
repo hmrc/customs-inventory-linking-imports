@@ -17,7 +17,6 @@
 package util
 
 import java.util.UUID
-
 import com.google.inject.AbstractModule
 import org.joda.time.{DateTime, DateTimeZone}
 import org.scalatestplus.mockito.MockitoSugar
@@ -31,9 +30,9 @@ import play.api.test.Helpers.{ACCEPT, CONTENT_TYPE, POST}
 import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.{AuthProviders, Enrolment}
-import uk.gov.hmrc.customs.api.common.config.ServiceConfig
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.errorBadRequest
+import uk.gov.hmrc.customs.inventorylinking.imports.config.ServiceConfig
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.errorBadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._

@@ -21,7 +21,6 @@ import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.http.MimeTypes
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.customs.api.common.controllers.DocumentationController
 
 @Singleton
 class ApiDocumentationController @Inject()(assets: Assets,

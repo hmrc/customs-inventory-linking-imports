@@ -22,7 +22,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.Helpers
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.ErrorContentTypeHeaderInvalid
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.ErrorContentTypeHeaderInvalid
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.ValidateAndExtractHeadersAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger

@@ -25,8 +25,8 @@ import play.api.http.Status.FORBIDDEN
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
 import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.customs.api.common.xml.ValidateXmlAgainstSchema
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import uk.gov.hmrc.customs.inventorylinking.imports.xml.ValidateXmlAgainstSchema
 import util.TestData._
 import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML, validWrappedGoodsArrivalXml, validWrappedValidateMovementXml}
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._

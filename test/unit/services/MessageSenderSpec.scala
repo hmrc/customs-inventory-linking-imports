@@ -26,8 +26,8 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status.{BAD_GATEWAY, FORBIDDEN, NOT_FOUND}
 import play.api.mvc.{AnyContentAsXml, Result}
 import play.api.test.Helpers
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse
-import uk.gov.hmrc.customs.api.common.controllers.ErrorResponse.{ErrorInternalServerError, ErrorPayloadForbidden, errorInternalServerError}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.{ErrorInternalServerError, ErrorPayloadForbidden, errorInternalServerError}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ApiSubscriptionFieldsConnector, ImportsConnector}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
@@ -71,7 +71,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     protected val mockHttpResponse: HttpResponse = mock[HttpResponse]
 
     protected lazy val service: MessageSender = new MessageSender(mockApiSubscriptionFieldsConnector, mockPayloadDecorator, mockImportsConnector,
-      mockDateTimeProvider, stubUniqueIdsService, mockLogger, mockConfigService)
+      mockDateTimeProvider, stubUniqueIdsService, mockLogger)
 
     protected def callSend(vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest, hc: HeaderCarrier = headerCarrier): Either[Result, Unit] = {
       await(service.send(importsMessageType)(vpr, hc))
