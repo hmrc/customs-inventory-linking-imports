@@ -32,7 +32,6 @@ class DocumentationControllerSpec extends IntegrationTestSpec with MockitoSugar 
   private implicit lazy val materializer = app.materializer
 
   private val definitionJsonContent = getResourceFileContent("/public/api/definition.json")
-  private val applicationRamlContent = getResourceFileContent("/public/api/conf/1.0/application.raml")
 
   override implicit lazy val app: Application = GuiceApplicationBuilder(
     modules = Seq()).
@@ -49,8 +48,6 @@ class DocumentationControllerSpec extends IntegrationTestSpec with MockitoSugar 
 
   "DocumentationController" should {
     "serve definition.json" in assertRoutedContent("/api/definition", definitionJsonContent)
-
-    "serve application.raml" in assertRoutedContent("/api/conf/1.0/application.raml", applicationRamlContent)
   }
 
   private def assertRoutedContent(uri: String, expectedContent: String) = {

@@ -21,7 +21,7 @@ import play.api.{Configuration, Environment}
 import uk.gov.hmrc.http.HttpClient
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
-class CustomsModuleBindings extends Module {
+class HttpClientModule extends Module {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = Seq(
     bind[HttpClient].to[DefaultHttpClient]
