@@ -112,7 +112,7 @@ zipXsds := { mappings: Seq[PathMapping] =>
         val dateFormat = new SimpleDateFormat("dd/MM/YYYY")
         val lastUpdated = dateFormat.format(today)
         println(s"Update the file size in ${dir.getParent}/${dir.getName}/docs/schema.md to be [ZIP, ${sizeInMb}MB last updated $lastUpdated]")
-        println(s"Check the raml renders correctly file://${dir.getParent}/${dir.getName}/application.raml")
+        println(s"Check the yaml renders correctly file://${dir.getParent}/${dir.getName}/application.yaml")
         println("")
         zipFile
       }
