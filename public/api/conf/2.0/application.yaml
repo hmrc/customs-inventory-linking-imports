@@ -7,7 +7,7 @@ info:
     # XML Schemas
     Schema definitions for all the API endpoints request and response payloads can be found in the following zip archive: [Schemas and example messages](/api-documentation/docs/api/download/customs-inventory-linking-imports/2.0/inventory-linking-imports-schemas.zip) 
     
-    ZIP, 3.1MB last updated 14/03/2024
+    ZIP, 3.1MB last updated 21/03/2024
     
     The ZIP file contains XML files. Open in your preferred file viewer.
 servers:
