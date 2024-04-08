@@ -17,7 +17,7 @@
 package unit.connectors
 
 import java.util.UUID
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => ameq, _}

@@ -18,10 +18,10 @@ package uk.gov.hmrc.customs.inventorylinking.imports.services
 
 import java.time.{Clock, ZoneId, ZonedDateTime}
 
-import org.joda.time.{DateTime, DateTimeZone}
+import java.time._
 
 class DateTimeService {
   val UtcZoneId: ZoneId = ZoneId.of("UTC")
-  def nowUtc(): DateTime = new DateTime(Clock.systemUTC().instant().toEpochMilli, DateTimeZone.UTC)
+  def nowUtc(): Instant = new Instant(Clock.systemUTC().instant().toEpochMilli, ZoneOffset.UTC)
   def zonedDateTimeUtc: ZonedDateTime = ZonedDateTime.now(UtcZoneId)
 }

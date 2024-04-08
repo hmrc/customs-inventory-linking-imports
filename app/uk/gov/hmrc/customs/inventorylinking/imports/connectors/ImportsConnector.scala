@@ -19,10 +19,10 @@ package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 
 import javax.inject.{Inject, Singleton}
-import org.joda.time.DateTime
+import java.time.Instant
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes.XML
 import play.api.http.{MimeTypes, Status}
@@ -56,7 +56,7 @@ class ImportsConnector @Inject()(http: HttpClient,
   override lazy val unstablePeriodDurationInMillis = config.importsCircuitBreakerConfig.unstablePeriodDurationInMillis
   override lazy val unavailablePeriodDurationInMillis = config.importsCircuitBreakerConfig.unavailablePeriodDurationInMillis
 
-  def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: DateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[HttpResponse] = {
+  def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: Instant, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${vpr.requestedApiVersion.configPrefix}${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
 
@@ -71,11 +71,11 @@ class ImportsConnector @Inject()(http: HttpClient,
       }
   }
 
-  private def getHeaders(date: DateTime, correlationId: UUID, conversationId: ConversationId) = {
+  private def getHeaders(date: Instant, correlationId: UUID, conversationId: ConversationId) = {
     Seq(
       (ACCEPT, MimeTypes.XML),
       (CONTENT_TYPE, s"$XML; charset=UTF-8"),
-      (DATE, date.toString("EEE, dd MMM yyyy HH:mm:ss z")),
+      (DATE, date.toString()),
       (X_FORWARDED_HOST, "MDTP"),
       (XConversationId, conversationId.toString),
       (XCorrelationId, correlationId.toString))

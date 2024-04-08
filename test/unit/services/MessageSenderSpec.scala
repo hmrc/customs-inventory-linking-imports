@@ -16,7 +16,7 @@
 
 package unit.services
 
-import akka.pattern.CircuitBreakerOpenException
+import org.apache.pekko.pattern.CircuitBreakerOpenException
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.Mockito.{atLeastOnce, verify, verifyNoMoreInteractions, when}

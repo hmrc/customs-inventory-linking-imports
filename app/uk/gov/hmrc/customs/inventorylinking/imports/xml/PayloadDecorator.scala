@@ -18,8 +18,8 @@ package uk.gov.hmrc.customs.inventorylinking.imports.xml
 
 import java.util.UUID
 
-import org.joda.time.DateTime
-import org.joda.time.format.ISODateTimeFormat
+import java.time.Instant
+import java.time.format._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, CorrelationIdHeader}
 
@@ -33,11 +33,11 @@ class PayloadDecorator {
               apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse,
               correlationIdHeader: Option[CorrelationIdHeader],
               wrapperRootElementLabel: String,
-              dateTime: DateTime,
+              dateTime: Instant,
               correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A]): NodeSeq = {
 
     val badgeIdentifierElement = vpr.maybeBadgeIdentifier.fold(Seq(NodeSeq.Empty)) { badgeIdentifier => Seq[NodeSeq](<n1:badgeIdentifier>{badgeIdentifier.value}</n1:badgeIdentifier>,Text(newLineAndIndentation))}
-    val dateTimeStampElement = Seq[NodeSeq](<n1:dateTimeStamp>{dateTime.toString(ISODateTimeFormat.dateTimeNoMillis)}</n1:dateTimeStamp>, Text(newLineAndIndentation))
+    val dateTimeStampElement = Seq[NodeSeq](<n1:dateTimeStamp>{DateTimeFormatter.ISO_DATE_TIME}</n1:dateTimeStamp>, Text(newLineAndIndentation))
     val originatingPartyElement = vpr.maybeSubmitterIdentifier.fold(Seq(NodeSeq.Empty)){ submitterIdentifier => Seq[NodeSeq](<n1:originatingPartyID>{submitterIdentifier.value}</n1:originatingPartyID>, Text(newLineAndIndentation) )}
     val authenticatedPartyElement = apiSubscriptionFieldsResponse.fields.authenticatedEori.fold(NodeSeq.Empty){ authenticatedEori: String => <n1:authenticatedPartyID>{authenticatedEori}</n1:authenticatedPartyID>}
 
