@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import java.time.{Clock, ZoneId, ZonedDateTime}
-
 import java.time._
+import java.time.format.DateTimeFormatter
 
 class DateTimeService {
   val UtcZoneId: ZoneId = ZoneId.of("UTC")
-  def nowUtc(): Instant = new Instant(Clock.systemUTC().instant().toEpochMilli, ZoneOffset.UTC)
+  val utcFormattedDate: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'UTC'")
+  val isoFormatNoMillis: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
+  def nowUtc(): LocalDateTime = LocalDateTime.ofInstant(Clock.systemUTC().instant(), ZoneOffset.UTC)
   def zonedDateTimeUtc: ZonedDateTime = ZonedDateTime.now(UtcZoneId)
 }

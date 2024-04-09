@@ -16,7 +16,7 @@
 
 package integration
 
-import org.joda.time.DateTime
+import java.time._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -28,12 +28,12 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.GoodsArrival
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.http.{Authorization, _}
 import util.ExternalServicesConfig.{AuthToken, Host, Port}
-
 import util.TestData
 import util.XMLTestData.ValidInventoryLinkingMovementRequestXML
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 import util.externalservices.{ApiSubscriptionFieldsService, InventoryLinkingImportsService}
 
+import java.time._
 import java.util.UUID
 import scala.xml.NodeSeq
 
@@ -113,7 +113,7 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
     setupBackendServiceToReturn(GoodsArrivalConnectorContext, status)
 
   private def sendValidXml(xml:NodeSeq)(implicit vpr: ValidatedPayloadRequest[_]) =
-    connector.send(new GoodsArrival(), xml, new DateTime(), correlationId)
+    connector.send(new GoodsArrival(), xml, LocalDateTime.now, correlationId)
 
   private def checkCorrectExceptionStatus(status: Int): Unit = {
     val ex = intercept[Non2xxResponseException](await(sendValidXml(ValidInventoryLinkingMovementRequestXML)))

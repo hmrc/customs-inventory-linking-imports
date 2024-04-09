@@ -18,14 +18,15 @@ package unit.connectors
 
 import java.util.UUID
 import org.apache.pekko.actor.ActorSystem
-import org.joda.time.{DateTime, DateTimeZone}
+
+import java.time._
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => ameq, _}
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.HeaderNames
+import play.api.http.{HeaderNames, dateFormat}
 import play.api.http.Status.OK
 import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers
@@ -35,12 +36,13 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig, SeqOfHeader}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, ImportsConfigService}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import util.UnitSpec
 import unit.logging.StubImportsLogger
 import util.TestData._
 
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -73,14 +75,11 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
     when(mockResponse.status).thenReturn(OK)
   }
 
-  private val year = 2017
-  private val monthOfYear = 7
-  private val dayOfMonth = 4
-  private val hourOfDay = 13
-  private val minuteOfHour = 45
-  private val date = new DateTime(year, monthOfYear, dayOfMonth, hourOfDay, minuteOfHour, DateTimeZone.UTC)
+  private val date = LocalDateTime.now()
 
-  private val httpFormattedDate = "Tue, 04 Jul 2017 13:45:00 UTC"
+  private val utcDateFormat: DateTimeFormatter = new DateTimeService().utcFormattedDate
+
+  private val httpFormattedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC).format(utcDateFormat)
 
   private val correlationId = UUID.randomUUID()
 

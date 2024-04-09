@@ -16,24 +16,23 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import java.time.LocalDateTime
+import java.time._
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import org.apache.pekko.actor.ActorSystem
 
 import javax.inject.{Inject, Singleton}
-import java.time.Instant
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes.XML
 import play.api.http.{MimeTypes, Status}
-
 import uk.gov.hmrc.customs.inventorylinking.imports.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{HasConversationId, ValidatedPayloadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, ImportsMessageType}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, ImportsConfigService}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
 
@@ -56,7 +55,7 @@ class ImportsConnector @Inject()(http: HttpClient,
   override lazy val unstablePeriodDurationInMillis = config.importsCircuitBreakerConfig.unstablePeriodDurationInMillis
   override lazy val unavailablePeriodDurationInMillis = config.importsCircuitBreakerConfig.unavailablePeriodDurationInMillis
 
-  def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: Instant, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[HttpResponse] = {
+  def send[A](importsMessageType: ImportsMessageType, xml: NodeSeq, date: LocalDateTime, correlationId: UUID)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[HttpResponse] = {
     val config = Option(serviceConfigProvider.getConfig(s"${vpr.requestedApiVersion.configPrefix}${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
 
@@ -71,11 +70,12 @@ class ImportsConnector @Inject()(http: HttpClient,
       }
   }
 
-  private def getHeaders(date: Instant, correlationId: UUID, conversationId: ConversationId) = {
+  private def getHeaders(date: LocalDateTime, correlationId: UUID, conversationId: ConversationId) = {
+    val utcDateFormat: DateTimeFormatter = new DateTimeService().utcFormattedDate
     Seq(
       (ACCEPT, MimeTypes.XML),
       (CONTENT_TYPE, s"$XML; charset=UTF-8"),
-      (DATE, date.toString()),
+      (DATE, date.atOffset(ZoneOffset.UTC).format(utcDateFormat)),
       (X_FORWARDED_HOST, "MDTP"),
       (XConversationId, conversationId.toString),
       (XCorrelationId, correlationId.toString))
