@@ -18,6 +18,7 @@ package unit.controllers.actionbuilders
 
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.ConversationIdAction
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
@@ -28,15 +29,17 @@ import util.UnitSpec
 import util.TestData
 import util.TestData.ValidConversationId
 
+import scala.concurrent.ExecutionContext
+
 class ConversationIdActionSpec extends UnitSpec with MockitoSugar {
 
   trait SetUp {
     private val mockImportsLogger = mock[ImportsLogger]
     protected val mockDateTimeService: DateTimeService = mock[DateTimeService]
-    val request = FakeRequest()
-    implicit val ec = Helpers.stubControllerComponents().executionContext
+    val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
+    implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
     val conversationIdAction = new ConversationIdAction(TestData.stubUniqueIdsService, mockDateTimeService, mockImportsLogger)
-    val expected = ConversationIdRequest(ValidConversationId, EventStart, request)
+    val expected: ConversationIdRequest[AnyContentAsEmpty.type] = ConversationIdRequest(ValidConversationId, EventStart, request)
   }
 
   "ConversationIdAction" should {

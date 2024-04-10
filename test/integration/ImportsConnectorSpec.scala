@@ -16,12 +16,12 @@
 
 package integration
 
-import java.time._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers._
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, Non2xxResponseException}
 import uk.gov.hmrc.customs.inventorylinking.imports.model.GoodsArrival
@@ -54,7 +54,7 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
   private val incomingBearerToken = "some_client's_bearer_token"
   private val incomingAuthToken = s"Bearer $incomingBearerToken"
   private val correlationId = UUID.randomUUID()
-  private implicit val vpr = TestData.TestCspValidatedPayloadRequest
+  private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
   private implicit val hc: HeaderCarrier = HeaderCarrier(authorization = Some(Authorization(incomingAuthToken)))
 

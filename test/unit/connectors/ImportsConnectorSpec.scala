@@ -26,7 +26,7 @@ import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.{HeaderNames, dateFormat}
+import play.api.http.HeaderNames
 import play.api.http.Status.OK
 import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers
@@ -56,7 +56,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private val mockResponse = mock[HttpResponse]
   private val cdsLogger = mock[CdsLogger]
   private val actorSystem = ActorSystem("mockActorSystem")
-  private implicit val ec = Helpers.stubControllerComponents().executionContext
+  private implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
   
   private val connector = new ImportsConnector(mockWsPost, stubImportsLogger, mockServiceConfigProvider, mockImportsConfigService, cdsLogger, actorSystem)
 

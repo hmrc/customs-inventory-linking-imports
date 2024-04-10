@@ -33,13 +33,15 @@ import util.AuthConnectorStubbing
 import util.CustomsMetricsTestData.EventStart
 import util.TestData.{ConversationIdValue, TestExtractedHeadersV1, ValidConversationId, testFakeRequest}
 
+import scala.concurrent.ExecutionContext
+
 class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks with BeforeAndAfterEach {
 
   private lazy val validatedHeadersRequest =
     ConversationIdRequest(ValidConversationId, EventStart, testFakeRequest()).toValidatedHeadersRequest(TestExtractedHeadersV1)
   private val mockAuthenticationConnector: AuthConnector = mock[AuthConnector]
   private val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
-  private implicit val ec = Helpers.stubControllerComponents().executionContext
+  private implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
   
   trait SetUp extends AuthConnectorStubbing {
     override val mockAuthConnector: AuthConnector = mockAuthenticationConnector

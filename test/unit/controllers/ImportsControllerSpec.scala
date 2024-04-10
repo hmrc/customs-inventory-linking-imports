@@ -46,7 +46,7 @@ class ImportsControllerSpec extends UnitSpec
 
   trait SetUp extends AuthConnectorStubbing {
 
-    protected implicit val ec = Helpers.stubControllerComponents().executionContext
+    protected implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
     override val mockAuthConnector: AuthConnector = mock[AuthConnector]
     protected val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
     protected val mockMessageSender: MessageSender = mock[MessageSender]

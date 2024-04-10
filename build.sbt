@@ -74,8 +74,7 @@ lazy val it = (project in file("it"))
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
   .settings(
-    DefaultBuildSettings.itSettings(),
-    parallelExecution := false)
+    DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.test)
   .settings(scoverageSettings: _*)
 

@@ -16,6 +16,7 @@
 
 package integration
 
+import org.apache.pekko.stream.Materializer
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -29,7 +30,7 @@ import scala.concurrent.Future
 
 class DocumentationControllerSpec extends IntegrationTestSpec with MockitoSugar with GuiceOneAppPerSuite {
 
-  private implicit lazy val materializer = app.materializer
+  private implicit lazy val materializer: Materializer = app.materializer
 
   private val definitionJsonContent = getResourceFileContent("/public/api/definition.json")
 

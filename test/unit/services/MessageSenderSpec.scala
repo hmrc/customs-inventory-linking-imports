@@ -17,6 +17,7 @@
 package unit.services
 
 import org.apache.pekko.pattern.CircuitBreakerOpenException
+
 import java.time._
 import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.Mockito.{atLeastOnce, verify, verifyNoMoreInteractions, when}
@@ -42,14 +43,14 @@ import util.{UnitSpec, VerifyLogging}
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
 import scala.xml.NodeSeq
 
 
 class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with TableDrivenPropertyChecks {
 
-  private implicit val ec = Helpers.stubControllerComponents().executionContext
+  private implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
   private val dateTime = LocalDateTime.now()
   private val headerCarrier: HeaderCarrier = HeaderCarrier()
   private val expectedApiSubscriptionKeyV1 = ApiSubscriptionKey(clientId, "customs%2Finventory-linking-imports", VersionOne)
