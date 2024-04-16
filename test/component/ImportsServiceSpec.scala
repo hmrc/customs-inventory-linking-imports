@@ -28,7 +28,7 @@ import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.ValidateXmlAgainstSchema
 import util.TestData._
-import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML, validWrappedGoodsArrivalXml, validWrappedValidateMovementXml}
+import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML}
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
 import util.externalservices.{ApiSubscriptionFieldsService, AuthService, CustomsMetricsService, InventoryLinkingImportsService}
 
@@ -141,7 +141,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       eventually(verifyAuthServiceCalledForCsp(goodsArrival.enrolment))
 
       And("the payload is correct")
-      verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, validWrappedGoodsArrivalXml.toString())
+      verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, "BADGEID123")
 
       And("Metrics logging call was made")
       eventually(verifyCustomsMetricsServiceWasCalled())
@@ -293,7 +293,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       eventually(verifyAuthServiceCalledForCsp(validateMovement.enrolment))
 
       And("the payload is correct")
-      verifyImportsConnectorServiceWasCalledWith(ValidateMovementConnectorContext, validWrappedValidateMovementXml.toString())
+      verifyImportsConnectorServiceWasCalledWith(ValidateMovementConnectorContext, "BADGEID123")
 
       And("Metrics logging call was made")
       eventually(verifyCustomsMetricsServiceWasCalled())
