@@ -6,7 +6,6 @@ import sbt.Tests.{Group, SubProcess}
 import sbt.{IO, Path, Setting, SimpleFileFilter, taskKey, _}
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, targetJvm}
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
-import uk.gov.hmrc.DefaultBuildSettings
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -14,6 +13,10 @@ import scala.language.postfixOps
 
 
 val appName = "customs-inventory-linking-imports"
+
+lazy val CdsIntegrationComponentTest = config("it") extend Test
+
+val testConfig = Seq(CdsIntegrationComponentTest, Test)
 
 // move shared settings from `microservice` here
 ThisBuild / majorVersion := 0
@@ -26,15 +29,19 @@ def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[G
   } toSeq
 
 lazy val testAll = TaskKey[Unit]("test-all")
+lazy val allTest = Seq(testAll := (CdsIntegrationComponentTest / test).dependsOn(Test / test).value)
 
 lazy val microservice = (project in file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(SbtDistributablesPlugin)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
+  .configs(testConfig: _*)
   .settings(
     targetJvm := "jvm-11",
     commonSettings,
     unitTestSettings,
+    integrationComponentTestSettings,
+    allTest,
     scoverageSettings
   )
   .settings(playDefaultPort := 9824)
@@ -48,6 +55,15 @@ lazy val unitTestSettings =
       Test / testOptions := Seq(Tests.Filter(unitTestFilter)),
       Test / unmanagedSourceDirectories := Seq((Test / baseDirectory).value / "test"),
       addTestReportOption(Test, "test-reports")
+    )
+
+lazy val integrationComponentTestSettings =
+  inConfig(CdsIntegrationComponentTest)(Defaults.testTasks) ++
+    Seq(
+      CdsIntegrationComponentTest / testOptions := Seq(Tests.Filter(integrationComponentTestFilter)),
+      CdsIntegrationComponentTest / parallelExecution := false,
+      addTestReportOption(CdsIntegrationComponentTest, "int-comp-test-reports"),
+      CdsIntegrationComponentTest / testGrouping := forkedJvmPerTestConfig((Test / definedTests).value, "integration", "component")
     )
 
 lazy val commonSettings: Seq[Setting[_]] = gitStampSettings
@@ -69,17 +85,6 @@ Compile / unmanagedResourceDirectories += baseDirectory.value / "public"
 (Runtime / managedClasspath) += (Assets / packageBin).value
 
 libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
-
-lazy val it = (project in file("it"))
-  .enablePlugins(PlayScala)
-  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
-  .settings(
-    DefaultBuildSettings.itSettings(),
-    parallelExecution := false)
-  .settings(libraryDependencies ++= AppDependencies.test)
-  .settings(scoverageSettings: _*)
-
-addCommandAlias("runAllChecks", "clean;compile;scalastyle;coverage;test;it/test;coverageReport;dependencyUpdates")
 
 scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s"
 

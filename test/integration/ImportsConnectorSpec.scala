@@ -109,7 +109,7 @@ class ImportsConnectorSpec extends IntegrationTestSpec with InventoryLinkingImpo
       }
   }
 
-  private def startBackendService(status: Int) =
+  private def startBackendService(status: Int): Unit =
     setupBackendServiceToReturn(GoodsArrivalConnectorContext, status)
 
   private def sendValidXml(xml:NodeSeq)(implicit vpr: ValidatedPayloadRequest[_]) =
