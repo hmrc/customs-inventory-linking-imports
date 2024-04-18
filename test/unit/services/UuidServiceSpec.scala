@@ -14,15 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.services
+package unit.services
 
-import java.time._
-import java.time.format.DateTimeFormatter
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import uk.gov.hmrc.customs.inventorylinking.imports.services.UuidService
 
-class DateTimeService {
-  val UtcZoneId: ZoneId = ZoneId.of("UTC")
-  val utcFormattedDate: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss 'UTC'")
-  val isoFormatNoMillis: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX")
-  def nowUtc(): LocalDateTime = LocalDateTime.ofInstant(Clock.systemUTC().instant(), ZoneOffset.UTC)
-  def zonedDateTimeUtc: ZonedDateTime = ZonedDateTime.now(UtcZoneId)
+class UuidServiceSpec extends AnyWordSpecLike with Matchers {
+
+  private val uuidService = new UuidService
+
+  "UuidService" should {
+    "provide different value on each call" in {
+      val uuid1 = uuidService.uuid()
+      val uuid2 = uuidService.uuid()
+
+      uuid1 should not be uuid2
+      uuid1.toString should not be uuid2.toString
+    }
+  }
+
 }

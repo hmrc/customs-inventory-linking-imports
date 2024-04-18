@@ -68,7 +68,7 @@ class CdsLoggerSpec extends UnitSpec with MockitoSugar {
 
       output should have size 1
       val loggedMessage :: Nil = output
-      loggedMessage should endWith(s"DEBUG $cdsLoggerName - $msg")
+      loggedMessage should endWith(s"DEBUG $cdsLoggerName -- $msg")
     }
 
     "log debug with exception" in new Setup {
@@ -81,7 +81,7 @@ class CdsLoggerSpec extends UnitSpec with MockitoSugar {
 
       output.size should be > 2
       val loggedMessage :: exceptionMessage :: stacktrace = output
-      loggedMessage should endWith(s"DEBUG $cdsLoggerName - $msg")
+      loggedMessage should endWith(s"DEBUG $cdsLoggerName -- $msg")
       exceptionMessage shouldBe exception.toString
       stacktrace foreach(_ should startWith("\tat "))
     }
@@ -95,7 +95,7 @@ class CdsLoggerSpec extends UnitSpec with MockitoSugar {
 
       output should have size 1
       val loggedMessage :: Nil = output
-      loggedMessage should endWith(s"INFO $cdsLoggerName - $msg")
+      loggedMessage should endWith(s"INFO $cdsLoggerName -- $msg")
     }
 
     "log info with exception" in new Setup {
@@ -108,7 +108,7 @@ class CdsLoggerSpec extends UnitSpec with MockitoSugar {
 
       output.size should be > 2
       val loggedMessage :: exceptionMessage :: stacktrace = output
-      loggedMessage should endWith(s"INFO $cdsLoggerName - $msg")
+      loggedMessage should endWith(s"INFO $cdsLoggerName -- $msg")
       exceptionMessage shouldBe exception.toString
       stacktrace foreach(_ should startWith("\tat "))
     }
@@ -122,7 +122,7 @@ class CdsLoggerSpec extends UnitSpec with MockitoSugar {
 
       output should have size 1
       val loggedMessage :: Nil = output
-      loggedMessage should endWith(s"WARN $cdsLoggerName - $msg")
+      loggedMessage should endWith(s"WARN $cdsLoggerName -- $msg")
 
     }
 
@@ -136,7 +136,7 @@ class CdsLoggerSpec extends UnitSpec with MockitoSugar {
 
       output.size should be > 2
       val loggedMessage :: exceptionMessage :: stacktrace = output
-      loggedMessage should endWith(s"WARN $cdsLoggerName - $msg")
+      loggedMessage should endWith(s"WARN $cdsLoggerName -- $msg")
       exceptionMessage shouldBe exception.toString
       stacktrace foreach(_ should startWith("\tat "))
     }
@@ -150,7 +150,7 @@ class CdsLoggerSpec extends UnitSpec with MockitoSugar {
 
       output should have size 1
       val loggedMessage :: Nil = output
-      loggedMessage should endWith(s"ERROR $cdsLoggerName - $msg")
+      loggedMessage should endWith(s"ERROR $cdsLoggerName -- $msg")
     }
 
     "log error with exception" in new Setup {
@@ -163,7 +163,7 @@ class CdsLoggerSpec extends UnitSpec with MockitoSugar {
 
       output.size should be > 2
       val loggedMessage :: exceptionMessage :: stacktrace = output
-      loggedMessage should endWith(s"ERROR $cdsLoggerName - $msg")
+      loggedMessage should endWith(s"ERROR $cdsLoggerName -- $msg")
       exceptionMessage shouldBe exception.toString
       stacktrace foreach(_ should startWith("\tat "))
     }

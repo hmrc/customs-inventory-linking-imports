@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.services
 
-import akka.pattern.CircuitBreakerOpenException
-import org.joda.time.DateTime
+import org.apache.pekko.pattern.CircuitBreakerOpenException
+
+import java.time._
 import play.api.http.Status.FORBIDDEN
 import play.api.mvc.Result
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
@@ -111,7 +112,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
                                 apiSubscriptionFieldsResponse: ApiSubscriptionFieldsResponse,
                                 correlationIdHeader: Option[CorrelationIdHeader],
                                 importsMessageType: ImportsMessageType,
-                                dateTime: DateTime,
+                                dateTime: LocalDateTime,
                                 correlationId: UUID)
                                (implicit vpr: ValidatedPayloadRequest[A]): NodeSeq = {
     logger.debug(s"preparePayload called")

@@ -18,7 +18,8 @@ package util
 
 import java.util.UUID
 import com.google.inject.AbstractModule
-import org.joda.time.{DateTime, DateTimeZone}
+
+import java.time._
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.HeaderNames.AUTHORIZATION
 import play.api.http.MimeTypes.{JSON, XML}
@@ -36,10 +37,11 @@ import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.er
 import uk.gov.hmrc.customs.inventorylinking.imports.model._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
-import uk.gov.hmrc.customs.inventorylinking.imports.services.{UniqueIdsService, UuidService}
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, UniqueIdsService, UuidService}
 import util.CustomsMetricsTestData.EventStart
 import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 
+import java.time.format.DateTimeFormatter
 import scala.xml.Elem
 
 object TestData {
@@ -134,14 +136,10 @@ object TestData {
     case _: ImportsMessageType => ""
   }
 
-  private val year = 2017
-  private val monthOfYear = 6
-  private val dayOfMonth = 8
-  private val hourOfDay = 13
-  private val minuteOfHour = 55
-  val RequestDateTime = new DateTime(year, monthOfYear, dayOfMonth, hourOfDay, minuteOfHour, DateTimeZone.UTC)
+  val RequestDateTime = LocalDateTime.now()
 
-  val RequestDateTimeHttp: String = "2017-06-08T13:55:00Z"
+  val requestIsoFormatDate: DateTimeFormatter = new DateTimeService().isoFormatNoMillis
+  val RequestDateTimeHttp: String = LocalDateTime.now().atOffset(ZoneOffset.UTC).format(requestIsoFormatDate)
   val BearerToken: String = "token"
   val ValidServiceConfig: ServiceConfig = ServiceConfig("url", Some(BearerToken), "env")
 

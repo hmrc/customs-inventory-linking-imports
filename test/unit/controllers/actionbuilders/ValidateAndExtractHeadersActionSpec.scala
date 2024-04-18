@@ -30,12 +30,14 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ApiVer
 import util.TestData._
 import util.UnitSpec
 
+import scala.concurrent.ExecutionContext
+
 class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
 
   trait SetUp {
-    val mockLogger = mock[ImportsLogger]
+    val mockLogger: ImportsLogger = mock[ImportsLogger]
     val mockHeaderValidator: HeaderValidator = mock[HeaderValidator]
-    implicit val ec = Helpers.stubControllerComponents().executionContext
+    implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
     val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(mockHeaderValidator, mockLogger)
   }
 

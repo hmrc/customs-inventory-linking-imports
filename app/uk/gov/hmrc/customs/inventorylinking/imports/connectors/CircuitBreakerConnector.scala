@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import akka.actor.ActorSystem
-import akka.pattern.CircuitBreaker
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.pattern.CircuitBreaker
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.CdsLogger
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import scala.concurrent.duration.Duration

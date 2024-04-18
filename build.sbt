@@ -1,23 +1,26 @@
-import AppDependencies._
 import com.typesafe.sbt.web.PathMapping
 import com.typesafe.sbt.web.pipeline.Pipeline
 import play.sbt.PlayImport.PlayKeys.playDefaultPort
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
-import sbt.{IO, Path, Resolver, Setting, SimpleFileFilter, taskKey, _}
+import sbt.{IO, Path, Setting, SimpleFileFilter, taskKey, _}
 import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, targetJvm}
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import scala.language.postfixOps
 
-name := "customs-inventory-linking-imports"
+
+val appName = "customs-inventory-linking-imports"
 
 lazy val CdsIntegrationComponentTest = config("it") extend Test
 
 val testConfig = Seq(CdsIntegrationComponentTest, Test)
+
+// move shared settings from `microservice` here
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
 
 def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[Group] =
   tests.groupBy(_.name.takeWhile(_ != '.')).filter(packageAndTests => packages contains packageAndTests._1) map {
@@ -28,13 +31,12 @@ def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[G
 lazy val testAll = TaskKey[Unit]("test-all")
 lazy val allTest = Seq(testAll := (CdsIntegrationComponentTest / test).dependsOn(Test / test).value)
 
-lazy val microservice = (project in file("."))
+lazy val microservice = Project(appName, file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(SbtDistributablesPlugin)
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .configs(testConfig: _*)
   .settings(
-    scalaVersion := "2.13.10",
     targetJvm := "jvm-11",
     commonSettings,
     unitTestSettings,
@@ -42,7 +44,6 @@ lazy val microservice = (project in file("."))
     allTest,
     scoverageSettings
   )
-  .settings(majorVersion := 0)
   .settings(playDefaultPort := 9824)
   .settings(scalacOptions ++= List(
     "-Wconf:cat=unused-imports&src=target/scala-2\\.13/routes/.*:s"
@@ -65,7 +66,7 @@ lazy val integrationComponentTestSettings =
       CdsIntegrationComponentTest / testGrouping := forkedJvmPerTestConfig((Test / definedTests).value, "integration", "component")
     )
 
-lazy val commonSettings: Seq[Setting[_]] = publishingSettings ++ gitStampSettings
+lazy val commonSettings: Seq[Setting[_]] = gitStampSettings
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   coverageExcludedPackages := "<empty>;models/.data/..*;view.*;models.*;config.*;.*(Reverse|AuthService|BuildInfo|Routes).*;uk.gov.hmrc.customs.inventorylinking.imports.views.*",
@@ -80,16 +81,12 @@ def unitTestFilter(name: String): Boolean = name startsWith "unit"
 
 scalastyleConfig := baseDirectory.value / "project" / "scalastyle-config.xml"
 
-val compileDependencies = Seq(bootstrapBackendPlay28, cats)
-
-val testDependencies = Seq(scalaTestPlusPlay, scalatestplusMockito, wireMock, mockito, flexmark, Jackson, bootstrapTestPlay)
-
 Compile / unmanagedResourceDirectories += baseDirectory.value / "public"
 (Runtime / managedClasspath) += (Assets / packageBin).value
 
-libraryDependencies ++= compileDependencies ++ testDependencies
-// To resolve a bug with version 2.x.x of the scoverage plugin - https://github.com/sbt/sbt/issues/6997
-libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
+
+scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s"
 
 // Task to create a ZIP file containing all xsds for each version, under the version directory
 val zipXsds = taskKey[Pipeline.Stage]("Zips up all inventory linking imports XSDs")
@@ -97,7 +94,7 @@ val zipXsds = taskKey[Pipeline.Stage]("Zips up all inventory linking imports XSD
 zipXsds := { mappings: Seq[PathMapping] =>
   val targetDir = WebKeys.webTarget.value / "zip"
   val zipFiles: Iterable[java.io.File] =
-    ((resourceDirectory in Assets).value / "api" / "conf")
+    ((Assets / resourceDirectory).value / "api" / "conf")
       .listFiles
       .filter(_.isDirectory)
       .map { dir =>

@@ -26,9 +26,11 @@ import uk.gov.hmrc.customs.inventorylinking.imports.controllers.{GoodsArrivalCon
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService}
 
+import scala.concurrent.ExecutionContext
+
 class ControllersWiringSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar {
 
-  private implicit val ec = Helpers.stubControllerComponents().executionContext
+  private implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
   private lazy val mockGoodsArrivalXmlValidationService = mock[GoodsArrivalXmlValidationService]
   private lazy val mockValidateMovementXmlValidationService = mock[ValidateMovementXmlValidationService]
   private lazy val mockImportLogger = mock[ImportsLogger]

@@ -17,8 +17,9 @@
 package unit.connectors
 
 import java.util.UUID
-import akka.actor.ActorSystem
-import org.joda.time.{DateTime, DateTimeZone}
+import org.apache.pekko.actor.ActorSystem
+
+import java.time._
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.{eq => ameq, _}
 import org.mockito.Mockito._
@@ -35,12 +36,13 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.CdsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ImportsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig, SeqOfHeader}
-import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
+import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, ImportsConfigService}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, HttpResponse}
 import util.UnitSpec
 import unit.logging.StubImportsLogger
 import util.TestData._
 
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -54,7 +56,7 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
   private val mockResponse = mock[HttpResponse]
   private val cdsLogger = mock[CdsLogger]
   private val actorSystem = ActorSystem("mockActorSystem")
-  private implicit val ec = Helpers.stubControllerComponents().executionContext
+  private implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
   
   private val connector = new ImportsConnector(mockWsPost, stubImportsLogger, mockServiceConfigProvider, mockImportsConfigService, cdsLogger, actorSystem)
 
@@ -73,14 +75,11 @@ class ImportsConnectorSpec extends UnitSpec with MockitoSugar with BeforeAndAfte
     when(mockResponse.status).thenReturn(OK)
   }
 
-  private val year = 2017
-  private val monthOfYear = 7
-  private val dayOfMonth = 4
-  private val hourOfDay = 13
-  private val minuteOfHour = 45
-  private val date = new DateTime(year, monthOfYear, dayOfMonth, hourOfDay, minuteOfHour, DateTimeZone.UTC)
+  private val date = LocalDateTime.now()
 
-  private val httpFormattedDate = "Tue, 04 Jul 2017 13:45:00 UTC"
+  private val utcDateFormat: DateTimeFormatter = new DateTimeService().utcFormattedDate
+
+  private val httpFormattedDate = LocalDateTime.now().atOffset(ZoneOffset.UTC).format(utcDateFormat)
 
   private val correlationId = UUID.randomUUID()
 

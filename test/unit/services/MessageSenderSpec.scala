@@ -16,8 +16,9 @@
 
 package unit.services
 
-import akka.pattern.CircuitBreakerOpenException
-import org.joda.time.DateTime
+import org.apache.pekko.pattern.CircuitBreakerOpenException
+
+import java.time._
 import org.mockito.ArgumentMatchers.{eq => meq, _}
 import org.mockito.Mockito.{atLeastOnce, verify, verifyNoMoreInteractions, when}
 import org.scalatest.matchers.should.Matchers
@@ -42,15 +43,15 @@ import util.{UnitSpec, VerifyLogging}
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
 import scala.xml.NodeSeq
 
 
 class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with TableDrivenPropertyChecks {
 
-  private implicit val ec = Helpers.stubControllerComponents().executionContext
-  private val dateTime = new DateTime()
+  private implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
+  private val dateTime = LocalDateTime.now()
   private val headerCarrier: HeaderCarrier = HeaderCarrier()
   private val expectedApiSubscriptionKeyV1 = ApiSubscriptionKey(clientId, "customs%2Finventory-linking-imports", VersionOne)
   private val expectedApiSubscriptionKeyV2 = expectedApiSubscriptionKeyV1.copy(version = VersionTwo)
@@ -82,7 +83,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       meq(apiSubscriptionFieldsResponse),
       any[Option[String]].asInstanceOf[Option[CorrelationIdHeader]],
       meq(importsMessageType.wrapperRootElementLabel),
-      any[DateTime],
+      any[LocalDateTime],
       meq(CorrelationIdUuid))(any[ValidatedPayloadRequest[_]])
     ).thenReturn(wrappedValidXML)
 
@@ -98,14 +99,14 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
       callSend() shouldBe Right(())
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
-      verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[LocalDateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
     "ensure that correct version is used in call to subscription service" in new SetUp() {
       callSend(vpr = TestCspValidatedPayloadRequestV2) shouldBe Right(())
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(expectedApiSubscriptionKeyV2)(TestCspValidatedPayloadRequestV2, headerCarrier)
-      verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
+      verify(mockImportsConnector).send(meq(importsMessageType), meq(wrappedValidXML), any[LocalDateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
     "pass utc date to connector" in new SetUp() {
@@ -123,7 +124,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
         meq(apiSubscriptionFieldsResponse),
         any[Option[String]].asInstanceOf[Option[CorrelationIdHeader]],
         meq(importsMessageType.wrapperRootElementLabel),
-        any[DateTime],
+        any[LocalDateTime],
         meq(CorrelationIdUuid))(any[ValidatedPayloadRequest[_]])
       verify(mockApiSubscriptionFieldsConnector).getSubscriptionFields(meq(expectedApiSubscriptionKeyV1))(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
@@ -145,21 +146,21 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     }
 
     "return InternalServerError ErrorResponse when Mdg Import call fails" in new SetUp() {
-      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(emulatedServiceFailure))
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[LocalDateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(emulatedServiceFailure))
       callSend() shouldBe Left(ErrorInternalServerError.XmlResult.withConversationId)
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
     "return InternalServerError ErrorResponse when backend circuit breaker trips" in new SetUp() {
-      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new CircuitBreakerOpenException(FiniteDuration(10, TimeUnit.SECONDS))))
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[LocalDateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new CircuitBreakerOpenException(FiniteDuration(10, TimeUnit.SECONDS))))
       callSend() shouldBe Left(errorResponseServiceUnavailable.XmlResult)
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
     }
 
     "return Forbidden ErrorResponse when backend returns 403" in new SetUp() {
-      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Forbidden", FORBIDDEN)))
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[LocalDateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Forbidden", FORBIDDEN)))
       callSend() shouldBe Left(ErrorPayloadForbidden.XmlResult.withConversationId)
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
@@ -168,7 +169,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     }
 
     "return InternalServerError ErrorResponse when backend returns 404 NOT_FOUND" in new SetUp() {
-      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Not Found", NOT_FOUND)))
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[LocalDateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("Not Found", NOT_FOUND)))
       callSend() shouldBe Left(ErrorInternalServerError.XmlResult.withConversationId)
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])
@@ -176,7 +177,7 @@ class MessageSenderSpec extends UnitSpec with Matchers with MockitoSugar with Ta
     }
 
     "return InternalServerError ErrorResponse when backend returns 502 BAD_GATEWAY" in new SetUp() {
-      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[DateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("BAD_GATEWAY", BAD_GATEWAY)))
+      when(mockImportsConnector.send(any[ImportsMessageType], any[NodeSeq], any[LocalDateTime], any[UUID])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.failed(new HttpException("BAD_GATEWAY", BAD_GATEWAY)))
       callSend() shouldBe Left(ErrorInternalServerError.XmlResult.withConversationId)
 
       verify(mockApiSubscriptionFieldsConnector, atLeastOnce()).getSubscriptionFields(any[ApiSubscriptionKey])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])

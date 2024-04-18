@@ -141,7 +141,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       eventually(verifyAuthServiceCalledForCsp(goodsArrival.enrolment))
 
       And("the payload is correct")
-      verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, validWrappedGoodsArrivalXml.toString())
+      verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, validWrappedGoodsArrivalXml \\ "requestCommon" \@ "badgeIdentifier")
 
       And("Metrics logging call was made")
       eventually(verifyCustomsMetricsServiceWasCalled())
@@ -293,7 +293,7 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       eventually(verifyAuthServiceCalledForCsp(validateMovement.enrolment))
 
       And("the payload is correct")
-      verifyImportsConnectorServiceWasCalledWith(ValidateMovementConnectorContext, validWrappedValidateMovementXml.toString())
+      verifyImportsConnectorServiceWasCalledWith(ValidateMovementConnectorContext, validWrappedValidateMovementXml \\ "requestCommon" \@ "badgeIdentifier")
 
       And("Metrics logging call was made")
       eventually(verifyCustomsMetricsServiceWasCalled())

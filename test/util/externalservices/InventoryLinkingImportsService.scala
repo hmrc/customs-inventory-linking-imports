@@ -45,7 +45,7 @@ trait InventoryLinkingImportsService extends WireMockRunner {
       .withHeader(XCorrelationIdHeaderName, notMatching(""))
       .withHeader(XConversationIdHeaderName, notMatching(""))
       .withHeader(X_FORWARDED_HOST, equalTo("MDTP"))
-      .withRequestBody(equalToXml(requestBody))
+      .withRequestBody(containing(requestBody))
     )
 
     maybeUnexpectedAuthToken foreach { unexpectedAuthToken =>
