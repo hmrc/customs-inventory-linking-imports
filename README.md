@@ -1,6 +1,6 @@
-# customs-inventory-linking-imports
+# Customs Inventory Linking Imports
 
-This service offers an interface for submitting custom inventory linking import declarations.
+The Customs Inventory Linking Imports service offers an interface for submitting Custom Inventory Linking Import declarations.
 
 The objective of the Customs Inventory Linking Imports API is as below:
 
@@ -9,6 +9,50 @@ The objective of the Customs Inventory Linking Imports API is as below:
 4. Respond to the declarant indicating the success of previous steps.
 
 It is assumed that the underlying backend process is asynchronous, and that the only response to the declarant from this API is to indicate the success (or otherwise) of the validation and submission to the backend service for onward processing.
+
+
+## Development Setup
+- Run locally: `sbt run` which runs on port `9824` by default
+- Run with test endpoints: `sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
+
+##  Service Manager Profiles
+The Customs Inventory Linking Imports service can be run locally from Service Manager, using the following profiles:
+
+
+| Profile Details                       | Command                                                           | Description                                                    |
+|---------------------------------------|:------------------------------------------------------------------|----------------------------------------------------------------|
+| CUSTOMS_DECLARATION_ALL               | sm2 --start CUSTOMS_DECLARATION_ALL                               | To run all CDS applications.                                   |
+| CUSTOMS_INVENTORY_LINKING_EXPORTS_ALL | sm2 --start CUSTOMS_INVENTORY_LINKING_EXPORTS_ALL                 | To run all CDS Inventory Linking Exports related applications. |
+| CUSTOMS_INVENTORY_LINKING_IMPORTS_ALL | sm2 --start CUSTOMS_INVENTORY_LINKING_IMPORTS_ALL                 | To run all CDS Inventory Linking Imports related applications. |
+
+
+## Run Tests
+- Run Unit Tests: `sbt test`
+- Run Integration Tests: `sbt IntegrationTest/test`
+- Run Unit and Integration Tests: `sbt test IntegrationTest/test`
+- Run Unit and Integration Tests with coverage report: `./run_all_tests.sh`<br/> which runs `sbt clean scalastyle coverage test it:test coverageReport"`
+
+### Acceptance Tests
+To run the CDS acceptance tests, see [here](https://github.com/hmrc/customs-automation-test).
+
+### Performance Tests
+To run performance tests, see [here](https://github.com/hmrc/customs-declaration-performance-test).
+
+
+## API documentation
+For Customs Inventory Linking Imports documentation, see [here](https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/customs-inventory-linking-imports).
+
+
+### Customs Inventory Linking Imports specific routes
+| Path - internal routes prefixed by `/customs/inventory-linking-imports` | Supported Methods | Description                                                                                        |
+|-------------------------------------------------------------------------|:-----------------:|----------------------------------------------------------------------------------------------------|
+| `/arrival-notifications`                                                |       POST        | Submission of a CSP's request to present their goods to Customs.                                   |
+| `/movement-validation`                                                  |       POST        | Submission of a CSP's validate movement response in order to match to a Inventory Exports Request. |
+
+
+### Test-only specific routes
+This service does not have any specific test-only endpoints.
+
 
 ## Seeding Data in `api-subscription-fields` for local end to end testing
 
