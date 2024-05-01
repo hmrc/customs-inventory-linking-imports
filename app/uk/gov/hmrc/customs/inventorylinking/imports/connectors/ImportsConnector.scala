@@ -66,7 +66,6 @@ class ImportsConnector @Inject()(http: HttpClient,
       .map { response =>
         logCallDuration(startTime)
         logger.debug(s"Response status ${response.status} and response body ${formatResponseBody(response.body)}")
-        println(response)
         response
       }
   }

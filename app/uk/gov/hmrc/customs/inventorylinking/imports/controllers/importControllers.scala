@@ -62,9 +62,6 @@ abstract class ImportController(val common: Common,
           common.logger.info("Inventory linking imports request processed successfully")
           common.metricsConnector.post(CustomsMetricsRequest(
             "ILI", vpr.conversationId, vpr.start, common.conversationIdAction.timeService.zonedDateTimeUtc))
-          println("find me")
-          println(vpr.request)
-          println(Accepted.as(MimeTypes.XML).withConversationId)
           Accepted.as(MimeTypes.XML).withConversationId
 
         case Left(errorResult) =>
