@@ -63,7 +63,6 @@ abstract class ImportController(val common: Common,
           common.metricsConnector.post(CustomsMetricsRequest(
             "ILI", vpr.conversationId, vpr.start, common.conversationIdAction.timeService.zonedDateTimeUtc))
           Accepted.as(MimeTypes.XML).withConversationId
-
         case Left(errorResult) =>
           errorResult
       }
