@@ -47,7 +47,7 @@ class ImportsConnector @Inject()(http: HttpClient,
                                  config: ImportsConfigService,
                                  override val cdsLogger: CdsLogger,
                                  override val actorSystem: ActorSystem)
-                                (implicit override val ec: ExecutionContext) extends CircuitBreakerConnector with HttpErrorFunctions with Status {
+                                (implicit override val ec: ExecutionContext) extends CircuitBreakerConnector with HttpErrorFunctions with Status with HeaderUtil {
 
   override val configKey = "mdg-imports"
 
@@ -59,10 +59,9 @@ class ImportsConnector @Inject()(http: HttpClient,
     val config = Option(serviceConfigProvider.getConfig(s"${vpr.requestedApiVersion.configPrefix}${importsMessageType.name}")).getOrElse(throw new IllegalArgumentException("config not found"))
     val bearerToken = "Bearer " + config.bearerToken.getOrElse(throw new IllegalStateException("no bearer token was found in config"))
 
-    implicit val headerCarrier: HeaderCarrier = hc.copy(authorization = None)
-    val importsHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId) ++ Seq(HeaderNames.authorisation -> bearerToken) ++ hc.headers(List("Accept", "Gov-Test-Scenario"))
+    val importsHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId) ++ Seq(HeaderNames.authorisation -> bearerToken) ++ getCustomsApiStubExtraHeaders(hc)
     val startTime = LocalDateTime.now
-    withCircuitBreaker(post(xml, config.url, importsHeaders)(vpr, headerCarrier))
+    withCircuitBreaker(post(xml, config.url, importsHeaders)(vpr, HeaderCarrier()))
       .map { response =>
         logCallDuration(startTime)
         logger.debug(s"Response status ${response.status} and response body ${formatResponseBody(response.body)}")
