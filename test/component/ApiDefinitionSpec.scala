@@ -44,12 +44,6 @@ class ApiDefinitionSpec extends AnyFeatureSpec with GivenWhenThen with GuiceOneA
       contentAsJson(response) shouldBe Json.parse(
         """
           |{
-          |    {
-          |      "key": "write:customs-il-imports-arrival-notifications",
-          |      "name": "Customs Inventory Linking Imports - Arrival Notifications",
-          |      "description": "CSPs requesting to present their goods to Customs"
-          |    }
-          |  ],
           |  "api": {
           |    "name": "Customs Inventory Linking Imports",
           |    "description": "Single WCO-compliant Customs Inventory Linking Import Declaration API",
