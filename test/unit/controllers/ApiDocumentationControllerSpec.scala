@@ -60,18 +60,6 @@ class ApiDocumentationControllerSpec extends PlaySpec with MockitoSugar with Res
     Json.parse(
       s"""
          |{
-         |  "scopes":[
-         |    {
-         |      "key":"write:customs-il-imports-movement-validation",
-         |      "name":"Customs Inventory Linking Imports - Movement Validation",
-         |      "description":"Send validated movement response messages provided by the CSP as a result of a previous validate movement request"
-         |    },
-         |    {
-         |      "key":"write:customs-il-imports-arrival-notifications",
-         |      "name":"Customs Inventory Linking Imports - Arrival Notifications",
-         |      "description":"CSPs requesting to present their goods to Customs"
-         |    }
-         |  ],
          |  "api":{
          |    "name":"Customs Inventory Linking Imports",
          |    "description":"Single WCO-compliant Customs Inventory Linking Import Declaration API",
