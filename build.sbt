@@ -1,11 +1,11 @@
 import com.typesafe.sbt.web.PathMapping
 import com.typesafe.sbt.web.pipeline.Pipeline
 import play.sbt.PlayImport.PlayKeys.playDefaultPort
-import sbt.Keys.*
+import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
-import sbt.{IO, Path, Setting, SimpleFileFilter, taskKey, *}
+import sbt.{IO, Path, Setting, SimpleFileFilter, taskKey, _}
 import uk.gov.hmrc.DefaultBuildSettings.addTestReportOption
-import uk.gov.hmrc.gitstamp.GitStampPlugin.*
+import uk.gov.hmrc.gitstamp.GitStampPlugin._
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
