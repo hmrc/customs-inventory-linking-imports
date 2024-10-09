@@ -4,7 +4,7 @@ import play.sbt.PlayImport.PlayKeys.playDefaultPort
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
 import sbt.{IO, Path, Setting, SimpleFileFilter, taskKey, _}
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, targetJvm}
+import uk.gov.hmrc.DefaultBuildSettings.addTestReportOption
 import uk.gov.hmrc.gitstamp.GitStampPlugin._
 
 import java.text.SimpleDateFormat
@@ -37,7 +37,6 @@ lazy val microservice = Project(appName, file("."))
   .disablePlugins(sbt.plugins.JUnitXmlReportPlugin)
   .configs(testConfig: _*)
   .settings(
-    targetJvm := "jvm-11",
     commonSettings,
     unitTestSettings,
     integrationComponentTestSettings,
