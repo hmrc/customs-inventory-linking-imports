@@ -39,7 +39,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionB
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, UniqueIdsService, UuidService}
 import util.CustomsMetricsTestData.EventStart
-import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML, validWrappedGoodsArrivalXml, validWrappedValidateMovementXml}
+import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
 
 import java.time.format.DateTimeFormatter
 import scala.xml.Elem

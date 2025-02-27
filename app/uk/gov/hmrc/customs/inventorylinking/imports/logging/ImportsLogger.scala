@@ -17,7 +17,6 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
 import com.google.inject.Inject
-
 import javax.inject.Singleton
 import play.api.mvc.Request
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper._
