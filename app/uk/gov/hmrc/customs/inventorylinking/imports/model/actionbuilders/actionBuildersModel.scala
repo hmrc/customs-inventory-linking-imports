@@ -147,7 +147,6 @@ case class AuthorisedRequest[A](
                                  clientId: ClientId,
                                  request: Request[A]
 ) extends WrappedRequest[A](request) with HasConversationId with HasApiVersion with ExtractedHeaders
-
 // Available after ValidatedPayloadAction builder
 case class ValidatedPayloadRequest[A](
                                        maybeBadgeIdentifier: Option[BadgeIdentifier],
@@ -159,4 +158,15 @@ case class ValidatedPayloadRequest[A](
                                        clientId: ClientId,
                                        xmlBody: NodeSeq,
                                        request: Request[A]
-) extends WrappedRequest[A](request) with HasConversationId with HasApiVersion with ExtractedHeaders with HasXmlBody
+) extends WrappedRequest[A](request) with HasConversationId with HasApiVersion with ExtractedHeaders with HasXmlBody {
+  val maybeEntryNumber: Option[EntryNumber] = {
+    val xmlNode = (xmlBody \ "entryNumber")
+    val values = xmlNode.iterator.collect {
+      case node if node.nonEmpty && xmlNode.text.trim.nonEmpty => node.text.trim
+    }.mkString("|")
+    if (values.isEmpty) None else Some(values).fold {
+      val tmp: Option[EntryNumber] = None; tmp
+    }(x => Some(EntryNumber(x)))
+  }
+
+}

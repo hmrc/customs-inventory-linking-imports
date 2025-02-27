@@ -65,7 +65,8 @@ abstract class PayloadValidationAction @Inject()(val xmlValidationService: XmlVa
   private def validateXml[A](xml: NodeSeq)(implicit ar: AuthorisedRequest[A]): Future[Either[Result, ValidatedPayloadRequest[A]]] = {
     xmlValidationService.validate(xml)
       .map { _ =>
-        logger.debug("XML payload validated")
+        val validatedPayloadRequest = ar.toValidatedPayloadRequest(xml)
+        logger.infoEn("XML payload validated", validatedPayloadRequest.maybeEntryNumber)
         Right(ar.toValidatedPayloadRequest(xml))
       }
       .recover {

@@ -37,7 +37,7 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
 
   private lazy val customsMetricsConnector = app.injector.instanceOf[CustomsMetricsConnector]
 
-  private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
+  private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequestWithValidPayload
 
   private implicit val mockImportsLogger: ImportsLogger = mock[ImportsLogger]
 
@@ -67,9 +67,10 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
       setupCustomsMetricsServiceToReturn()
 
       val response: Unit = await(sendValidRequest())
-
+      vpr.maybeEntryNumber.getOrElse("").toString shouldBe "string"
       response shouldBe
       verifyCustomsMetricsServiceWasCalledWith(ValidCustomsMetricsRequest)
+
     }
 
     "return a failed future when external service returns 404" in {
@@ -108,6 +109,6 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
   }
 
   private def localhostString: String = {
-    if (System.getenv("HOME") == "/home/jenkins") "127.0.0.1" else "0:0:0:0:0:0:0:1"
+    if (System.getenv("HOME") == "/home/jenkins") "127.0.0.1" else "[0:0:0:0:0:0:0:1]"
   }
 }

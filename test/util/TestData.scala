@@ -39,7 +39,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionB
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders._
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, UniqueIdsService, UuidService}
 import util.CustomsMetricsTestData.EventStart
-import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML}
+import util.XMLTestData.{ValidInventoryLinkingGoodsArrivalRequestXML, ValidInventoryLinkingMovementRequestXML, validWrappedGoodsArrivalXml, validWrappedValidateMovementXml}
 
 import java.time.format.DateTimeFormatter
 import scala.xml.Elem
@@ -68,6 +68,9 @@ object TestData {
 
   val AuthenticatedEoriValue = "RASHADMUGHAL"
   val ValidAuthenticatedEori = AuthenticatedEori(AuthenticatedEoriValue)
+
+  val EntryNumberValue = "23GB6BN2FXCDS58A00"
+  val ValidEntryNumber = EntryNumber(EntryNumberValue)
 
   val ValidBadgeIdentifierValue = "BADGEID123"
   val InvalidBadgeIdentifierValue = "INVALIDBADGEID123456789"
@@ -183,6 +186,7 @@ object TestData {
   val TestValidatedHeadersNoIdsRequest: ValidatedHeadersRequest[AnyContentAsXml] = TestConversationIdRequestV1.toValidatedHeadersRequest(TestExtractedHeadersWithoutCorrelationIdOrSubmitterIdOrBadgeId)
   val TestAuthorisedRequest: AuthorisedRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest
   val TestCspValidatedPayloadRequest: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
+  val TestCspValidatedPayloadRequestWithValidPayload: ValidatedPayloadRequest[AnyContentAsXml] = ValidatedPayloadRequest(None,ValidConversationId,EventStart,VersionOne, None, None,ClientId("124353"), xmlBody = ValidInventoryLinkingMovementRequestXML, TestFakeRequestV1)
   val TestCspValidatedPayloadRequestV2: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersRequestV2.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
   val TestCspValidatedPayloadRequestNoIds: ValidatedPayloadRequest[AnyContentAsXml] = TestValidatedHeadersNoIdsRequest.toAuthorisedRequest.toValidatedPayloadRequest(xmlBody = TestXmlPayload)
   val ValidRequest: FakeRequest[AnyContentAsXml] = TestFakeRequestV1.withHeaders(ValidHeaders.toSeq: _*)

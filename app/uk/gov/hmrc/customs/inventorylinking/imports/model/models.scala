@@ -50,6 +50,10 @@ case class CorrelationId(uuid: UUID) extends AnyVal {
   override def toString: String = uuid.toString
 }
 
+case class EntryNumber(value: String) extends AnyVal{
+  override def toString: String = value.toString
+}
+
 case class BadgeIdentifier(value: String) extends AnyVal
 
 case class FieldsId(value: String) extends AnyVal

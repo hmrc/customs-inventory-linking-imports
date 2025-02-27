@@ -18,6 +18,7 @@ package uk.gov.hmrc.customs.inventorylinking.imports.logging
 
 import play.api.http.HeaderNames.{ACCEPT, CONTENT_TYPE}
 import play.api.mvc.Request
+import uk.gov.hmrc.customs.inventorylinking.imports.model.EntryNumber
 import uk.gov.hmrc.customs.inventorylinking.imports.model.HeaderConstants._
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ExtractedHeaders, HasConversationId}
 
@@ -37,6 +38,10 @@ object LoggingHelper {
     formatMessage(msg, r)
   }
 
+  def formatInfoEn(msg: String, r: HasConversationId, en:Option[EntryNumber]): String = {
+    formatMessage(msg, r, en)
+  }
+
   def formatDebug(msg: String, r: HasConversationId): String = {
     formatMessage(msg, r)
   }
@@ -45,18 +50,19 @@ object LoggingHelper {
     formatMessageFull(msg, r)
   }
 
-  private def formatMessage(msg: String, r: HasConversationId): String = {
-    s"${format(r)} $msg".trim
+  private def formatMessage(msg: String, r: HasConversationId, maybeEntryNumber: Option[EntryNumber] = None): String = {
+    s"${format(r, maybeEntryNumber)} $msg".trim
   }
 
-  private def format(r: HasConversationId): String = {
+  private def format(r: HasConversationId,  entryNumber: Option[EntryNumber]): String = {
     val defaultMsg = s"[conversationId=${r.conversationId}]"
 
     r match {
       case h: ExtractedHeaders =>
         val bid = h.maybeBadgeIdentifier.map(b => s"[badgeIdentifier=${b.value}]").getOrElse("")
         val sid = h.maybeSubmitterIdentifier.map(s => s"[submitterIdentifier=${s.value}]").getOrElse("")
-        s"$defaultMsg[clientId=${h.clientId}][requestedApiVersion=${h.requestedApiVersion.value}]$bid$sid"
+        val en = entryNumber.map(s => s"[entryNumber=${s.value}]").getOrElse("")
+        s"$defaultMsg[clientId=${h.clientId}][requestedApiVersion=${h.requestedApiVersion.value}]$bid$sid$en"
       case _ => defaultMsg
     }
   }
