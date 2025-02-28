@@ -12,7 +12,7 @@ object AppDependencies {
 
   val test: Seq[ModuleID] = Seq(
   "org.mockito"                               %% "mockito-scala-scalatest"          % "1.17.37"         % Test,
-  "org.wiremock"                              % "wiremock-standalone"               % "3.12.0"           % Test,
+  "org.wiremock"                              % "wiremock-standalone"               % "3.12.0"          % Test,
   "org.mockito"                               % "mockito-core"                      % "5.15.2"          % Test,
   "uk.gov.hmrc"                               %% s"bootstrap-test-$playVersion"     % bootstrapVersion  % Test
   )
