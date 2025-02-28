@@ -7,13 +7,13 @@ object AppDependencies {
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                              %% s"bootstrap-backend-$playVersion" % bootstrapVersion,
-    "org.typelevel"                            %% "cats-core"                       % "2.12.0"
+    "org.typelevel"                            %% "cats-core"                       % "2.13.0"
   )
 
   val test: Seq[ModuleID] = Seq(
   "org.mockito"                               %% "mockito-scala-scalatest"          % "1.17.37"         % Test,
-  "org.wiremock"                              % "wiremock-standalone"               % "3.9.0"           % Test,
-  "org.mockito"                               % "mockito-core"                      % "5.12.0"          % Test,
+  "org.wiremock"                              % "wiremock-standalone"               % "3.12.0"          % Test,
+  "org.mockito"                               % "mockito-core"                      % "5.15.2"          % Test,
   "uk.gov.hmrc"                               %% s"bootstrap-test-$playVersion"     % bootstrapVersion  % Test
   )
 }

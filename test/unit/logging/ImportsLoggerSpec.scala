@@ -26,7 +26,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{Author
 import util.CustomsMetricsTestData.EventStart
 import util.UnitSpec
 import util.MockitoPassByNameHelper.PassByNameVerifier
-import util.TestData.{TestExtractedHeadersV1, TestXmlPayload, ValidConversationId, emulatedServiceFailure}
+import util.TestData.{TestExtractedHeadersV1, TestXmlPayload, ValidConversationId, ValidEntryNumber, emulatedServiceFailure}
 
 class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
 
@@ -69,6 +69,21 @@ class ImportsLoggerSpec extends UnitSpec with MockitoSugar {
         .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][requestedApiVersion=1.0][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] msg")
         .verify()
     }
+    "infoEn(s: => String, en:Option[EntryNumber])" in new SetUp {
+      logger.infoEn("msg", Some(ValidEntryNumber))
+
+      PassByNameVerifier(mockCdsLogger, "info")
+        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][requestedApiVersion=1.0][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123][entryNumber=23GB6BN2FXCDS58A00] msg")
+        .verify()
+    }
+    "info(s: => String, en:Option[EntryNumber] = None)" in new SetUp {
+      logger.infoEn("msg", None)
+
+      PassByNameVerifier(mockCdsLogger, "info")
+        .withByNameParam("[conversationId=38400000-8cf0-11bd-b23e-10b96e4ef00d][clientId=SOME_X_CLIENT_ID][requestedApiVersion=1.0][badgeIdentifier=BADGEID123][submitterIdentifier=xsubmitterid123] msg")
+        .verify()
+    }
+
     "warn(s: => String)" in new SetUp {
       logger.warn("msg")
 

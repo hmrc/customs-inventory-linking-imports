@@ -20,6 +20,7 @@ import com.google.inject.Inject
 import javax.inject.Singleton
 import play.api.mvc.Request
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.LoggingHelper._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.EntryNumber
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.HasConversationId
 
 @Singleton
@@ -37,6 +38,9 @@ class ImportsLogger @Inject()(logger: CdsLogger) {
 
   def info(s: => String)(implicit r: HasConversationId): Unit =
     logger.info(formatInfo(s, r))
+
+  def infoEn(s: => String, en: Option[EntryNumber])(implicit r: HasConversationId): Unit =
+    logger.info(formatInfoEn(s, r, en))
 
   def warn(s: => String)(implicit r: HasConversationId): Unit =
     logger.warn(formatWarn(s, r))
