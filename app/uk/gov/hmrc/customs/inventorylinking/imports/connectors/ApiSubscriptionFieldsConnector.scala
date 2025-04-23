@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ApiSubscriptionKey}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpException}
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException, StringContextOps}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
+class ApiSubscriptionFieldsConnector @Inject()(http: HttpClientV2,
                                                servicesConfig: ImportsConfigService,
                                                logger: ImportsLogger)
                                               (implicit ec: ExecutionContext) {
@@ -40,7 +41,7 @@ class ApiSubscriptionFieldsConnector @Inject()(http: HttpClient,
   private def get[A](url: String)(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[ApiSubscriptionFieldsResponse] = {
     logger.debug(s"Getting fields id from api subscription fields service. url=$url")
 
-    http.GET[ApiSubscriptionFieldsResponse](url)
+    http.get(url"$url").execute[ApiSubscriptionFieldsResponse]
       .recoverWith {
         case httpError: HttpException =>
           Future.failed(new RuntimeException(httpError))
