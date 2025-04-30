@@ -16,33 +16,40 @@
 
 package unit.connectors
 
-import com.typesafe.config.Config
-import org.mockito.ArgumentMatchers.{eq => ameq, _}
+import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.http.Fault
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.Application
+import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsXml
+import play.api.test.Helpers.ACCEPT
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.ApiSubscriptionFieldsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
+import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
-import uk.gov.hmrc.customs.inventorylinking.imports.model.{ApiSubscriptionFieldsResponse, ImportsConfig}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads, NotFoundException}
-import util.UnitSpec
-import util.ExternalServicesConfig._
-import util.externalservices.InventoryLinkingImportsExternalServicesConfig.ApiSubscriptionFieldsContext
-import util.{ApiSubscriptionFieldsTestData, TestData}
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
+import uk.gov.hmrc.http.test.WireMockSupport
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException, UpstreamErrorResponse}
+import uk.gov.hmrc.play.bootstrap.http.HttpClientV2Provider
+import util.{ApiSubscriptionFieldsTestData, TestData, UnitSpec}
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.net.SocketException
+import scala.concurrent.ExecutionContext
 
 class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   with MockitoSugar
   with BeforeAndAfterEach
   with Eventually
-  with ApiSubscriptionFieldsTestData {
+  with ApiSubscriptionFieldsTestData
+  with WireMockSupport {
 
-  private val mockWSGetImpl = mock[HttpClient]
   private val mockLogger = mock[ImportsLogger]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
   private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
@@ -50,47 +57,90 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
 
   private val mockImportsConfigService: ImportsConfigService = mock[ImportsConfigService]
   private val mockImportsConfig: ImportsConfig = mock[ImportsConfig]
-  private val connector = connectorWithConfig(validConfig)
+
+  lazy val app: Application = new GuiceApplicationBuilder()
+    .configure(
+      "play.http.router" -> "definition.Routes",
+      "application.logger.name" -> "customs-inventory-linking-imports",
+      "appName" -> "customs-inventory-linking-imports",
+      "appUrl" -> "http://customs-inventory-linking-imports-host"
+    ).overrides(
+      bind[String].qualifiedWith("appName").toInstance("customs-inventory-linking-imports"),
+      bind[HttpClientV2].toProvider[HttpClientV2Provider],
+      bind[ImportsLogger].toInstance(mockLogger),
+      bind[ImportsConfigService].toInstance(mockImportsConfigService)
+    )
+    .build()
+
+  private val connector: ApiSubscriptionFieldsConnector = app.injector.instanceOf[ApiSubscriptionFieldsConnector]
 
   private val httpException = new NotFoundException("Emulated 404 response from a web call")
-  private val expectedUrl = s"http://$Host:$Port$ApiSubscriptionFieldsContext/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
+
+  // I think this should be correct but this is not the url being used (customs-declaration who also call this use this url)
+  //  private val expectedUrl = s"$ApiSubscriptionFieldsContext/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
+
+  private val expectedUrl = s"/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
+  private val mockRequestBuilder = mock[RequestBuilder]
 
   override protected def beforeEach(): Unit = {
+    wireMockServer.resetMappings()
+    wireMockServer.resetRequests()
     when(mockImportsConfigService.importsConfig).thenReturn(mockImportsConfig)
-    when(mockImportsConfigService.importsConfig.apiSubscriptionFieldsBaseUrl).thenReturn(s"http://$Host:$Port$ApiSubscriptionFieldsContext")
-    reset[Any](mockLogger, mockWSGetImpl)
+    when(mockImportsConfig.apiSubscriptionFieldsBaseUrl).thenReturn(s"http://localhost:${wireMockServer.port()}")
   }
 
   "ApiSubscriptionFieldsConnector" can {
     "when making a successful request" should {
       "use the correct URL for valid path parameters and config" in {
-        val futureResponse = Future.successful(apiSubscriptionFieldsResponse)
-        when(mockWSGetImpl.GET[ApiSubscriptionFieldsResponse](ameq(expectedUrl), any(), any())
-          (any[HttpReads[ApiSubscriptionFieldsResponse]](), any[HeaderCarrier](), any[ExecutionContext])).thenReturn(futureResponse)
+        wireMockServer.stubFor(get(urlEqualTo(expectedUrl))
+          .withHeader(ACCEPT, equalTo("*/*"))
+          .willReturn(
+            aResponse()
+              .withBody(Json.stringify(Json.toJson(apiSubscriptionFieldsResponse)))
+              .withStatus(OK)
+          )
+        )
 
         awaitRequest shouldBe apiSubscriptionFieldsResponse
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo(expectedUrl)))
       }
     }
 
     "when making an failing request" should {
       "propagate an underlying error when api subscription fields call fails with a non-http exception" in {
-        returnResponseForRequest(Future.failed(TestData.emulatedServiceFailure))
+        wireMockServer.stubFor(get(urlEqualTo(expectedUrl))
+          .withHeader(ACCEPT, equalTo("*/*"))
+          .willReturn(
+            aResponse()
+              .withFault(Fault.CONNECTION_RESET_BY_PEER)
+          )
+        )
 
-        val caught = intercept[TestData.EmulatedServiceFailure] {
+        val caught = intercept[SocketException] {
           awaitRequest
         }
-
-        caught shouldBe TestData.emulatedServiceFailure
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo(expectedUrl)))
+        caught shouldBe a[SocketException]
+        caught.getMessage should include("Connection reset")
       }
 
       "wrap an underlying error when api subscription fields call fails with an http exception" in {
-        returnResponseForRequest(Future.failed(httpException))
 
-        val caught = intercept[RuntimeException] {
+        wireMockServer.stubFor(get(urlEqualTo(expectedUrl))
+          .withHeader(ACCEPT, equalTo("*/*"))
+          .willReturn(
+            aResponse()
+              .withBody(Json.stringify(Json.toJson(apiSubscriptionFieldsResponse)))
+              .withStatus(NOT_FOUND)
+          )
+        )
+        val caught = intercept[UpstreamErrorResponse] {
           awaitRequest
         }
 
-        caught.getCause shouldBe httpException
+        wireMockServer.verify(1, getRequestedFor(urlEqualTo(expectedUrl)))
+        caught.getMessage shouldBe s"""GET of 'http://localhost:6001/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0' returned 404. Response body: '{"fieldsId":"327d9145-4965-4d28-a2c5-39dedee50334","fields":{"authenticatedEori":"RASHADMUGHAL"}}'"""
+
       }
     }
   }
@@ -98,12 +148,4 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   private def awaitRequest = {
     await(connector.getSubscriptionFields(apiSubscriptionKey))
   }
-
-  private def returnResponseForRequest(eventualResponse: Future[ApiSubscriptionFieldsResponse]) = {
-    when(mockWSGetImpl.GET[ApiSubscriptionFieldsResponse](anyString(), any(), any())
-      (any[HttpReads[ApiSubscriptionFieldsResponse]](), any[HeaderCarrier](), any[ExecutionContext])).thenReturn(eventualResponse)
-  }
-
-  private def connectorWithConfig(config: Config) = new ApiSubscriptionFieldsConnector(mockWSGetImpl, mockImportsConfigService, mockLogger)
-
 }
