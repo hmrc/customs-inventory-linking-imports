@@ -48,7 +48,7 @@ class CustomsMetricsConnector @Inject()(http: HttpClientV2,
 
     logger.debug(s"Sending request to customs metrics. Url: $url Payload:\n${request.toString}")
     http
-      .post(url"url")
+      .post(url"$url")
       .withBody(Json.toJson(request))
       .execute[HttpResponse]
       .map{ response =>

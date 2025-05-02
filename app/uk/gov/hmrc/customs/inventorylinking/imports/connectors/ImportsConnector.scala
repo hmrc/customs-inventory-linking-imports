@@ -83,7 +83,7 @@ class ImportsConnector @Inject()(http: HttpClientV2,
 
   private def post[A](xml: NodeSeq, url: String, importsHeaders: Seq[(String, String)])(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
     logger.debug(s"Sending request to backend. Url: $url\nPayload: ${xml.toString()}")
-    http.post(url"$url").withBody(xml.toString()).setHeader(importsHeaders: _*).execute[HttpResponse].map { response =>
+    http.post(url"$url").setHeader(importsHeaders: _*).withBody(xml).execute[HttpResponse].map { response =>
       response.status match {
         case status if is2xx(status) =>
           response

@@ -34,10 +34,11 @@ import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsConfig
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
-import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.WireMockSupport
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException, UpstreamErrorResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClientV2Provider
+import util.externalservices.InventoryLinkingImportsExternalServicesConfig.ApiSubscriptionFieldsContext
 import util.{ApiSubscriptionFieldsTestData, TestData, UnitSpec}
 
 import java.net.SocketException
@@ -63,30 +64,26 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
       "play.http.router" -> "definition.Routes",
       "application.logger.name" -> "customs-inventory-linking-imports",
       "appName" -> "customs-inventory-linking-imports",
-      "appUrl" -> "http://customs-inventory-linking-imports-host"
+      "appUrl" -> "http://customs-inventory-linking-imports-host",
+      "microservice.services.api-subscription-fields.context" -> ApiSubscriptionFieldsContext,
+      "metrics.enabled" -> false
     ).overrides(
       bind[String].qualifiedWith("appName").toInstance("customs-inventory-linking-imports"),
       bind[HttpClientV2].toProvider[HttpClientV2Provider],
       bind[ImportsLogger].toInstance(mockLogger),
-      bind[ImportsConfigService].toInstance(mockImportsConfigService)
+      bind[ImportsConfigService].toInstance(mockImportsConfigService),
     )
     .build()
 
   private val connector: ApiSubscriptionFieldsConnector = app.injector.instanceOf[ApiSubscriptionFieldsConnector]
 
-  private val httpException = new NotFoundException("Emulated 404 response from a web call")
-
-  // I think this should be correct but this is not the url being used (customs-declaration who also call this use this url)
-  //  private val expectedUrl = s"$ApiSubscriptionFieldsContext/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
-
-  private val expectedUrl = s"/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
-  private val mockRequestBuilder = mock[RequestBuilder]
+  private val expectedUrl = s"$ApiSubscriptionFieldsContext/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0"
 
   override protected def beforeEach(): Unit = {
     wireMockServer.resetMappings()
     wireMockServer.resetRequests()
     when(mockImportsConfigService.importsConfig).thenReturn(mockImportsConfig)
-    when(mockImportsConfig.apiSubscriptionFieldsBaseUrl).thenReturn(s"http://localhost:${wireMockServer.port()}")
+    when(mockImportsConfig.apiSubscriptionFieldsBaseUrl).thenReturn(s"$wireMockUrl$ApiSubscriptionFieldsContext")
   }
 
   "ApiSubscriptionFieldsConnector" can {
@@ -139,7 +136,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
         }
 
         wireMockServer.verify(1, getRequestedFor(urlEqualTo(expectedUrl)))
-        caught.getMessage shouldBe s"""GET of 'http://localhost:6001/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0' returned 404. Response body: '{"fieldsId":"327d9145-4965-4d28-a2c5-39dedee50334","fields":{"authenticatedEori":"RASHADMUGHAL"}}'"""
+        caught.getMessage shouldBe s"""GET of '$wireMockUrl$expectedUrl' returned $NOT_FOUND. Response body: '{"fieldsId":"327d9145-4965-4d28-a2c5-39dedee50334","fields":{"authenticatedEori":"RASHADMUGHAL"}}'"""
 
       }
     }
