@@ -18,7 +18,6 @@ package unit.connectors
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.http.Fault
-import org.apache.pekko.actor.ActorSystem
 import org.mockito.Mockito.when
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.Eventually
@@ -29,11 +28,10 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.AnyContentAsXml
-import play.api.test.Helpers
 import play.mvc.Http.MimeTypes
 import uk.gov.hmrc.customs.inventorylinking.imports.config.{ServiceConfig, ServiceConfigProvider}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.{ImportsConnector, Non2xxResponseException}
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.{CdsLogger, ImportsLogger}
+import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, ImportsCircuitBreakerConfig}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, ImportsConfigService}
@@ -52,7 +50,6 @@ import java.net.SocketException
 import java.time._
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import scala.concurrent.ExecutionContext
 
 
 class ImportsConnectorSpec extends UnitSpec
@@ -62,16 +59,12 @@ class ImportsConnectorSpec extends UnitSpec
   with WireMockSupport
   with HttpClientV2Support {
 
-//  private val mockWsPost = mock[HttpClientV2]
   private val mockLogger = mock[ImportsLogger]
   private val mockServiceConfigProvider = mock[ServiceConfigProvider]
   private val mockImportsConfigService = mock[ImportsConfigService]
   private val mockImportsCircuitBreakerConfig = mock[ImportsCircuitBreakerConfig]
   private val mockResponse = mock[HttpResponse]
   private val mockAuditConnector = mock[AuditConnector]
-  private val cdsLogger = mock[CdsLogger]
-  private val actorSystem = ActorSystem("mockActorSystem")
-  private implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
 
   lazy val app: Application = new GuiceApplicationBuilder()
     .configure(
@@ -99,17 +92,13 @@ class ImportsConnectorSpec extends UnitSpec
     )
     .build()
 
-//  private val connector = new ImportsConnector(httpClientV2, mockLogger, mockServiceConfigProvider, mockImportsConfigService, cdsLogger, actorSystem)
-
   private val connector: ImportsConnector = app.injector.instanceOf[ImportsConnector]
 
   private val goodsArrivalConfigv1 = ServiceConfig(s"$wireMockUrl$GoodsArrivalConnectorContext", Some("v1-ga-bearer-token"), "V1-ga-default")
   private val goodsArrivalConfigv2 = ServiceConfig(s"$wireMockUrl$GoodsArrivalConnectorContext", Some("v2-ga-bearer-token"), "V2-ga-default")
 
   private val xml = <xml></xml>
-  private implicit val hc   : HeaderCarrier = HeaderCarrier()
-
-  private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestCspValidatedPayloadRequest
+  private implicit val hc : HeaderCarrier = HeaderCarrier()
 
   override protected def beforeEach(): Unit = {
     wireMockServer.resetMappings()
