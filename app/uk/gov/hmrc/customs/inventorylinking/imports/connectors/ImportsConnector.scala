@@ -35,13 +35,14 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.{ConversationId, Impor
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{DateTimeService, ImportsConfigService}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.client.HttpClientV2
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.xml.NodeSeq
 
 @Singleton
-class ImportsConnector @Inject()(http: HttpClient,
+class ImportsConnector @Inject()(http: HttpClientV2,
                                  logger: ImportsLogger,
                                  serviceConfigProvider: ServiceConfigProvider,
                                  config: ImportsConfigService,
@@ -82,7 +83,7 @@ class ImportsConnector @Inject()(http: HttpClient,
 
   private def post[A](xml: NodeSeq, url: String, importsHeaders: Seq[(String, String)])(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
     logger.debug(s"Sending request to backend. Url: $url\nPayload: ${xml.toString()}")
-    http.POSTString[HttpResponse](url, xml.toString(), headers = importsHeaders).map { response =>
+    http.post(url"$url").setHeader(importsHeaders: _*).withBody(xml).execute[HttpResponse].map { response =>
       response.status match {
         case status if is2xx(status) =>
           response

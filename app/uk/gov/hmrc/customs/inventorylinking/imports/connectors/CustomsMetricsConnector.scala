@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
-import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json
 import play.mvc.Http.HeaderNames.{ACCEPT, CONTENT_TYPE}
 import play.mvc.Http.MimeTypes.JSON
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
@@ -24,12 +24,14 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.CustomsMetricsRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.HasConversationId
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpErrorFunctions, HttpException, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpErrorFunctions, HttpException, HttpResponse, StringContextOps}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CustomsMetricsConnector @Inject()(http: HttpClient,
+class CustomsMetricsConnector @Inject()(http: HttpClientV2,
                                         logger: ImportsLogger,
                                         config: ImportsConfigService)
                                        (implicit ec: ExecutionContext) extends HttpErrorFunctions {
@@ -45,7 +47,11 @@ class CustomsMetricsConnector @Inject()(http: HttpClient,
   private def post[A](request: CustomsMetricsRequest, url: String)(implicit hasConversationId: HasConversationId): Future[Unit] = {
 
     logger.debug(s"Sending request to customs metrics. Url: $url Payload:\n${request.toString}")
-    http.POST[CustomsMetricsRequest, HttpResponse](url, request).map{ response =>
+    http
+      .post(url"$url")
+      .withBody(Json.toJson(request))
+      .execute[HttpResponse]
+      .map{ response =>
       response.status match {
         case status if is2xx(status) =>
           logger.debug("customs metrics sent successfully")

@@ -76,21 +76,21 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
     "return a failed future when external service returns 404" in {
       setupCustomsMetricsServiceToReturn(NOT_FOUND)
       await(sendValidRequest()) shouldBe
-      verifyImportsLoggerError("Call to customs metrics failed. url=http://localhost:11111/log-times, status=404, error=received a non 2XX response")
+      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=404, error=received a non 2XX response")
     }
 
     "return a failed future when external service returns 400" in {
       setupCustomsMetricsServiceToReturn(BAD_REQUEST)
 
       await(sendValidRequest()) shouldBe
-      verifyImportsLoggerError("Call to customs metrics failed. url=http://localhost:11111/log-times, status=400, error=received a non 2XX response")
+      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=400, error=received a non 2XX response")
     }
 
     "return a failed future when external service returns 500" in {
       setupCustomsMetricsServiceToReturn(INTERNAL_SERVER_ERROR)
 
       await(sendValidRequest()) shouldBe
-      verifyImportsLoggerError("Call to customs metrics failed. url=http://localhost:11111/log-times, status=500, error=received a non 2XX response")
+      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=500, error=received a non 2XX response")
     }
 
     "return a failed future when fail to connect the external service" in {
@@ -98,7 +98,7 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
 
       intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
       //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
-      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:11111/log-times, status=502, error=POST of 'http://localhost:11111/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:11111'")
+      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'")
 
       startMockServer()
     }
