@@ -51,5 +51,4 @@ trait CustomsMetricsService extends WireMockRunner {
         .withRequestBody(equalToJson(Json.toJson(request).toString))
     )
   }
-
 }
