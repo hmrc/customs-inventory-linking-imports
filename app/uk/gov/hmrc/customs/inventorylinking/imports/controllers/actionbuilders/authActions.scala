@@ -54,25 +54,28 @@ abstract class AuthAction @Inject()(override val authConnector: AuthConnector,
                                    (implicit ec: ExecutionContext)
   extends ActionRefiner[ValidatedHeadersRequest, AuthorisedRequest] with AuthorisedFunctions  {
 
+  override def refine[A](request: ValidatedHeadersRequest[A]): Future[Either[Result, AuthorisedRequest[A]]] = {
+    implicit val implicitVhr: ValidatedHeadersRequest[A] = request
+
+    implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromRequest(rh)
+
+    authorised(importsMessageType.enrolment and AuthProviders(PrivilegedApplication)) {
+      logger.debug(s"Successfully authorised CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment")
+      Future.successful(Right(request.toAuthorisedRequest))
+    }.recover {
+      case NonFatal(_: AuthorisationException) =>
+        logger.error(s"No authorisation for CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment")
+        Left(errorResponseUnauthorisedGeneral.XmlResult.withConversationId)
+      case NonFatal(e) =>
+        logger.error(s"Error when authorising for CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment", e)
+        Left(ErrorInternalServerError.XmlResult.withConversationId)
+    }
+  }
+
   protected def executionContext: ExecutionContext = ec
 
-  private val errorResponseUnauthorisedGeneral =
+  private val errorResponseUnauthorisedGeneral : ErrorResponse =
     ErrorResponse(UNAUTHORIZED, UnauthorizedCode, "Unauthorised request")
 
-    override def refine[A](vhr: ValidatedHeadersRequest[A]): Future[Either[Result, AuthorisedRequest[A]]] = {
-      implicit val implicitVhr: ValidatedHeadersRequest[A] = vhr
-      implicit def hc(implicit rh: RequestHeader): HeaderCarrier = HeaderCarrierConverter.fromRequest(rh)
 
-      authorised(importsMessageType.enrolment and AuthProviders(PrivilegedApplication)) {
-        logger.debug(s"Successfully authorised CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment")
-        Future.successful(Right(vhr.toAuthorisedRequest))
-      }.recover{
-        case NonFatal(_: AuthorisationException) =>
-          logger.error(s"No authorisation for CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment")
-          Left(errorResponseUnauthorisedGeneral.XmlResult.withConversationId)
-        case NonFatal(e) =>
-          logger.error(s"Error when authorising for CSP PrivilegedApplication with ${importsMessageType.enrolment.key} enrolment", e)
-          Left(ErrorInternalServerError.XmlResult.withConversationId)
-      }
-    }
 }

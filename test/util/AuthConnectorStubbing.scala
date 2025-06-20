@@ -33,7 +33,7 @@ trait AuthConnectorStubbing extends UnitSpec with MockitoSugar {
 
   def authoriseCsp(apiScope: Enrolment): Unit = {
     when(mockAuthConnector.authorise(ameq(cspAuthPredicate(apiScope)), ameq(EmptyRetrieval))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(())
+      .thenReturn((Future.unit))
   }
 
   def cspAuthPredicate(apiScope: Enrolment): Predicate = {

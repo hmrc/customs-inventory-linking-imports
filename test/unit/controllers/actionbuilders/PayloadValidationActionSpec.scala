@@ -28,7 +28,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionB
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedPayloadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService}
 import util.CustomsMetricsTestData.EventStart
-import util.UnitSpec
+import util.{UnitSpec, VerifyLogging}
 import util.TestData.{TestAuthorisedRequest, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -72,6 +72,7 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
         private val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(validateMovementPayloadValidationAction.refine(TestAuthorisedRequest))
 
         actual shouldBe Left(expectedXmlSchemaErrorResult)
+        VerifyLogging.verifyImportsLoggerThrowable("debug","Payload is not valid according to schema:\n<foo>bar</foo>")(mockImportsLogger)
       }
 
     "return 400 error response when XML is not well formed" in new SetUp {
@@ -143,6 +144,7 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
       val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(goodsArrivalPayloadValidationAction.refine(TestAuthorisedRequest))
 
       actual shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+      VerifyLogging.verifyImportsLoggerThrowable("debug","Error validating payload.:\n<foo>bar</foo>")(mockImportsLogger)
     }
   }
 

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.customs.inventorylinking.imports.connectors
 
 import play.api.libs.json.Json
+import play.api.libs.ws.writeableOf_JsValue
 import play.mvc.Http.HeaderNames.{ACCEPT, CONTENT_TYPE}
 import play.mvc.Http.MimeTypes.JSON
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger

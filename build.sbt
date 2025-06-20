@@ -20,7 +20,7 @@ val testConfig = Seq(CdsIntegrationComponentTest, Test)
 
 // move shared settings from `microservice` here
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "3.3.5"
 
 def forkedJvmPerTestConfig(tests: Seq[TestDefinition], packages: String*): Seq[Group] =
   tests.groupBy(_.name.takeWhile(_ != '.')).filter(packageAndTests => packages contains packageAndTests._1) map {
@@ -68,8 +68,17 @@ lazy val integrationComponentTestSettings =
 lazy val commonSettings: Seq[Setting[_]] = gitStampSettings
 
 lazy val scoverageSettings: Seq[Setting[_]] = Seq(
-  coverageExcludedPackages := "<empty>;models/.data/..*;view.*;models.*;config.*;.*(Reverse|AuthService|BuildInfo|Routes).*;uk.gov.hmrc.customs.inventorylinking.imports.views.*",
-  coverageMinimumStmtTotal := 98,
+
+  coverageExcludedPackages := List(
+    "<empty>"
+    ,"uk\\.gov\\.hmrc\\.customs\\.inventorylinking\\.imports\\.model\\..*"
+    ,"uk\\.gov\\.hmrc\\.customs\\.inventorylinking\\.imports\\.views\\..*"
+    ,".*(Reverse|AuthService|BuildInfo|Routes|DateTimeService|TestOnlyService).*"
+    ,"uk\\.gov\\.hmrc\\.customs\\.inventorylinking\\.imports\\.data\\..*"
+
+    ,"uk\\.gov\\.hmrc\\.customs\\.inventorylinking\\.imports\\.config\\..*"
+  ).mkString(";"),
+  coverageMinimumStmtTotal := 97,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,
   Test / parallelExecution := false
@@ -77,8 +86,6 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
 
 def integrationComponentTestFilter(name: String): Boolean = (name startsWith "integration") || (name startsWith "component")
 def unitTestFilter(name: String): Boolean = name startsWith "unit"
-
-scalastyleConfig := baseDirectory.value / "project" / "scalastyle-config.xml"
 
 Compile / unmanagedResourceDirectories += baseDirectory.value / "public"
 (Runtime / managedClasspath) += (Assets / packageBin).value

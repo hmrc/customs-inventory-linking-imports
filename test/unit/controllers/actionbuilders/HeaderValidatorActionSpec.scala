@@ -22,13 +22,14 @@ import play.api.http.HeaderNames.CONTENT_TYPE
 import play.api.mvc.AnyContent
 import play.api.test.FakeRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse._
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.*
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.HeaderValidator
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.VersionOne
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ApiVersionRequest, ConversationIdRequest, ExtractedHeaders, ValidatedHeadersRequest}
 import util.CustomsMetricsTestData.EventStart
-import util.TestData._
+import util.TestData.*
+import util.VerifyLogging
 import util.{TestData, UnitSpec}
 
 class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks with MockitoSugar {
@@ -59,6 +60,7 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
     "in unhappy path, validation" should {
       "be unsuccessful for a valid request with missing accept header" in new SetUp {
         validate(apiVersionRequest(ValidHeaders - XClientIdHeaderName)) shouldBe Left(ErrorInternalServerError)
+        VerifyLogging.verifyImportsLoggerError("Error - header 'X-Client-ID' not present")(loggerMock)
       }
       "be unsuccessful for a valid request with missing content type header" in new SetUp {
         validate(apiVersionRequest(ValidHeaders - CONTENT_TYPE)) shouldBe Left(ErrorContentTypeHeaderInvalid)
@@ -68,6 +70,7 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       }
       "be successful for a valid request with missing X-Badge-Identifier header" in new SetUp {
         validate(apiVersionRequest(ValidHeadersNoCorrelationId - XBadgeIdentifierHeaderName)) shouldBe Right(TestExtractedHeadersWithoutCorrelationIdOrBadgeId)
+        VerifyLogging.verifyImportsLogger("debug","X-Badge-Identifier is optional and empty")(loggerMock)
       }
       "be successful for a valid request with missing X-Submitter-Identifier header" in new SetUp {
         validate(apiVersionRequest(ValidHeaders - XSubmitterIdentifierHeaderName)) shouldBe Right(TestExtractedHeadersWithoutCorrelationIdOrSubmitterId)
@@ -77,9 +80,11 @@ class HeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks 
       }
       "be unsuccessful for a valid request with Invalid content type header JSON header" in new SetUp {
         validate(apiVersionRequest(ValidHeaders + InvalidContentTypeJsonHeader)) shouldBe Left(ErrorContentTypeHeaderInvalid)
+        VerifyLogging.verifyImportsLoggerError("Error - header 'Content-Type' value 'application/json' is not valid")(loggerMock)
       }
       "be unsuccessful for a valid request with Invalid content type XML without UTF-8 header" in new SetUp {
         validate(apiVersionRequest(ValidHeaders + (CONTENT_TYPE -> "application/xml"))) shouldBe Left(ErrorContentTypeHeaderInvalid)
+        VerifyLogging.verifyImportsLoggerError("Error - header 'Content-Type' value 'application/xml' is not valid")(loggerMock)
       }
       "be unsuccessful for a valid request with Invalid X-Client-ID header" in new SetUp {
         validate(apiVersionRequest(ValidHeaders + InvalidXClientIdHeader)) shouldBe Left(ErrorInternalServerError)

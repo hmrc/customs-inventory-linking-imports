@@ -43,7 +43,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.http.{DefaultHttpAuditing, HttpClientV2Provider}
 import util.ExternalServicesConfig.{Host, Port}
 import util.TestData._
-import util.UnitSpec
+import util.{UnitSpec, VerifyLogging}
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig.GoodsArrivalConnectorContext
 
 import java.net.SocketException
@@ -151,6 +151,8 @@ class ImportsConnectorSpec extends UnitSpec
           .withHeader("X-Correlation-ID", equalTo(correlationId.toString))
           .withRequestBody(equalTo("<xml></xml>"))
         )
+        VerifyLogging.verifyImportsLogger("debug","Sending request to backend. Url: http://localhost:6001/inventorylinkingimports/goodsarrivalnotification\nPayload: <xml></xml>")(mockLogger)
+        VerifyLogging.verifyImportsLogger("debug","Response status 200 and response body <empty>")(mockLogger)
       }
 
       "passing all headers and v2 config" in {
@@ -200,6 +202,7 @@ class ImportsConnectorSpec extends UnitSpec
         wireMockServer.verify(1, postRequestedFor(urlEqualTo(GoodsArrivalConnectorContext)))
         caught shouldBe a[SocketException]
         caught.getMessage should include("Connection reset")
+        VerifyLogging.verifyImportsLoggerThrowable("error","Call to backend failed. url=[http://localhost:6001/inventorylinkingimports/goodsarrivalnotification]")(mockLogger)
       }
 
       "wrap an underlying error when call fails with an http exception when no response body is present" in {

@@ -44,7 +44,7 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
   "HeaderValidationAction when validation succeeds" should {
     "extract headers from incoming request and copy relevant values on to the ValidatedHeaderRequest" in new SetUp {
       val apiVersionRequestV1: ApiVersionRequest[AnyContentAsXml] = TestApiVersionRequestV1
-      when(mockHeaderValidator.validateHeaders(any[ApiVersionRequest[_]])).thenReturn(Right(TestExtractedHeadersV1))
+      when(mockHeaderValidator.validateHeaders(any[ApiVersionRequest[Any]])).thenReturn(Right(TestExtractedHeadersV1))
 
       val actualResult: Either[Result, ValidatedHeadersRequest[_]] = await(validateAndExtractHeadersAction.refine(apiVersionRequestV1))
 
@@ -55,7 +55,7 @@ class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar wit
   "HeaderValidationAction when validation fails" should {
     "return error with conversation Id in the headers" in new SetUp {
       val apiVersionRequestV1: ApiVersionRequest[AnyContentAsXml] = TestApiVersionRequestV1
-      when(mockHeaderValidator.validateHeaders(any[ApiVersionRequest[_]])).thenReturn(Left(ErrorContentTypeHeaderInvalid))
+      when(mockHeaderValidator.validateHeaders(any[ApiVersionRequest[Any]])).thenReturn(Left(ErrorContentTypeHeaderInvalid))
 
       val actualResult: Either[Result, ValidatedHeadersRequest[_]] = await(validateAndExtractHeadersAction.refine(apiVersionRequestV1))
 
