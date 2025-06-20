@@ -45,17 +45,17 @@ class ShutterCheckAction @Inject()(logger: ImportsLogger,
   extends ActionRefiner[ConversationIdRequest, ApiVersionRequest] {
     actionName =>
 
-  private val errorResponseVersionShuttered: Result = ErrorResponse(SERVICE_UNAVAILABLE, "SERVER_ERROR", "Service unavailable").XmlResult
+    private val errorResponseVersionShuttered: Result = ErrorResponse(SERVICE_UNAVAILABLE, "SERVER_ERROR", "Service unavailable").XmlResult
 
-  protected val versionsByAcceptHeader: Map[String, ApiVersion] = Map(
-      Version1AcceptHeaderValue -> VersionOne,
-      Version2AcceptHeaderValue -> VersionTwo
+    protected val versionsByAcceptHeader: Map[String, ApiVersion] = Map(
+        Version1AcceptHeaderValue -> VersionOne,
+        Version2AcceptHeaderValue -> VersionTwo
+      )
+
+    protected lazy val versionShuttered: Map[ApiVersion, Boolean] = Map(
+      VersionOne -> config.importsShutterConfig.v1Shuttered.getOrElse(false),
+      VersionTwo -> config.importsShutterConfig.v2Shuttered.getOrElse(false)
     )
-
-  protected lazy val versionShuttered: Map[ApiVersion, Boolean] = Map(
-    VersionOne -> config.importsShutterConfig.v1Shuttered.getOrElse(false),
-    VersionTwo -> config.importsShutterConfig.v2Shuttered.getOrElse(false)
-  )
 
     override def executionContext: ExecutionContext = ec
 

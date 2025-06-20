@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.customs.inventorylinking.imports.controllers
+package uk.gov.hmrc.customs.inventorylinking.imports.controllers.dynamicDefinitionControllers
 
 import controllers.Assets
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import play.api.http.MimeTypes
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.definitionControllers.DocumentationController
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class ApiDocumentationController @Inject()(assets: Assets,

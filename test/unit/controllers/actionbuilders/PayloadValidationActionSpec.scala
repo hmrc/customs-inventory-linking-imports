@@ -28,7 +28,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionB
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ConversationIdRequest, ValidatedPayloadRequest}
 import uk.gov.hmrc.customs.inventorylinking.imports.services.{GoodsArrivalXmlValidationService, ValidateMovementXmlValidationService}
 import util.CustomsMetricsTestData.EventStart
-import util.UnitSpec
+import util.{UnitSpec, VerifyLogging}
 import util.TestData.{TestAuthorisedRequest, _}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -72,34 +72,35 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
         private val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(validateMovementPayloadValidationAction.refine(TestAuthorisedRequest))
 
         actual shouldBe Left(expectedXmlSchemaErrorResult)
+        VerifyLogging.verifyImportsLoggerThrowable("debug","Payload is not valid according to schema:\n<foo>bar</foo>")(mockImportsLogger)
       }
 
-    "return 400 error response when XML is not well formed" in new SetUp {
-      private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest().withTextBody("<foo><foo>"))
-        .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
+      "return 400 error response when XML is not well formed" in new SetUp {
+        private val authorisedRequestWithNonWellFormedXml = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest().withTextBody("<foo><foo>"))
+          .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
 
-      private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNonWellFormedXml))
+        private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNonWellFormedXml))
 
-      actual shouldBe Left(errorNotWellFormedResult)
-    }
+        actual shouldBe Left(errorNotWellFormedResult)
+      }
 
-    "return 400 error response when there is no request body" in new SetUp {
-      private val authorisedRequestWithNoneRequestBody = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest().withBody(None))
-        .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
+      "return 400 error response when there is no request body" in new SetUp {
+        private val authorisedRequestWithNoneRequestBody = ConversationIdRequest(ValidConversationId, EventStart, FakeRequest().withBody(None))
+          .toValidatedHeadersRequest(TestExtractedHeadersV1).toAuthorisedRequest
 
-      private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNoneRequestBody))
+        private val actual = await(validateMovementPayloadValidationAction.refine(authorisedRequestWithNoneRequestBody))
 
-      actual shouldBe Left(errorNotWellFormedResult)
-    }
+        actual shouldBe Left(errorNotWellFormedResult)
+      }
 
 
-    "propagates downstream errors by returning a 500 error response" in new SetUp {
-      when(mockValidateMovementXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(emulatedServiceFailure))
+      "propagates downstream errors by returning a 500 error response" in new SetUp {
+        when(mockValidateMovementXmlValidationService.validate(TestCspValidatedPayloadRequest.body.asXml.get)).thenReturn(Future.failed(emulatedServiceFailure))
 
-      val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(validateMovementPayloadValidationAction.refine(TestAuthorisedRequest))
+        val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(validateMovementPayloadValidationAction.refine(TestAuthorisedRequest))
 
-      actual shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
-    }
+        actual shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+      }
   }
 
   "PayloadValidationAction for Goods Arrival" should {
@@ -143,6 +144,7 @@ class PayloadValidationActionSpec extends UnitSpec with MockitoSugar with TableD
       val actual: Either[Result, ValidatedPayloadRequest[AnyContentAsXml]] = await(goodsArrivalPayloadValidationAction.refine(TestAuthorisedRequest))
 
       actual shouldBe Left(ErrorResponse.ErrorInternalServerError.XmlResult.withConversationId)
+      VerifyLogging.verifyImportsLoggerThrowable("debug","Error validating payload.:\n<foo>bar</foo>")(mockImportsLogger)
     }
   }
 

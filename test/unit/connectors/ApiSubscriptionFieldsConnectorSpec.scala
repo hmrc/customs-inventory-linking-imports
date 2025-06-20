@@ -39,10 +39,10 @@ import uk.gov.hmrc.http.test.WireMockSupport
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.http.HttpClientV2Provider
 import util.externalservices.InventoryLinkingImportsExternalServicesConfig.ApiSubscriptionFieldsContext
-import util.{ApiSubscriptionFieldsTestData, TestData, UnitSpec}
+import util.{ApiSubscriptionFieldsTestData, TestData, UnitSpec, VerifyLogging}
 
 import java.net.SocketException
-import scala.concurrent.ExecutionContext
+
 
 class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
   with MockitoSugar
@@ -53,7 +53,6 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
 
   private val mockLogger = mock[ImportsLogger]
   private implicit val hc: HeaderCarrier = HeaderCarrier()
-  private implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
   private implicit val vpr: ValidatedPayloadRequest[AnyContentAsXml] = TestData.TestCspValidatedPayloadRequest
 
   private val mockImportsConfigService: ImportsConfigService = mock[ImportsConfigService]
@@ -100,6 +99,7 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
 
         awaitRequest shouldBe apiSubscriptionFieldsResponse
         wireMockServer.verify(1, getRequestedFor(urlEqualTo(expectedUrl)))
+        VerifyLogging.verifyImportsLogger("debug","Getting fields id from api subscription fields service. url=http://localhost:6001/api-subscription-fields/field/application/SOME_X_CLIENT_ID/context/some/api/context/version/1.0")(mockLogger)
       }
     }
 
@@ -137,7 +137,6 @@ class ApiSubscriptionFieldsConnectorSpec extends UnitSpec
 
         wireMockServer.verify(1, getRequestedFor(urlEqualTo(expectedUrl)))
         caught.getMessage shouldBe s"""GET of '$wireMockUrl$expectedUrl' returned $NOT_FOUND. Response body: '{"fieldsId":"327d9145-4965-4d28-a2c5-39dedee50334","fields":{"authenticatedEori":"RASHADMUGHAL"}}'"""
-
       }
     }
   }

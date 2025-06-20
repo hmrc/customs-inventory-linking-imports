@@ -56,11 +56,11 @@ class ValidateXmlAgainstSchemaSpec extends UnitSpec {
 
       val unlimitedFailure = validator.validateWithErrors(getInvalidXmlSource())
       unlimitedFailure.isLeft shouldBe true
-      unlimitedFailure.leftSide.map(result => result.value.get shouldBe 4)
+      unlimitedFailure.leftSide.map(result => result.value.getOrElse(0) shouldBe  4)
 
       val limitedFailure = validator.validateWithErrors(getInvalidXmlSource(), 2)
       limitedFailure.isLeft shouldBe true
-      limitedFailure.leftSide.map(result => result.value.get shouldBe 2)
+      limitedFailure.leftSide.map(result => result.value.getOrElse(0) shouldBe 2)
     }
   }
 

@@ -30,7 +30,7 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.Convers
 import uk.gov.hmrc.customs.inventorylinking.imports.services.ImportsConfigService
 import util.CustomsMetricsTestData.EventStart
 import util.TestData.{ConversationIdValue, InvalidAcceptHeader, TestApiVersionRequestV1, TestApiVersionRequestV2, TestConversationIdRequestV1, TestConversationIdRequestV2, ValidConversationId, XConversationIdHeaderName}
-import util.UnitSpec
+import util.{UnitSpec, VerifyLogging}
 
 import scala.concurrent.ExecutionContext
 
@@ -57,6 +57,7 @@ class ShutterCheckActionSpec extends UnitSpec with MockitoSugar {
       val action = new ShutterCheckAction(mockLogger, mockConfigService)
 
       await(action.refine(TestConversationIdRequestV1)) shouldBe Right(TestApiVersionRequestV1)
+      VerifyLogging.verifyImportsLogger("debug","Accept header passed validation with: 1.0")(mockLogger)
     }
 
     "be successful for a valid request with accept header for V2" in new SetUp {
@@ -76,6 +77,7 @@ class ShutterCheckActionSpec extends UnitSpec with MockitoSugar {
       val result = await(action.refine(ConversationIdRequest(ValidConversationId, EventStart, FakeRequest())))
 
       result shouldBe Left(ErrorAcceptHeaderInvalid.XmlResult.withHeaders(XConversationIdHeaderName -> ConversationIdValue))
+      VerifyLogging.verifyImportsLoggerError("Error - header 'Accept' not present")(mockLogger)
     }
 
     "fail for a valid request with invalid accept header" in new SetUp {
@@ -86,6 +88,7 @@ class ShutterCheckActionSpec extends UnitSpec with MockitoSugar {
 
       val result = await(action.refine(ConversationIdRequest(ValidConversationId, EventStart, requestWithInvalidAcceptHeader)))
       result shouldBe Left(ErrorAcceptHeaderInvalid.XmlResult.withHeaders(XConversationIdHeaderName -> ConversationIdValue))
+      VerifyLogging.verifyImportsLoggerError("Error - header 'Accept' value 'application/json' is not valid")(mockLogger)
     }
   }
 
@@ -98,6 +101,8 @@ class ShutterCheckActionSpec extends UnitSpec with MockitoSugar {
       val result = await(action.refine(TestConversationIdRequestV1))
 
       result shouldBe Left(errorResponseVersionShuttered)
+      VerifyLogging.verifyImportsLogger("warn","version 1.0 requested but is shuttered")(mockLogger)
+
     }
 
     "return 503 error for a valid request with v2 accept header and v2 is shuttered" in new SetUp {

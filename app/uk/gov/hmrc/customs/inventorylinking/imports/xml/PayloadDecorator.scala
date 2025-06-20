@@ -40,7 +40,7 @@ class PayloadDecorator {
     val isoFormatDate: DateTimeFormatter = new DateTimeService().isoFormatNoMillis
     val dateTimeStampElement = Seq[NodeSeq](<n1:dateTimeStamp>{dateTime.atOffset(ZoneOffset.UTC).format(isoFormatDate)}</n1:dateTimeStamp>, Text(newLineAndIndentation))
     val originatingPartyElement = vpr.maybeSubmitterIdentifier.fold(Seq(NodeSeq.Empty)){ submitterIdentifier => Seq[NodeSeq](<n1:originatingPartyID>{submitterIdentifier.value}</n1:originatingPartyID>, Text(newLineAndIndentation) )}
-    val authenticatedPartyElement = apiSubscriptionFieldsResponse.fields.authenticatedEori.fold(NodeSeq.Empty){ authenticatedEori: String => <n1:authenticatedPartyID>{authenticatedEori}</n1:authenticatedPartyID>}
+    val authenticatedPartyElement = apiSubscriptionFieldsResponse.fields.authenticatedEori.fold(NodeSeq.Empty){ (authenticatedEori: String ) => <n1:authenticatedPartyID>{authenticatedEori}</n1:authenticatedPartyID>}
 
     <n1:rootElementToBeRenamed
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -49,7 +49,7 @@ class PayloadDecorator {
       <n1:requestCommon>
         <n1:clientID>{apiSubscriptionFieldsResponse.fieldsId.toString}</n1:clientID>
         <n1:conversationID>{vpr.conversationId.toString}</n1:conversationID>
-        <n1:correlationID>{correlationIdHeader.fold(correlationId.toString) { corrId: CorrelationIdHeader => corrId.value }}</n1:correlationID>
+        <n1:correlationID>{correlationIdHeader.fold(correlationId.toString) { (corrId: CorrelationIdHeader) => corrId.value }}</n1:correlationID>
         {badgeIdentifierElement}{dateTimeStampElement}{originatingPartyElement}{authenticatedPartyElement}
       </n1:requestCommon>
       <n1:requestDetail>
