@@ -26,7 +26,7 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test._
-import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ApiDocumentationController
+import uk.gov.hmrc.customs.inventorylinking.imports.controllers.dynamicDefinitionControllers.ApiDocumentationController
 
 class ApiDocumentationControllerSpec extends PlaySpec with MockitoSugar with Results with BeforeAndAfterEach {
 
