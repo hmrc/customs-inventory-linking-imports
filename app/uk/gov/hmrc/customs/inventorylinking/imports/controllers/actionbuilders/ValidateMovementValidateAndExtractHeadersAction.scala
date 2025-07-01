@@ -18,7 +18,6 @@ package uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ValidateMovementHeaderValidator
-import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 
 import scala.concurrent.ExecutionContext
 
@@ -28,9 +27,8 @@ import scala.concurrent.ExecutionContext
   * <li/>ERROR - 4XX Result if is a header validation error. This terminates the action builder pipeline.
   */
 @Singleton
-class ValidateMovementValidateAndExtractHeadersAction @Inject()(validator: ValidateMovementHeaderValidator,
-                                                                logger: ImportsLogger)
+class ValidateMovementValidateAndExtractHeadersAction @Inject()(validator: ValidateMovementHeaderValidator)
                                                                (implicit ec: ExecutionContext)
-  extends ValidateAndExtractHeadersAction(validator, logger) {}
+  extends ValidateAndExtractHeadersAction(validator) {}
 
 

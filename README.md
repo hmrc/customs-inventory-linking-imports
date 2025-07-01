@@ -28,9 +28,9 @@ The Customs Inventory Linking Imports service can be run locally from Service Ma
 
 ## Run Tests
 - Run Unit Tests: `sbt test`
-- Run Integration Tests: `sbt IntegrationTest/test`
-- Run Unit and Integration Tests: `sbt test IntegrationTest/test`
-- Run Unit and Integration Tests with coverage report: `./run_all_tests.sh`<br/> which runs `sbt clean scalastyle coverage test it:test coverageReport"`
+- Run Integration Tests: `sbt it:test`
+- Run Unit and Integration Tests: `sbt test it:test`
+- Run Unit and Integration Tests with coverage report: `./run_all_tests.sh`<br/> which runs `sbt clean coverage test it:test coverageReport"`
 
 ### Acceptance Tests
 To run the CDS acceptance tests, see [here](https://github.com/hmrc/customs-automation-test).

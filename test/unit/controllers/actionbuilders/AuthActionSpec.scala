@@ -25,11 +25,10 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.ErrorResponse.ErrorInternalServerError
 import uk.gov.hmrc.customs.inventorylinking.imports.controllers.actionbuilders.{GoodsArrivalAuthAction, ValidateMovementAuthAction}
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ActionBuilderModelHelper.*
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ConversationIdRequest
 import uk.gov.hmrc.customs.inventorylinking.imports.model.{GoodsArrival, HeaderConstants, ValidateMovement}
-import util.UnitSpec
-import util.AuthConnectorStubbing
+import util.{AuthConnectorStubbing, UnitSpec, VerifyLogging}
 import util.CustomsMetricsTestData.EventStart
 import util.TestData.{ConversationIdValue, TestExtractedHeadersV1, ValidConversationId, testFakeRequest}
 
@@ -62,6 +61,7 @@ class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenProperty
         private val actual = await(authAction.refine(validatedHeadersRequest))
         actual shouldBe Right(validatedHeadersRequest.toAuthorisedRequest)
         verifyCspAuthorisationCalled(enrolment, 1)
+        VerifyLogging.verifyImportsLogger("debug","Successfully authorised CSP PrivilegedApplication with write:customs-il-imports-arrival-notifications enrolment")(mockImportsLogger)
       }
 
       "return ErrorResponse with ConversationId when not authorised by auth API" in new SetUp {
@@ -70,6 +70,7 @@ class AuthActionSpec extends UnitSpec with MockitoSugar with TableDrivenProperty
         private val actual = await(authAction.refine(validatedHeadersRequest))
         actual shouldBe Left(ErrorInternalServerError.XmlResult.withHeaders(HeaderConstants.XConversationId -> ConversationIdValue))
         verifyCspAuthorisationCalled(enrolment, 1)
+        VerifyLogging.verifyImportsLoggerThrowable("error","Error when authorising for CSP PrivilegedApplication with write:customs-il-imports-arrival-notifications enrolment")(mockImportsLogger)
       }
     }
 

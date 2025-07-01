@@ -60,7 +60,7 @@ class ImportsControllerSpec extends UnitSpec
     protected val stubConversationIdAction: ConversationIdAction = new ConversationIdAction(stubUniqueIdsService, mockDateTimeService, mockImportsLogger)
     protected val stubShutterCheckAction: ShutterCheckAction = new ShutterCheckAction(mockImportsLogger, mockImportsConfigService)
     protected val stubGoodsArrivalAuthAction = new GoodsArrivalAuthAction(mockAuthConnector, mockGoodsArrival, mockImportsLogger)
-    protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger), mockImportsLogger)
+    protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger))
     protected val stubGoodsArrivalPayloadValidationAction: GoodsArrivalPayloadValidationAction = new GoodsArrivalPayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger)
     protected val stubCommon: Common = new Common(stubConversationIdAction, stubShutterCheckAction, mockMessageSender, Helpers.stubControllerComponents(), mockMetricsConnector, mockImportsLogger)
     protected val enrolment: Enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
@@ -77,7 +77,7 @@ class ImportsControllerSpec extends UnitSpec
 
     when(mockImportsConfigService.importsShutterConfig).thenReturn(ImportsShutterConfig(Some(false), Some(false)))
     when(mockGoodsArrivalXmlValidationService.validate(any[NodeSeq])(any[ExecutionContext])).thenReturn(Future.successful(()))
-    when(mockMessageSender.send(any[GoodsArrival])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier])).thenReturn(Future.successful(Right(())))
+    when(mockMessageSender.send(any[GoodsArrival])(any[ValidatedPayloadRequest[Any]], any[HeaderCarrier])).thenReturn(Future.successful(Right(())))
     when(mockGoodsArrival.enrolment).thenReturn(Enrolment("write:customs-il-imports-arrival-notifications"))
   }
 
@@ -114,7 +114,7 @@ class ImportsControllerSpec extends UnitSpec
     }
 
     "return the error response returned from the Communication service" in new SetUp {
-      when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedPayloadRequest[_]], any[HeaderCarrier]))
+      when(mockMessageSender.send(any[ImportsMessageType])(any[ValidatedPayloadRequest[Any]], any[HeaderCarrier]))
         .thenReturn(Future.successful(Left(mockResult)))
       authoriseCsp(enrolment)
 

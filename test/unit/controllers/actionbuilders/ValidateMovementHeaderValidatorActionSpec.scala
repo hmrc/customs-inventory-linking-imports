@@ -28,7 +28,8 @@ import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ApiVer
 import util.CustomsMetricsTestData.EventStart
 import util.UnitSpec
 import util.TestData
-import util.TestData._
+import util.TestData.*
+import util.VerifyLogging
 
 class ValidateMovementHeaderValidatorActionSpec extends UnitSpec with TableDrivenPropertyChecks with MockitoSugar {
 
@@ -47,6 +48,7 @@ class ValidateMovementHeaderValidatorActionSpec extends UnitSpec with TableDrive
     "in happy path, validation" should {
       "be successful for X-Correlation-ID as a UUID" in new SetUp {
         validate(conversationIdRequest(ValidHeaders + (XCorrelationIdHeaderName -> CorrelationIdValue))) shouldBe Right(TestExtractedHeadersV1.copy(maybeCorrelationIdHeader = Some(CorrelationIdHeader(CorrelationIdValue))))
+        VerifyLogging.verifyImportsLogger("debug","X-Correlation-ID header passed validation: Some(e61f8eee-812c-4b8f-b193-06aedc60dca2)")(loggerMock)
       }
     }
     "in unhappy path, validation" should {

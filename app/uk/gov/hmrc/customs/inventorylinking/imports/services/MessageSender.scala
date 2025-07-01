@@ -64,7 +64,7 @@ class MessageSender @Inject()(apiSubscriptionFieldsConnector: ApiSubscriptionFie
   private def futureApiSubFieldsId[A](c: ClientId)
                                      (implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier): Future[Either[Result, ApiSubscriptionFieldsResponse]] = {
     (apiSubscriptionFieldsConnector.getSubscriptionFields(ApiSubscriptionKey(c, apiContextEncoded, vpr.requestedApiVersion)) map {
-      response: ApiSubscriptionFieldsResponse =>
+      (response: ApiSubscriptionFieldsResponse) =>
         logger.debug(s"Got a response from api subscription fields $response")
         response.fields.authenticatedEori match {
           case Some(_) =>

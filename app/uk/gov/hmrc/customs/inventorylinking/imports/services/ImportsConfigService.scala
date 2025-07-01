@@ -42,14 +42,14 @@ class ImportsConfigService @Inject() (configValidatedNel: ConfigValidatedNelAdap
 
   private val validatedImportsShutterConfig: CustomsValidatedNel[ImportsShutterConfig] = (
     v1ShutteredNel, v2ShutteredNel
-  ) mapN ImportsShutterConfig
+  ) mapN uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsShutterConfig.apply
 
   private val validatedImportsCircuitBreakerConfig: CustomsValidatedNel[ImportsCircuitBreakerConfig] = (
     numberOfCallsToTriggerStateChangeNel, unavailablePeriodDurationInMillisNel, unstablePeriodDurationInMillisNel
-    ) mapN ImportsCircuitBreakerConfig
+    ) mapN uk.gov.hmrc.customs.inventorylinking.imports.model.ImportsCircuitBreakerConfig.apply
 
   private val importsConfigHolder: ImportsConfigHolder =
-    (validatedImportsConfig, validatedImportsShutterConfig, validatedImportsCircuitBreakerConfig) mapN ImportsConfigHolder fold(
+    (validatedImportsConfig, validatedImportsShutterConfig, validatedImportsCircuitBreakerConfig) mapN this.ImportsConfigHolder.apply fold(
       // error
       { nel =>
         // error case exposes nel (a NotEmptyList)

@@ -25,6 +25,7 @@ import org.apache.pekko.actor.ActorSystem
 import javax.inject.{Inject, Singleton}
 import play.api.http.HeaderNames._
 import play.api.http.MimeTypes.XML
+import play.api.libs.ws.XMLBodyWritables.writeableOf_NodeSeq
 import play.api.http.{MimeTypes, Status}
 import uk.gov.hmrc.customs.inventorylinking.imports.config.ServiceConfigProvider
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.CdsLogger
@@ -63,7 +64,7 @@ class ImportsConnector @Inject()(http: HttpClientV2,
     val importsHeaders = hc.extraHeaders ++ getHeaders(date, correlationId, vpr.conversationId) ++ Seq(HeaderNames.authorisation -> bearerToken) ++ getCustomsApiStubExtraHeaders(hc)
     val startTime = LocalDateTime.now
     withCircuitBreaker(post(xml, config.url, importsHeaders)(vpr, HeaderCarrier()))
-      .map { response =>
+      .map { (response) =>
         logCallDuration(startTime)
         logger.debug(s"Response status ${response.status} and response body ${formatResponseBody(response.body)}")
         response
@@ -83,7 +84,7 @@ class ImportsConnector @Inject()(http: HttpClientV2,
 
   private def post[A](xml: NodeSeq, url: String, importsHeaders: Seq[(String, String)])(implicit vpr: ValidatedPayloadRequest[A], hc: HeaderCarrier) = {
     logger.debug(s"Sending request to backend. Url: $url\nPayload: ${xml.toString()}")
-    http.post(url"$url").setHeader(importsHeaders: _*).withBody(xml).execute[HttpResponse].map { response =>
+    http.post(url"$url").setHeader(importsHeaders: _*).withBody(xml).execute[HttpResponse].map { (response) =>
       response.status match {
         case status if is2xx(status) =>
           response

@@ -24,8 +24,9 @@ import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.CustomsMetricsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ ValidatedPayloadRequest}
+import uk.gov.hmrc.http.*
+import util.VerifyLogging.verifyImportsLogger
 import util.VerifyLogging.verifyImportsLoggerError
 import util.CustomsMetricsTestData.ValidCustomsMetricsRequest
 import util.ExternalServicesConfig.{Host, Port}
@@ -70,7 +71,7 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
       vpr.maybeEntryNumber.getOrElse("").toString shouldBe "string"
       response shouldBe
       verifyCustomsMetricsServiceWasCalledWith(ValidCustomsMetricsRequest)
-
+      verifyImportsLogger("debug", "customs metrics sent successfully")
     }
 
     "return a failed future when external service returns 404" in {
