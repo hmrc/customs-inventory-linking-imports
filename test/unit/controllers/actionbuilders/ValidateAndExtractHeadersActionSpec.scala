@@ -35,10 +35,9 @@ import scala.concurrent.ExecutionContext
 class ValidateAndExtractHeadersActionSpec extends UnitSpec with MockitoSugar with TableDrivenPropertyChecks {
 
   trait SetUp {
-    val mockLogger: ImportsLogger = mock[ImportsLogger]
     val mockHeaderValidator: HeaderValidator = mock[HeaderValidator]
     implicit val ec: ExecutionContext = Helpers.stubControllerComponents().executionContext
-    val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(mockHeaderValidator, mockLogger)
+    val validateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(mockHeaderValidator)
   }
 
   "HeaderValidationAction when validation succeeds" should {

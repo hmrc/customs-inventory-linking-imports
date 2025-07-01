@@ -60,7 +60,7 @@ class ImportsControllerSpec extends UnitSpec
     protected val stubConversationIdAction: ConversationIdAction = new ConversationIdAction(stubUniqueIdsService, mockDateTimeService, mockImportsLogger)
     protected val stubShutterCheckAction: ShutterCheckAction = new ShutterCheckAction(mockImportsLogger, mockImportsConfigService)
     protected val stubGoodsArrivalAuthAction = new GoodsArrivalAuthAction(mockAuthConnector, mockGoodsArrival, mockImportsLogger)
-    protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger), mockImportsLogger)
+    protected val stubValidateAndExtractHeadersAction: ValidateAndExtractHeadersAction = new ValidateAndExtractHeadersAction(new HeaderValidator(mockImportsLogger))
     protected val stubGoodsArrivalPayloadValidationAction: GoodsArrivalPayloadValidationAction = new GoodsArrivalPayloadValidationAction(mockGoodsArrivalXmlValidationService, mockImportsLogger)
     protected val stubCommon: Common = new Common(stubConversationIdAction, stubShutterCheckAction, mockMessageSender, Helpers.stubControllerComponents(), mockMetricsConnector, mockImportsLogger)
     protected val enrolment: Enrolment = Enrolment("write:customs-il-imports-arrival-notifications")
