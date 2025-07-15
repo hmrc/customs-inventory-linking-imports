@@ -16,6 +16,7 @@
 
 package component
 
+import com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents
 import org.scalatest._
 import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.matchers.should.Matchers
@@ -136,6 +137,16 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       status(result) shouldBe ACCEPTED
       header(XConversationIdHeaderName, result).get shouldNot be("")
 
+      val allServeEvents = getAllServeEvents
+      allServeEvents.forEach { event =>
+        val request = event.getRequest
+
+        println(s"URL: ${request.getUrl}")
+        println(s"Method: ${request.getMethod}")
+        println(s"Headers: ${request.getHeaders}")
+        println(s"Body: ${request.getBodyAsString}")
+      }
+
       And("the request was authorised with AuthService")
       eventually(verifyAuthServiceCalledForCsp(goodsArrival.enrolment))
 
@@ -145,7 +156,6 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       And("Metrics logging call was made")
       eventually(verifyCustomsMetricsServiceWasCalled())
     }
-
     Scenario(s"A valid Goods Arrival submitted and the Back End service fails") {
       Given("a CSP is authorised to use the API endpoint")
       authServiceAuthorisesCSP(new GoodsArrival())
