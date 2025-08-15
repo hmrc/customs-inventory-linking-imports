@@ -1,4 +1,4 @@
-@import play.api.libs.json.Json
+
 @(  v1Enabled: Boolean,
     v2Enabled: Boolean
     )
