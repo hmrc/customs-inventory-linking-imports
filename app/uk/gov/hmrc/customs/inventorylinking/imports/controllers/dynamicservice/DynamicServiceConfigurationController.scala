@@ -31,7 +31,7 @@ class DynamicServiceConfigurationController @Inject()(serviceConfigProvider: Ser
 
   def setConfigurationForService(service: String): Action[AnyContent] = Action { request =>
     request.body.asJson.get.validate[ServiceConfigDto] match {
-      case success: JsSuccess[ServiceConfigDto] =>
+      case success @ JsSuccess(value:ServiceConfigDto, _) =>
         val dto = success.value
         setEnvironmentForService(service, dto.environment)
       case _: JsError => BadRequest("no environment was provided")

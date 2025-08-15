@@ -1,11 +1,12 @@
 import com.typesafe.sbt.web.PathMapping
 import com.typesafe.sbt.web.pipeline.Pipeline
 import play.sbt.PlayImport.PlayKeys.playDefaultPort
-import sbt.Keys._
+import sbt.Keys.*
 import sbt.Tests.{Group, SubProcess}
-import sbt.{IO, Path, Setting, SimpleFileFilter, taskKey, _}
+import sbt.{IO, Path, Setting, SimpleFileFilter, taskKey, *}
+import uk.gov.hmrc.DefaultBuildSettings
 import uk.gov.hmrc.DefaultBuildSettings.addTestReportOption
-import uk.gov.hmrc.gitstamp.GitStampPlugin._
+import uk.gov.hmrc.gitstamp.GitStampPlugin.*
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -39,14 +40,10 @@ lazy val microservice = Project(appName, file("."))
   .settings(
     commonSettings,
     unitTestSettings,
-    integrationComponentTestSettings,
     allTest,
     scoverageSettings
   )
   .settings(playDefaultPort := 9824)
-  .settings(scalacOptions ++= List(
-    "-Wconf:cat=unused-imports&src=target/scala-2\\.13/routes/.*:s"
-  ))
 
 lazy val unitTestSettings =
   inConfig(Test)(Defaults.testTasks) ++
@@ -56,14 +53,10 @@ lazy val unitTestSettings =
       addTestReportOption(Test, "test-reports")
     )
 
-lazy val integrationComponentTestSettings =
-  inConfig(CdsIntegrationComponentTest)(Defaults.testTasks) ++
-    Seq(
-      CdsIntegrationComponentTest / testOptions := Seq(Tests.Filter(integrationComponentTestFilter)),
-      CdsIntegrationComponentTest / parallelExecution := false,
-      addTestReportOption(CdsIntegrationComponentTest, "int-comp-test-reports"),
-      CdsIntegrationComponentTest / testGrouping := forkedJvmPerTestConfig((Test / definedTests).value, "integration", "component")
-    )
+lazy val it = project.in(file("it"))
+  .dependsOn(microservice % "test->test")
+  .settings(DefaultBuildSettings.itSettings())
+  .enablePlugins(play.sbt.PlayScala)
 
 lazy val commonSettings: Seq[Setting[_]] = gitStampSettings
 
@@ -84,7 +77,7 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
   Test / parallelExecution := false
 )
 
-def integrationComponentTestFilter(name: String): Boolean = (name startsWith "integration") || (name startsWith "component")
+def integrationComponentTestFilter(name: String): Boolean = (name startsWith "it/test/integration") || (name startsWith "it/test/component")
 def unitTestFilter(name: String): Boolean = name startsWith "unit"
 
 Compile / unmanagedResourceDirectories += baseDirectory.value / "public"
@@ -92,7 +85,8 @@ Compile / unmanagedResourceDirectories += baseDirectory.value / "public"
 
 libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test
 
-scalacOptions += "-Wconf:cat=unused-imports&src=routes/.*:s"
+ThisBuild/scalacOptions ++= Seq("-Wconf:src=routes/.*:s",
+                      "-Wconf:msg=Flag.*repeatedly:s")
 
 // Task to create a ZIP file containing all xsds for each version, under the version directory
 val zipXsds = taskKey[Pipeline.Stage]("Zips up all inventory linking imports XSDs")
