@@ -108,8 +108,5 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
   private def sendValidRequest() = {
     customsMetricsConnector.post(ValidCustomsMetricsRequest)
   }
-
-  private def localhostString: String = {
-    if (System.getenv("HOME") == "/home/jenkins") "127.0.0.1" else "[0:0:0:0:0:0:0:1]"
-  }
+  private def localhostString: String = "127.0.0.1"
 }

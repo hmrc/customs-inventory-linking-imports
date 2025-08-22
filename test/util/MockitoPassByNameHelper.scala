@@ -18,12 +18,13 @@ package util
 
 import org.mockito.{ArgumentMatcher, ArgumentMatchers, Mockito}
 import uk.gov.hmrc.http.HeaderCarrier
+import scala.reflect.ClassTag
 
 object MockitoPassByNameHelper {
 
   sealed trait Builder {
     def withByNameParamMatcher[P](matcher: => P): Builder
-    def withParamMatcher[P](matcher: => P)(implicit mp: Manifest[P]): Builder
+    def withParamMatcher[P](matcher: => P)(implicit ct: ClassTag[P]): Builder
     def withByNameParam[P](expected: => P): Builder
 
     @deprecated("use the more general withParamMatcher(any[HeaderCarrier]) instead", "1.24.0")
@@ -61,8 +62,8 @@ object MockitoPassByNameHelper {
       initOngoingVerification.copy(params = this.params :+ PassByNameParam(classOf[() => P], matcher))
     }
 
-    def withParamMatcher[P](matcher: => P)(implicit mp: Manifest[P]): Builder = {
-      val c = mp.runtimeClass.asInstanceOf[Class[P]]
+    def withParamMatcher[P](matcher: => P)(implicit ct: ClassTag[P]): Builder = {
+      val c = ct.runtimeClass.asInstanceOf[Class[P]]
       initOngoingVerification.copy(params = this.params :+ PassByNameParam(c, matcher))
     }
 
