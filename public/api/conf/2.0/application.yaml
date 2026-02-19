@@ -10,7 +10,7 @@ info:
 
     [Schemas and example messages](/api-documentation/docs/api/download/customs-inventory-linking-imports/2.0/inventory-linking-imports-schemas.zip) 
 
-    ZIP, 3.4MB last updated 15/01/2026
+    ZIP, 3.4MB last updated 19/02/2026
 servers:
   - url: https://test-api.service.hmrc.gov.uk
     description: Sandbox
