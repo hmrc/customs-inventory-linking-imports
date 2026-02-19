@@ -16,7 +16,7 @@
 	             xsi:schemaLocation="urn:wco:datamodel:WCO:DEC-DMS:2 ../WCO_DEC_2_DMS.xsd ">
 		<!--
 			SCENARIO
-			Type K direct reperesentation scenario with DUCR and MUCR declared and no control
+			Type K direct representation scenario with DUCR and MUCR declared and no control
 			Goods exported permanently
 			Procedure code 0012 Additional procedure code 16M
 			Goods: Paper Envelopes
