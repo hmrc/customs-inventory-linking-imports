@@ -16,19 +16,21 @@
 
 package component
 
-import org.scalatest._
+import org.scalatest.*
 import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.concurrent.Futures.{interval, timeout}
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
-import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.customs.inventorylinking.imports.model._
+import play.api.test.Helpers.{status, *}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.*
 import uk.gov.hmrc.customs.inventorylinking.imports.xml.ValidateXmlAgainstSchema
-import util.TestData._
+import util.TestData.*
 import util.XMLTestData.{InvalidInventoryLinkingGoodsArrivalRequestXML, InvalidInventoryLinkingMovementRequestXML, validWrappedGoodsArrivalXml, validWrappedValidateMovementXml}
-import util.externalservices.InventoryLinkingImportsExternalServicesConfig._
+import util.externalservices.InventoryLinkingImportsExternalServicesConfig.*
 import util.externalservices.{ApiSubscriptionFieldsService, AuthService, CustomsMetricsService, InventoryLinkingImportsService}
 
 import java.io.StringReader
@@ -143,7 +145,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       verifyImportsConnectorServiceWasCalledWith(GoodsArrivalConnectorContext, validWrappedGoodsArrivalXml \\ "requestCommon" \@ "badgeIdentifier")
 
       And("Metrics logging call was made")
-      eventually(verifyCustomsMetricsServiceWasCalled())
+      eventually(
+        timeout(Span(10, Seconds)),
+        interval(Span(100, Millis))
+      ) {
+        verifyCustomsMetricsServiceWasCalled()
+      }
     }
 
     Scenario(s"A valid Goods Arrival submitted and the Back End service fails") {
@@ -295,7 +302,12 @@ class ImportsServiceSpec extends ComponentTestSpec with Matchers with OptionValu
       verifyImportsConnectorServiceWasCalledWith(ValidateMovementConnectorContext, validWrappedValidateMovementXml \\ "requestCommon" \@ "badgeIdentifier")
 
       And("Metrics logging call was made")
-      eventually(verifyCustomsMetricsServiceWasCalled())
+      eventually(
+        timeout(Span(10, Seconds)),
+        interval(Span(100, Millis))
+      ) {
+        verifyCustomsMetricsServiceWasCalled()
+      }
     }
 
     Scenario(s"A valid Validate Movement submitted and the Back End service fails") {
