@@ -4,3 +4,4 @@ description: The Customs Inventory Linking Imports service offers an interface f
 test-repositories:
   - customs-declaration-performance-test
   - customs-automation-test
+serviceNowMapping: SNSVC0019200
