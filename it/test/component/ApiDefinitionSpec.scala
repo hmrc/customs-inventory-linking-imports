@@ -53,9 +53,7 @@ class ApiDefinitionSpec extends AnyFeatureSpec with GivenWhenThen with GuiceOneA
           |        "version": "1.0",
           |        "status": "BETA",
           |        "endpointsEnabled": true,
-          |        "access": {
-          |          "type": "PRIVATE"
-          |        },
+          |        "access": "CONTROLLED",
           |        "fieldDefinitions": [
           |          {
           |            "name": "callbackUrl",
@@ -90,9 +88,7 @@ class ApiDefinitionSpec extends AnyFeatureSpec with GivenWhenThen with GuiceOneA
           |        "version": "2.0",
           |        "status": "BETA",
           |        "endpointsEnabled": true,
-          |        "access": {
-          |          "type": "PRIVATE"
-          |        },
+          |        "access": "CONTROLLED",
           |        "fieldDefinitions": [
           |          {
           |            "name": "callbackUrl",
