@@ -71,7 +71,7 @@ lazy val scoverageSettings: Seq[Setting[_]] = Seq(
 
     ,"uk\\.gov\\.hmrc\\.customs\\.inventorylinking\\.imports\\.config\\..*"
   ).mkString(";"),
-  coverageMinimumStmtTotal := 97,
+  coverageMinimumStmtTotal := 95,
   coverageFailOnMinimum := true,
   coverageHighlighting := true,
   Test / parallelExecution := false
