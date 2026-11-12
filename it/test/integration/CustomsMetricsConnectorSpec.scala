@@ -94,19 +94,27 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
       verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=500, error=received a non 2XX response")
     }
 
-//    "return a failed future when fail to connect the external service" in {
-//      stopMockServer()
-//
-//      intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
-//      //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
-//      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'")
-//
-//      startMockServer()
-//    }
+    "return a failed future when fail to connect the external service" in {
+      stopMockServer()
+
+      intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
+      //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
+      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'")
+
+      startMockServer()
+    }
   }
 
   private def sendValidRequest() = {
     customsMetricsConnector.post(ValidCustomsMetricsRequest)
   }
-  private def localhostString: String = "127.0.0.1"
+  private def localhostString: String = {
+    val isJenkins = System.getenv("HOME") == "/home/jenkins"
+    val isWsl = Option(System.getenv("WSL_DISTRO_NAME")).isDefined
+
+    if (isJenkins || isWsl)
+      "127.0.0.1"
+    else
+      "[0:0:0:0:0:0:0:1]"
+  }
 }
