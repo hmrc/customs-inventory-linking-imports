@@ -16,6 +16,9 @@
 
 package integration
 
+import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.concurrent.Futures.{interval, timeout}
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -24,7 +27,7 @@ import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.CustomsMetricsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ ValidatedPayloadRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.http.*
 import util.VerifyLogging.verifyImportsLogger
 import util.VerifyLogging.verifyImportsLoggerError
@@ -96,13 +99,14 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
 
     "return a failed future when fail to connect the external service" in {
       stopMockServer()
-
-      intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
-      //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
-      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'")
-      println(s"HOME = ${System.getenv("HOME")}")
-      println(s"WSL_DISTRO_NAME = ${System.getenv("WSL_DISTRO_NAME")}")
-      println(s"localhostString = ${localhostString}")
+      eventually(
+        timeout(Span(20, Seconds)),
+        interval(Span(200, Millis))
+      ){
+        intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
+           //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
+         verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'")
+        }
       startMockServer()
     }
   }
