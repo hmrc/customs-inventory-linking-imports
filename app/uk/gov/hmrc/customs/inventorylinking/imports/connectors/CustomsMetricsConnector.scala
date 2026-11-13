@@ -62,7 +62,7 @@ class CustomsMetricsConnector @Inject()(http: HttpClientV2,
       ()
     }.recoverWith {
       case httpError: HttpException =>
-        logger.error(s"Call to customs metrics failed. url=$url, status=${httpError.responseCode}, error=${httpError.message}")
+        logger.error(s"Call to customs metrics failed. url=$url, status=${httpError.responseCode}, error=")
         Future.failed(new RuntimeException(httpError))
       case e: Throwable =>
         logger.error(s"Call to customs metrics failed. url=$url")
