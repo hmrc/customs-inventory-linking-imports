@@ -100,7 +100,9 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
       intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
       //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
       verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'")
-
+      println(s"HOME = ${System.getenv("HOME")}")
+      println(s"WSL_DISTRO_NAME = ${System.getenv("WSL_DISTRO_NAME")}")
+      println(s"localhostString = ${localhostString}")
       startMockServer()
     }
   }
@@ -109,10 +111,10 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
     customsMetricsConnector.post(ValidCustomsMetricsRequest)
   }
   private def localhostString: String = {
-   // val home = Option(System.getenv("HOME")).getOrElse("")
+    val home = Option(System.getenv("HOME")).getOrElse("")
     val isWsl = Option(System.getenv("WSL_DISTRO_NAME")).isDefined
 
-    if (isWsl)
+    if (home.contains("jenkins") || isWsl)
       "127.0.0.1"
     else
       "[0:0:0:0:0:0:0:1]"
