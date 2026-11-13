@@ -109,10 +109,10 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
     customsMetricsConnector.post(ValidCustomsMetricsRequest)
   }
   private def localhostString: String = {
-    val home = Option(System.getenv("HOME")).getOrElse("")
+   // val home = Option(System.getenv("HOME")).getOrElse("")
     val isWsl = Option(System.getenv("WSL_DISTRO_NAME")).isDefined
 
-    if (home.contains("jenkins") || isWsl)
+    if (isWsl)
       "127.0.0.1"
     else
       "[0:0:0:0:0:0:0:1]"
