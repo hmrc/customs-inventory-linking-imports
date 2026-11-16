@@ -95,13 +95,9 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
 
     "return a failed future when fail to connect the external service" in {
       stopMockServer()
-      val expectedString=s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused$connectionFailedString: localhost/$localhostString:$Port'"
-      println(s"Expected Error Message  [$expectedString]")
-      //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
+      val expectedString = s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused$connectionFailedString: localhost/$localhostString:$Port'"
       intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
       verifyImportsLoggerError(expectedString)
-    //  verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused $connectionFailedString: localhost/$localhostString:$Port'")
-
       startMockServer()
     }
   }
