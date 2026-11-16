@@ -16,10 +16,6 @@
 
 package integration
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import org.scalatest.concurrent.Eventually.eventually
-import org.scalatest.concurrent.Futures.{interval, timeout}
-import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Application
@@ -30,11 +26,10 @@ import uk.gov.hmrc.customs.inventorylinking.imports.connectors.CustomsMetricsCon
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
 import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.http.*
-import util.VerifyLogging.verifyImportsLogger
-import util.VerifyLogging.verifyImportsLoggerError
 import util.CustomsMetricsTestData.ValidCustomsMetricsRequest
 import util.ExternalServicesConfig.{Host, Port}
 import util.TestData
+import util.VerifyLogging.{verifyImportsLogger, verifyImportsLoggerError}
 import util.externalservices.{CustomsMetricsService, InventoryLinkingImportsExternalServicesConfig}
 
 class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar
@@ -101,30 +96,9 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
     "return a failed future when fail to connect the external service" in {
       stopMockServer()
 
-      eventually(
-        timeout(Span(10, Seconds)),
-        interval(Span(1000, Millis))
-      ) {
-        isRunning() shouldBe false
-      }
-
       //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
-      eventually(
-        timeout(Span(10, Seconds)),
-        interval(Span(1000, Millis))
-      ) {
-        intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
-        val expectedMessage =
-          s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused (connect failed): localhost/$localhostString:$Port'"
-
-        println(s"EXPECTED ERROR MESSAGE >>> [$expectedMessage]")
-        println(s"localhostString: $localhostString")
-        println(s"HOME >>> [${System.getenv("HOME")}]")
-        println(s"WSL_DISTRO_NAME >>> [${System.getenv("WSL_DISTRO_NAME")}]")
-
-        verifyImportsLoggerError(expectedMessage)
-        //verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'")
-      }
+      intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
+      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused${connectionFailedString()}: localhost/$localhostString:$Port'")
 
       startMockServer()
     }
@@ -134,13 +108,21 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
     customsMetricsConnector.post(ValidCustomsMetricsRequest)
   }
 
-  private def localhostString: String = {
-    val home = Option(System.getenv("HOME")).getOrElse("")
-    val isWsl = Option(System.getenv("WSL_DISTRO_NAME")).isDefined
+  def isJenkins: Boolean =
+    System.getenv("HOME") == "/home/jenkins"
 
-    if (home.contains("jenkins") || isWsl)
+  private def localhostString: String = {
+    val isWsl = Option(System.getenv("WSL_DISTRO_NAME")).isDefined
+    if (isJenkins || isWsl)
       "127.0.0.1"
     else
       "[0:0:0:0:0:0:0:1]"
+  }
+
+  private def connectionFailedString(): String = {
+    if (isJenkins)
+      "(connect failed)"
+    else
+      ""
   }
 }
