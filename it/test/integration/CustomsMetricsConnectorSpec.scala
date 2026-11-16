@@ -24,17 +24,16 @@ import play.api.mvc.AnyContentAsXml
 import play.api.test.Helpers.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND}
 import uk.gov.hmrc.customs.inventorylinking.imports.connectors.CustomsMetricsConnector
 import uk.gov.hmrc.customs.inventorylinking.imports.logging.ImportsLogger
-import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.{ ValidatedPayloadRequest}
+import uk.gov.hmrc.customs.inventorylinking.imports.model.actionbuilders.ValidatedPayloadRequest
 import uk.gov.hmrc.http.*
-import util.VerifyLogging.verifyImportsLogger
-import util.VerifyLogging.verifyImportsLoggerError
 import util.CustomsMetricsTestData.ValidCustomsMetricsRequest
 import util.ExternalServicesConfig.{Host, Port}
 import util.TestData
+import util.VerifyLogging.{verifyImportsLogger, verifyImportsLoggerError}
 import util.externalservices.{CustomsMetricsService, InventoryLinkingImportsExternalServicesConfig}
 
 class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPerSuite with MockitoSugar
- with CustomsMetricsService {
+  with CustomsMetricsService {
 
   private lazy val customsMetricsConnector = app.injector.instanceOf[CustomsMetricsConnector]
 
@@ -70,43 +69,58 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
       val response: Unit = await(sendValidRequest())
       vpr.maybeEntryNumber.getOrElse("").toString shouldBe "string"
       response shouldBe
-      verifyCustomsMetricsServiceWasCalledWith(ValidCustomsMetricsRequest)
+        verifyCustomsMetricsServiceWasCalledWith(ValidCustomsMetricsRequest)
       verifyImportsLogger("debug", "customs metrics sent successfully")
     }
 
     "return a failed future when external service returns 404" in {
       setupCustomsMetricsServiceToReturn(NOT_FOUND)
       await(sendValidRequest()) shouldBe
-      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=404, error=received a non 2XX response")
+        verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=404, error=received a non 2XX response")
     }
 
     "return a failed future when external service returns 400" in {
       setupCustomsMetricsServiceToReturn(BAD_REQUEST)
 
       await(sendValidRequest()) shouldBe
-      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=400, error=received a non 2XX response")
+        verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=400, error=received a non 2XX response")
     }
 
     "return a failed future when external service returns 500" in {
       setupCustomsMetricsServiceToReturn(INTERNAL_SERVER_ERROR)
 
       await(sendValidRequest()) shouldBe
-      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=500, error=received a non 2XX response")
+        verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=500, error=received a non 2XX response")
     }
 
-//    "return a failed future when fail to connect the external service" in {
-//      stopMockServer()
-//
-//      intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
-//      //This seems to fail in local on MAC and pass on ubuntu due to how localhost ip is mapped
-//      verifyImportsLoggerError(s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'")
-//
-//      startMockServer()
-//    }
+    "return a failed future when fail to connect the external service" in {
+      stopMockServer()
+      val expectedString = s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused$connectionFailedString: localhost/$localhostString:$Port'"
+      intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
+      verifyImportsLoggerError(expectedString)
+      startMockServer()
+    }
   }
 
   private def sendValidRequest() = {
     customsMetricsConnector.post(ValidCustomsMetricsRequest)
   }
-  private def localhostString: String = "127.0.0.1"
+
+  def isJenkins: Boolean =
+    System.getenv("HOME") == "/home/jenkins"
+
+  private def localhostString: String = {
+    val isWsl = Option(System.getenv("WSL_DISTRO_NAME")).isDefined
+    if (isJenkins || isWsl)
+      "127.0.0.1"
+    else
+      "[0:0:0:0:0:0:0:1]"
+  }
+
+  private def connectionFailedString: String = {
+    if (isJenkins)
+      " (connect failed)"
+    else
+      ""
+  }
 }
