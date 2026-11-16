@@ -115,7 +115,7 @@ class CustomsMetricsConnectorSpec extends IntegrationTestSpec with GuiceOneAppPe
       ) {
         intercept[RuntimeException](await(sendValidRequest())).getCause.getClass shouldBe classOf[BadGatewayException]
         val expectedMessage =
-          s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused: localhost/$localhostString:$Port'"
+          s"Call to customs metrics failed. url=http://localhost:$Port/log-times, status=502, error=POST of 'http://localhost:$Port/log-times' failed. Caused by: 'Connection refused (connect failed): localhost/$localhostString:$Port'"
 
         println(s"EXPECTED ERROR MESSAGE >>> [$expectedMessage]")
         println(s"localhostString: $localhostString")
