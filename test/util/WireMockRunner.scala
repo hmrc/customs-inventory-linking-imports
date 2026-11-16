@@ -34,10 +34,6 @@ trait WireMockRunner {
   def stopMockServer(): Unit = {
     wireMockServer.stop()
   }
-  
-  def isRunning(): Boolean = {
-    wireMockServer.isRunning
-  }
 
   def resetMockServer(): Unit = {
     wireMockServer.resetAll()
